@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export function V4Diagnostic() {
   const [personaId, setPersonaId] = useState('v4_1758673786354_lkpko3wzklm');
-  const [userMessage, setUserMessage] = useState('What do you think about work-life balance?');
+  const [userMessage, setUserMessage] = useState('What do you like to eat?');
   const [result, setResult] = useState<any>(null);
   const [promptResult, setPromptResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);

@@ -1,109 +1,288 @@
 import { V4FullProfile } from '../types/persona-v4';
 import { V4TraitPath, V4TraitScore, V4TraitAnalysisResult, TurnClassification, KnowledgeBoundary } from '../types/trait-analysis';
 
-// V4-NATIVE TRAIT RELEVANCE ANALYZER
+interface TraitCategory {
+  name: string;
+  baseWeight: number;
+  relevanceContexts: string[];
+}
+
+// Define trait categories with their importance and relevance contexts
+const TRAIT_CATEGORIES: TraitCategory[] = [
+  { name: "identity", baseWeight: 1.0, relevanceContexts: ["personal", "background", "demographic"] },
+  { name: "daily_life", baseWeight: 0.8, relevanceContexts: ["routine", "lifestyle", "habits", "work", "time"] },
+  { name: "health_profile", baseWeight: 0.7, relevanceContexts: ["health", "medical", "fitness", "wellness", "sleep"] },
+  { name: "relationships", baseWeight: 0.8, relevanceContexts: ["family", "friends", "social", "romantic", "partnership"] },
+  { name: "money_profile", baseWeight: 0.8, relevanceContexts: ["money", "financial", "spending", "saving", "income"] },
+  { name: "motivation_profile", baseWeight: 0.9, relevanceContexts: ["goals", "motivation", "values", "purpose", "drive"] },
+  { name: "communication_style", baseWeight: 0.9, relevanceContexts: ["communication", "speaking", "style", "interaction"] },
+  { name: "humor_profile", baseWeight: 0.6, relevanceContexts: ["humor", "funny", "joke", "laugh", "wit"] },
+  { name: "truth_honesty_profile", baseWeight: 0.9, relevanceContexts: ["honesty", "truth", "authentic", "transparent"] },
+  { name: "bias_profile", baseWeight: 0.8, relevanceContexts: ["decision", "thinking", "bias", "judgment", "belief"] },
+  { name: "cognitive_profile", baseWeight: 0.8, relevanceContexts: ["thinking", "reasoning", "intelligence", "problem"] },
+  { name: "emotional_profile", baseWeight: 0.9, relevanceContexts: ["emotion", "feeling", "mood", "reaction", "trigger"] },
+  { name: "attitude_narrative", baseWeight: 0.7, relevanceContexts: ["attitude", "perspective", "worldview", "opinion"] },
+  { name: "political_narrative", baseWeight: 0.6, relevanceContexts: ["politics", "political", "government", "policy"] },
+  { name: "adoption_profile", baseWeight: 0.6, relevanceContexts: ["technology", "adoption", "change", "new", "innovation"] },
+  { name: "prompt_shaping", baseWeight: 0.5, relevanceContexts: ["context", "situation", "response"] }
+];
+
+// V4-NATIVE TRAIT RELEVANCE ANALYZER - REDESIGNED FOR COMPREHENSIVE SCANNING
 export class V4TraitRelevanceAnalyzer {
-  private static readonly V4_TRAIT_PATHS: V4TraitPath[] = [
-    // MOTIVATION PROFILE PATHS
-    { path: 'motivation_profile.primary_drivers.self_interest', weight: 0.9, contexts: ['personal', 'decision', 'advice'] },
-    { path: 'motivation_profile.primary_drivers.family', weight: 1.0, contexts: ['family', 'relationships', 'children', 'parenting'] },
-    { path: 'motivation_profile.primary_drivers.status', weight: 0.8, contexts: ['career', 'achievement', 'recognition', 'success'] },
-    { path: 'motivation_profile.primary_drivers.mastery', weight: 0.8, contexts: ['learning', 'skill', 'improvement', 'expertise'] },
-    { path: 'motivation_profile.primary_drivers.care', weight: 0.7, contexts: ['helping', 'support', 'community', 'service'] },
-    { path: 'motivation_profile.primary_drivers.security', weight: 0.9, contexts: ['safety', 'stability', 'financial', 'planning'] },
-    { path: 'motivation_profile.primary_drivers.belonging', weight: 0.6, contexts: ['group', 'team', 'community', 'social'] },
-    { path: 'motivation_profile.primary_drivers.novelty', weight: 0.5, contexts: ['new', 'change', 'adventure', 'innovation'] },
-    { path: 'motivation_profile.primary_drivers.meaning', weight: 0.7, contexts: ['purpose', 'values', 'belief', 'philosophy'] },
-
-    // GOAL ORIENTATION
-    { path: 'motivation_profile.goal_orientation.strength', weight: 0.8, contexts: ['goals', 'planning', 'achievement'] },
-    { path: 'motivation_profile.goal_orientation.primary_goals', weight: 0.9, contexts: ['specific', 'objectives', 'targets'] },
-
-    // INHIBITOR PROFILE
-    { path: 'inhibitor_profile.social_cost_sensitivity', weight: 0.7, contexts: ['social', 'judgment', 'reputation'] },
-    { path: 'inhibitor_profile.consequence_aversion', weight: 0.6, contexts: ['risk', 'caution', 'safety'] },
-    { path: 'inhibitor_profile.confidence_level', weight: 0.8, contexts: ['assertion', 'opinion', 'leadership'] },
-    { path: 'inhibitor_profile.perfectionism', weight: 0.7, contexts: ['quality', 'standards', 'criticism'] },
-    { path: 'inhibitor_profile.confirmation_bias', weight: 0.8, contexts: ['information', 'evidence', 'belief'] },
-
-    // EMOTIONAL PROFILE
-    { path: 'emotional_profile.positive_triggers', weight: 1.0, contexts: ['motivation', 'energy', 'enthusiasm'] },
-    { path: 'emotional_profile.negative_triggers', weight: 1.0, contexts: ['frustration', 'anger', 'stress'] },
-    { path: 'emotional_profile.explosive_triggers', weight: 1.2, contexts: ['extreme', 'passionate', 'intense'] },
-
-    // KNOWLEDGE PROFILE
-    { path: 'knowledge_profile.expertise_domains', weight: 0.9, contexts: ['professional', 'work', 'technical'] },
-    { path: 'knowledge_profile.knowledge_gaps', weight: 0.6, contexts: ['learning', 'unfamiliar', 'limitations'] },
-    { path: 'knowledge_profile.education_level', weight: 0.5, contexts: ['academic', 'formal', 'theoretical'] },
-
-    // COMMUNICATION STYLE
-    { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
-    { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
-    { path: 'communication_style.linguistic_signature.signature_phrases', weight: 1.0, contexts: ['all'] },
-    { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
-    { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
-
-    // IDENTITY SALIENCE
-    { path: 'identity_salience.political_identity.orientation', weight: 0.9, contexts: ['politics', 'policy', 'government'] },
-    { path: 'identity_salience.political_identity.strength', weight: 0.8, contexts: ['political', 'ideology'] },
-    { path: 'identity_salience.political_identity.tribal_loyalty', weight: 0.9, contexts: ['group', 'loyalty', 'opposition'] },
-    { path: 'identity_salience.community_identities', weight: 0.8, contexts: ['identity', 'background', 'culture'] },
-
-    // CONTRADICTIONS
-    { path: 'contradictions.primary_tension', weight: 0.9, contexts: ['conflict', 'dilemma', 'inconsistency'] },
-    { path: 'contradictions.secondary_tensions', weight: 0.7, contexts: ['complexity', 'nuance'] },
-
-    // TRUTH/HONESTY
-    { path: 'truth_honesty_profile.baseline_honesty', weight: 0.7, contexts: ['truth', 'honesty', 'disclosure'] },
-    { path: 'truth_honesty_profile.truth_flexibility_by_context', weight: 0.8, contexts: ['context', 'audience', 'situation'] },
-  ];
-
   static analyzeTraitRelevance(
     userInput: string,
     fullProfile: V4FullProfile,
     conversationSummary: any
   ): V4TraitAnalysisResult {
-    const input = userInput.toLowerCase();
-    const selectedTraits: V4TraitScore[] = [];
-
-    // 1. CLASSIFY THE TURN
-    const classification = this.classifyTurn(userInput);
-
-    // 2. ANALYZE TRAIT RELEVANCE
-    for (const traitPath of this.V4_TRAIT_PATHS) {
-      const score = this.calculateTraitRelevance(input, traitPath, fullProfile);
-      if (score > 0.3) { // Relevance threshold
-        const traitValue = this.getNestedValue(fullProfile, traitPath.path);
-        if (traitValue !== undefined) {
-          selectedTraits.push({
-            trait: traitPath.path,
-            score: score,
-            relevance_reason: this.getRelevanceReason(input, traitPath),
-            data_value: traitValue
-          });
-        }
+    console.log('🔍 V4 Trait Analysis Starting - Dynamic Discovery Mode');
+    
+    // 1. Classify the user's turn
+    const turnClassification = this.classifyTurn(userInput);
+    console.log('📋 Turn Classification:', turnClassification);
+    
+    // 2. Dynamically discover ALL trait paths in the persona
+    const allTraitPaths = this.discoverAllTraitPaths(fullProfile);
+    console.log(`🗺️ Discovered ${allTraitPaths.length} total trait paths in persona`);
+    
+    // 3. Calculate relevance for ALL discovered traits
+    const traitScores: V4TraitScore[] = [];
+    
+    allTraitPaths.forEach(traitPath => {
+      const relevanceScore = this.calculateDynamicTraitRelevance(userInput, traitPath, fullProfile, turnClassification);
+      const traitValue = this.getNestedValue(fullProfile, traitPath.path);
+      
+      if (relevanceScore > 0.2 && traitValue !== undefined && traitValue !== null) {
+        traitScores.push({
+          trait: traitPath.path,
+          score: relevanceScore,
+          relevance_reason: this.getDynamicRelevanceReason(userInput, traitPath, traitValue),
+          data_value: traitValue
+        });
       }
-    }
-
-    // 3. EXTRACT LINGUISTIC SIGNATURE
+    });
+    
+    // 4. Sort by relevance and take top traits with diversity
+    const selectedTraits = this.selectDiverseTraits(traitScores, 20);
+    
+    console.log(`🎯 Selected ${selectedTraits.length} relevant traits from ${allTraitPaths.length} discovered paths`);
+    console.log('📊 Top trait categories:', this.getTraitCategoryDistribution(selectedTraits));
+    
+    // 5. Extract linguistic signature
     const linguisticSignature = this.extractLinguisticSignature(fullProfile);
-
-    // 4. DETERMINE BEHAVIORAL MODIFIERS
+    
+    // 6. Calculate behavioral modifiers
     const behavioralModifiers = this.calculateBehavioralModifiers(selectedTraits, fullProfile);
-
-    // 5. CALCULATE KNOWLEDGE BOUNDARIES
-    const knowledgeBoundary = this.calculateKnowledgeBoundaries(classification.topics, fullProfile);
-
-    // Sort traits by relevance score
-    selectedTraits.sort((a, b) => b.score - a.score);
-
+    
+    // 7. Calculate knowledge boundaries
+    const knowledgeBoundary = this.calculateKnowledgeBoundaries(turnClassification.topics, fullProfile);
+    
     return {
-      selected_traits: selectedTraits.slice(0, 12), // Top 12 most relevant traits
-      context_classification: classification,
+      selected_traits: selectedTraits,
+      context_classification: turnClassification,
       linguistic_signature: linguisticSignature,
       behavioral_modifiers: behavioralModifiers,
       knowledge_boundary: knowledgeBoundary
     };
+  }
+
+  // Dynamic trait path discovery - recursively find ALL trait paths
+  private static discoverAllTraitPaths(fullProfile: V4FullProfile): V4TraitPath[] {
+    const discoveredPaths: V4TraitPath[] = [];
+    
+    const traverseObject = (obj: any, currentPath: string = '', depth: number = 0) => {
+      if (depth > 5 || obj === null || obj === undefined) return; // Prevent infinite recursion
+      
+      if (typeof obj === 'object' && !Array.isArray(obj)) {
+        // It's an object, traverse its properties
+        Object.keys(obj).forEach(key => {
+          const newPath = currentPath ? `${currentPath}.${key}` : key;
+          traverseObject(obj[key], newPath, depth + 1);
+        });
+      } else {
+        // It's a value (string, number, boolean, array), create a trait path
+        const category = this.getTraitCategory(currentPath);
+        if (category) {
+          discoveredPaths.push({
+            path: currentPath,
+            weight: this.calculatePathWeight(currentPath, category, depth),
+            contexts: this.inferTraitContexts(currentPath, obj, category)
+          });
+        }
+      }
+    };
+    
+    traverseObject(fullProfile);
+    return discoveredPaths;
+  }
+
+  // Calculate dynamic trait relevance with enhanced scoring
+  private static calculateDynamicTraitRelevance(
+    userInput: string, 
+    traitPath: V4TraitPath, 
+    fullProfile: V4FullProfile, 
+    turnClassification: TurnClassification
+  ): number {
+    let score = 0;
+    const inputLower = userInput.toLowerCase();
+    
+    // 1. Context-based relevance (keyword matching)
+    const contextMatches = traitPath.contexts.filter(context => 
+      inputLower.includes(context.toLowerCase())
+    ).length;
+    
+    if (contextMatches > 0) {
+      score += (contextMatches / traitPath.contexts.length) * traitPath.weight * 0.4;
+    }
+    
+    // 2. Topic-based relevance (classification topics match trait category)
+    const traitCategory = this.getTraitCategory(traitPath.path);
+    if (traitCategory) {
+      const topicRelevance = this.calculateTopicRelevance(turnClassification.topics, traitCategory);
+      score += topicRelevance * traitPath.weight * 0.3;
+    }
+    
+    // 3. Content-based relevance (semantic similarity)
+    const traitValue = this.getNestedValue(fullProfile, traitPath.path);
+    if (traitValue) {
+      score += this.checkContentRelevance(userInput, traitValue) * 0.2;
+    }
+    
+    // 4. Intent-based relevance boost
+    score += this.calculateIntentRelevance(turnClassification.intent, traitPath) * 0.1;
+    
+    return Math.min(score, 1.0);
+  }
+
+  // Helper methods for dynamic trait discovery
+  private static getTraitCategory(traitPath: string): TraitCategory | null {
+    const topLevelKey = traitPath.split('.')[0];
+    return TRAIT_CATEGORIES.find(cat => cat.name === topLevelKey) || null;
+  }
+
+  private static calculatePathWeight(path: string, category: TraitCategory, depth: number): number {
+    // Base weight from category, reduced by depth to prioritize top-level traits
+    const depthPenalty = Math.pow(0.9, depth - 1);
+    return category.baseWeight * depthPenalty;
+  }
+
+  private static inferTraitContexts(path: string, value: any, category: TraitCategory): string[] {
+    const contexts = [...category.relevanceContexts];
+    
+    // Add path-specific contexts based on the trait name
+    const pathParts = path.split('.');
+    pathParts.forEach(part => {
+      contexts.push(part.replace(/_/g, ' '));
+    });
+    
+    // Add value-specific contexts for certain types
+    if (typeof value === 'string') {
+      contexts.push(...value.split(' ').slice(0, 3)); // Add first few words
+    } else if (Array.isArray(value)) {
+      value.slice(0, 3).forEach(item => {
+        if (typeof item === 'string') contexts.push(item);
+      });
+    }
+    
+    return contexts.slice(0, 10); // Limit context size
+  }
+
+  private static calculateTopicRelevance(topics: string[], category: TraitCategory): number {
+    const topicMatches = topics.filter(topic => 
+      category.relevanceContexts.some(context => 
+        topic.toLowerCase().includes(context.toLowerCase()) ||
+        context.toLowerCase().includes(topic.toLowerCase())
+      )
+    ).length;
+    
+    return topics.length > 0 ? topicMatches / topics.length : 0;
+  }
+
+  private static calculateIntentRelevance(intent: string, traitPath: V4TraitPath): number {
+    const intentTraitMap: Record<string, string[]> = {
+      "opinion": ["attitude", "belief", "value", "perspective"],
+      "advice": ["experience", "knowledge", "wisdom", "guidance"],
+      "story": ["memory", "experience", "narrative", "background"],
+      "compare": ["preference", "choice", "evaluation", "judgment"],
+      "critique": ["standard", "expectation", "quality", "assessment"],
+      "clarify": ["definition", "understanding", "knowledge", "explanation"]
+    };
+    
+    const relevantTraitTypes = intentTraitMap[intent] || [];
+    const pathLower = traitPath.path.toLowerCase();
+    
+    return relevantTraitTypes.some(type => pathLower.includes(type)) ? 0.3 : 0;
+  }
+
+  private static selectDiverseTraits(traitScores: V4TraitScore[], maxTraits: number): V4TraitScore[] {
+    // Sort by score first
+    const sortedTraits = traitScores.sort((a, b) => b.score - a.score);
+    
+    // Group by category to ensure diversity
+    const categoryGroups: Record<string, V4TraitScore[]> = {};
+    
+    sortedTraits.forEach(trait => {
+      const category = trait.trait.split('.')[0];
+      if (!categoryGroups[category]) categoryGroups[category] = [];
+      categoryGroups[category].push(trait);
+    });
+    
+    // Select top traits from each category
+    const selectedTraits: V4TraitScore[] = [];
+    const categoriesByImportance = Object.keys(categoryGroups).sort((a, b) => {
+      const catA = TRAIT_CATEGORIES.find(c => c.name === a);
+      const catB = TRAIT_CATEGORIES.find(c => c.name === b);
+      return (catB?.baseWeight || 0) - (catA?.baseWeight || 0);
+    });
+    
+    let traitsPerCategory = Math.max(1, Math.floor(maxTraits / categoriesByImportance.length));
+    let remainingSlots = maxTraits;
+    
+    categoriesByImportance.forEach(category => {
+      const categoryTraits = categoryGroups[category];
+      const slotsToUse = Math.min(traitsPerCategory, categoryTraits.length, remainingSlots);
+      
+      selectedTraits.push(...categoryTraits.slice(0, slotsToUse));
+      remainingSlots -= slotsToUse;
+    });
+    
+    // Fill remaining slots with highest scoring traits
+    const allRemaining = sortedTraits.filter(trait => 
+      !selectedTraits.some(selected => selected.trait === trait.trait)
+    );
+    selectedTraits.push(...allRemaining.slice(0, remainingSlots));
+    
+    return selectedTraits.slice(0, maxTraits);
+  }
+
+  private static getTraitCategoryDistribution(traits: V4TraitScore[]): Record<string, number> {
+    const distribution: Record<string, number> = {};
+    traits.forEach(trait => {
+      const category = trait.trait.split('.')[0];
+      distribution[category] = (distribution[category] || 0) + 1;
+    });
+    return distribution;
+  }
+
+  private static getDynamicRelevanceReason(userInput: string, traitPath: V4TraitPath, traitValue: any): string {
+    const inputLower = userInput.toLowerCase();
+    const matchedContexts = traitPath.contexts.filter(context => 
+      inputLower.includes(context.toLowerCase())
+    );
+    
+    if (matchedContexts.length > 0) {
+      return `Context match: ${matchedContexts.slice(0, 2).join(', ')} | Value: ${this.formatTraitValue(traitValue)}`;
+    }
+    
+    const category = this.getTraitCategory(traitPath.path);
+    return `${category?.name || 'trait'} relevance | Value: ${this.formatTraitValue(traitValue)}`;
+  }
+
+  private static formatTraitValue(value: any): string {
+    if (typeof value === 'string') return value.slice(0, 50);
+    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'boolean') return value.toString();
+    if (Array.isArray(value)) return `[${value.slice(0, 2).join(', ')}${value.length > 2 ? '...' : ''}]`;
+    return JSON.stringify(value).slice(0, 50);
   }
 
   private static classifyTurn(userInput: string): TurnClassification {
@@ -117,13 +296,18 @@ export class V4TraitRelevanceAnalyzer {
     else if (input.includes('vs') || input.includes('compare') || input.includes('better')) intent = 'compare';
     else if (input.includes('wrong') || input.includes('bad') || input.includes('critique')) intent = 'critique';
 
-    // Extract topics
+    // Extract topics - Enhanced topic detection
     const topics: string[] = [];
-    if (input.includes('work') || input.includes('job') || input.includes('career')) topics.push('work');
+    if (input.includes('work') || input.includes('job') || input.includes('career') || input.includes('balance')) topics.push('work');
     if (input.includes('family') || input.includes('children') || input.includes('kids')) topics.push('family');
     if (input.includes('money') || input.includes('finance') || input.includes('investment')) topics.push('finance');
     if (input.includes('politic') || input.includes('government') || input.includes('policy')) topics.push('politics');
     if (input.includes('relationship') || input.includes('dating') || input.includes('marriage')) topics.push('relationships');
+    if (input.includes('health') || input.includes('medical') || input.includes('wellness')) topics.push('health');
+    if (input.includes('food') || input.includes('eat') || input.includes('diet')) topics.push('lifestyle');
+    if (input.includes('hobby') || input.includes('fun') || input.includes('leisure')) topics.push('personal');
+    if (input.includes('technology') || input.includes('tech') || input.includes('ai')) topics.push('technology');
+    if (input.includes('education') || input.includes('learning') || input.includes('school')) topics.push('education');
 
     // Determine audience (simplified)
     const audience: TurnClassification['audience'] = 'peer'; // Default assumption
@@ -134,31 +318,6 @@ export class V4TraitRelevanceAnalyzer {
     else if (topics.includes('family') || topics.includes('relationships')) sensitivity = 'medium';
 
     return { intent, topics, audience, sensitivity };
-  }
-
-  private static calculateTraitRelevance(
-    userInput: string,
-    traitPath: V4TraitPath,
-    fullProfile: V4FullProfile
-  ): number {
-    let score = 0;
-
-    // Check context relevance
-    const hasContextMatch = traitPath.contexts.includes('all') || 
-      traitPath.contexts.some(context => userInput.includes(context));
-
-    if (hasContextMatch) {
-      score += traitPath.weight * 0.7;
-    }
-
-    // Check for keyword matches in trait content
-    const traitValue = this.getNestedValue(fullProfile, traitPath.path);
-    if (traitValue) {
-      const contentMatch = this.checkContentRelevance(userInput, traitValue);
-      score += contentMatch * 0.3;
-    }
-
-    return Math.min(score, 1.0);
   }
 
   private static checkContentRelevance(userInput: string, traitValue: any): number {
@@ -190,18 +349,6 @@ export class V4TraitRelevanceAnalyzer {
     }, obj);
   }
 
-  private static getRelevanceReason(userInput: string, traitPath: V4TraitPath): string {
-    const matchedContexts = traitPath.contexts.filter(context => 
-      context === 'all' || userInput.toLowerCase().includes(context)
-    );
-    
-    if (matchedContexts.length > 0) {
-      return `Matched contexts: ${matchedContexts.join(', ')}`;
-    }
-    
-    return 'Content similarity detected';
-  }
-
   private static extractLinguisticSignature(fullProfile: V4FullProfile): V4TraitAnalysisResult['linguistic_signature'] {
     const styleMarkers = fullProfile?.communication_style?.style_markers;
     const authFilters = fullProfile?.communication_style?.authenticity_filters;
@@ -218,22 +365,28 @@ export class V4TraitRelevanceAnalyzer {
     selectedTraits: V4TraitScore[],
     fullProfile: V4FullProfile
   ): V4TraitAnalysisResult['behavioral_modifiers'] {
-    // Extract confidence adjustment
-    const confidenceTraits = selectedTraits.filter(t => t.trait.includes('confidence_level'));
+    // Extract confidence adjustment from multiple sources
+    const confidenceTraits = selectedTraits.filter(t => 
+      t.trait.includes('confidence') || t.trait.includes('self_assurance')
+    );
     const confidenceValue = confidenceTraits.length > 0 ? confidenceTraits[0].data_value : 0.5;
     
-    // Extract directness level
-    const directnessTraits = selectedTraits.filter(t => t.trait.includes('directness_level'));
+    // Extract directness level from communication style
+    const directnessTraits = selectedTraits.filter(t => 
+      t.trait.includes('directness') || t.trait.includes('communication_style')
+    );
     const directnessLevel = directnessTraits.length > 0 ? directnessTraits[0].data_value : 'balanced';
 
-    // Determine emotional state from triggers
+    // Determine emotional state from triggers and current context
     const emotionalTraits = selectedTraits.filter(t => 
-      t.trait.includes('emotional_profile') || t.trait.includes('explosive_triggers')
+      t.trait.includes('emotional') || t.trait.includes('trigger') || t.trait.includes('stress')
     );
     const emotionalState = emotionalTraits.length > 0 ? 'activated' : 'neutral';
 
-    // Extract formality
-    const formalityTraits = selectedTraits.filter(t => t.trait.includes('formality_default'));
+    // Extract formality from communication context
+    const formalityTraits = selectedTraits.filter(t => 
+      t.trait.includes('formality') || t.trait.includes('voice_foundation')
+    );
     const formalityShift = formalityTraits.length > 0 ? formalityTraits[0].data_value : 'neutral';
 
     return {
@@ -248,8 +401,15 @@ export class V4TraitRelevanceAnalyzer {
     userTopics: string[],
     fullProfile: V4FullProfile
   ): KnowledgeBoundary {
-    // Extract expertise domains from the persona
-    const expertiseDomains = [fullProfile?.identity?.occupation || ''];
+    // Extract expertise domains from multiple sources
+    const expertiseDomains = [
+      fullProfile?.identity?.occupation || '',
+      ...(fullProfile?.daily_life?.primary_activities ? Object.keys(fullProfile.daily_life.primary_activities) : []),
+      // Extract goals as strings
+      ...(fullProfile?.motivation_profile?.goal_orientation?.primary_goals || []).map(goal => 
+        typeof goal === 'string' ? goal : (goal as any)?.goal || ''
+      )
+    ].filter(domain => domain && typeof domain === 'string' && domain.length > 0);
     
     // Expand topic keywords for better matching
     const expandedTopics = this.expandTopics(userTopics);
@@ -278,7 +438,7 @@ export class V4TraitRelevanceAnalyzer {
 
   private static expandTopics(topics: string[]): string[] {
     const topicExpansions: Record<string, string[]> = {
-      'work': ['career', 'professional', 'employment', 'job', 'business'],
+      'work': ['career', 'professional', 'employment', 'job', 'business', 'balance'],
       'finance': ['money', 'investment', 'financial', 'economic', 'budget', 'market'],
       'politics': ['government', 'policy', 'political', 'election', 'law', 'regulation'],
       'family': ['children', 'parenting', 'relationships', 'marriage', 'kids'],
@@ -286,8 +446,8 @@ export class V4TraitRelevanceAnalyzer {
       'technology': ['tech', 'software', 'digital', 'computer', 'programming', 'AI'],
       'health': ['medical', 'wellness', 'fitness', 'healthcare', 'mental health'],
       'education': ['learning', 'school', 'academic', 'study', 'training'],
-      'climate': ['environment', 'sustainability', 'green', 'carbon', 'emissions'],
-      'science': ['research', 'scientific', 'study', 'data', 'analysis']
+      'lifestyle': ['habits', 'routine', 'personal', 'daily', 'preferences'],
+      'personal': ['individual', 'private', 'personality', 'character']
     };
 
     const expanded = new Set(topics);
@@ -302,16 +462,13 @@ export class V4TraitRelevanceAnalyzer {
 
   private static expandExpertiseDomains(domains: string[]): string[] {
     const domainExpansions: Record<string, string[]> = {
-      'real estate': ['property', 'housing', 'development', 'investment property', 'construction'],
+      'healthcare': ['medical', 'medicine', 'health', 'clinical', 'patient care', 'hospital', 'radiology'],
       'technology': ['tech', 'software', 'programming', 'digital', 'IT', 'computers'],
       'finance': ['banking', 'investment', 'trading', 'financial planning', 'economics'],
-      'healthcare': ['medical', 'medicine', 'health', 'clinical', 'patient care'],
       'law': ['legal', 'attorney', 'court', 'litigation', 'contracts'],
       'education': ['teaching', 'academic', 'curriculum', 'learning', 'training'],
-      'manufacturing': ['production', 'industrial', 'factory', 'operations'],
-      'mining': ['extraction', 'minerals', 'geological', 'resources'],
-      'agriculture': ['farming', 'crops', 'livestock', 'rural', 'food production'],
-      'automotive': ['cars', 'vehicles', 'transportation', 'mechanics']
+      'management': ['leadership', 'operations', 'administration', 'supervision'],
+      'operations': ['management', 'workflow', 'efficiency', 'processes']
     };
 
     const expanded = new Set<string>();
