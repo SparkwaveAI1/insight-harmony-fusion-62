@@ -1699,7 +1699,7 @@ serve(async (req) => {
     const body = await req.json()
     const { persona_id, user_message, conversation_history, include_prompt } = body
     
-    console.log('V4 GROK Conversation Engine - Processing:', persona_id)
+    console.log("1. FUNCTION START - persona_id:", persona_id);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -1718,17 +1718,10 @@ serve(async (req) => {
       throw fetchError
     }
 
-    console.log('V4 persona loaded for Grok:', persona.conversation_summary.demographics.name)
+    console.log("2. PERSONA LOADED:", persona?.conversation_summary?.demographics?.name);
+    console.log("3. FULL PROFILE EXISTS:", !!persona?.full_profile);
 
-    // === VOICE DIFFERENTIATION DIAGNOSTIC ===
-    console.log('=== VOICE DIFFERENTIATION DIAGNOSTIC ===');
-    console.log('Current persona data keys:', Object.keys(persona));
-    console.log('Conversation summary communication style:', persona.conversation_summary?.communication_style);
-    console.log('Full profile exists:', !!persona.full_profile);
-    console.log('Full profile communication style:', persona.full_profile?.communication_style?.linguistic_signature);
-    console.log('David Kim signature phrases:', persona.full_profile?.communication_style?.linguistic_signature?.signature_phrases);
-    console.log('David Kim forbidden expressions:', persona.full_profile?.communication_style?.linguistic_signature?.forbidden_expressions);
-    console.log('=== END DIAGNOSTIC ===');
+    console.log("4. CALLING TRAIT ANALYSIS");
 
     // Analyze which traits are relevant to this specific input using V4-native analyzer
     const v4TraitAnalysis = V4TraitRelevanceAnalyzer.analyzeTraitRelevance(
@@ -1736,14 +1729,21 @@ serve(async (req) => {
       persona.full_profile, 
       persona.conversation_summary
     )
-    console.log('V4 - Selected traits for this input:', v4TraitAnalysis.selected_traits.map(t => t.trait))
-    console.log('V4 - Context classification:', v4TraitAnalysis.context_classification)
-    console.log('V4 - Linguistic signature extracted:', Object.keys(v4TraitAnalysis.linguistic_signature))
-    console.log('V4 - Behavioral modifiers:', v4TraitAnalysis.behavioral_modifiers)
+    
+    console.log("5. TRAITS SELECTED:", v4TraitAnalysis.selected_traits?.length || 0);
+    console.log("6. TRAIT VALUES:", v4TraitAnalysis.selected_traits?.map(t => ({trait: t.trait, value: t.data_value})));
+
+    // Generate specific opinion using synthesizeSpecificOpinion
+    const specificOpinion = synthesizeSpecificOpinion(persona.full_profile, v4TraitAnalysis.selected_traits, user_message);
+    console.log("7. OPINION GENERATED:", specificOpinion);
+
+    // Build communication execution style
+    const communicationStyle = buildCommunicationExecution(persona.full_profile, v4TraitAnalysis.selected_traits);
+    console.log("8. COMMUNICATION STYLE:", communicationStyle);
 
     // Build V4-native instructions using trait analysis
     const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
-    console.log('V4 - Instruction length:', instructions.length)
+    console.log("9. FINAL PROMPT LENGTH:", instructions?.length);
     
     // Debug flag: return prompt if requested
     if (include_prompt) {
