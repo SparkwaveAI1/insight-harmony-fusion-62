@@ -111,7 +111,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
   const age = getPersonaAge(persona) || 'Not specified';
   const location = getPersonaLocation(persona) || 'Not specified';
   const occupation = getPersonaOccupation(persona) || 'Not specified';
-  const description = getPersonaBackgroundDescription(persona) || "No description available";
+  const description = persona.conversation_summary?.character_description || "No description available";
 
   return (
     <Card className="bg-card text-card-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] group relative overflow-hidden">
