@@ -22,10 +22,13 @@ function analyzeQuestionContext(userMessage: string) {
     summary += 'Financial/economic concerns. '
   }
 
-  // Technology/Innovation topics
-  if (message.match(/\b(technology|tech|AI|artificial intelligence|robot|automation|digital|online|internet|app|software|computer|phone|mobile|platform|tool|innovation|future|algorithm|data|privacy|security|cyber|virtual|augmented|blockchain|crypto|programming|coding|development)\b/)) {
-    categories.push('adoption_profile', 'risk_tolerance', 'change_friction', 'cognitive_profile', 'education_level')
-    summary += 'Technology/innovation adoption. '
+  // AI/Technology Knowledge Domains (granular detection)
+  if (message.match(/\b(AI|artificial intelligence|algorithm|dataset|training data|validation|false positive|bias|black box|machine learning|neural network|deep learning|model training|accuracy rate|sensitivity|specificity)\b/)) {
+    categories.push('ai_technical_knowledge', 'adoption_profile', 'risk_tolerance', 'change_friction', 'cognitive_profile', 'education_level')
+    summary += 'AI technical understanding required. '
+  } else if (message.match(/\b(technology|tech|automation|digital|online|internet|app|software|computer|phone|mobile|platform|tool|innovation|future|workflow|efficiency|privacy|security|cyber|virtual|augmented)\b/)) {
+    categories.push('technology_general', 'adoption_profile', 'risk_tolerance', 'change_friction', 'cognitive_profile', 'education_level')
+    summary += 'General technology/workflow topics. '
   }
 
   // Work/Career topics
@@ -200,6 +203,16 @@ What would make this person CARE about this topic based on their specific profil
 - What personal experiences or circumstances would shape their perspective?
 - How do their current life pressures and preoccupations influence their response?
 
+3. KNOWLEDGE BOUNDARY ASSESSMENT:
+Based on ${name}'s education (${selectedTraits.identity?.education_level || 'unknown'}), occupation (${occupation}), and age (${age}):
+- What would they realistically know about technical subjects from direct professional experience?
+- What technical terminology should they avoid or use naturally?
+- How sophisticated should their analysis be? (practical effects vs technical implementation)  
+- What would they express curiosity about vs demonstrate expertise in?
+- Generate specific "knowledge guardrails" for the system prompt.
+
+CRITICAL: Most professionals understand practical EFFECTS of technology but NOT technical details unless they have relevant technical education or direct experience.
+
 4. ANTI-PATTERN IDENTIFICATION:
 Based on their traits, what would this person NEVER say or do?
 - Communication styles that contradict their personality
@@ -221,6 +234,12 @@ Create a system prompt that generates 2-4 sentences expressing their authentic r
 - Use natural speech patterns from their background and personality
 
 VOICE GUARDRAILS - ABSOLUTELY FORBIDDEN:
+
+KNOWLEDGE BOUNDARIES:
+- Avoid technical terminology unless persona has relevant technical education or direct experience
+- Express opinions about practical effects, not technical implementation details
+- Use profession-appropriate language: healthcare workers discuss "accuracy" and "errors", not "false positive rates" or "model validation"
+- Show natural curiosity about unfamiliar technical concepts rather than demonstrating false expertise
 
 OPENINGS TO AVOID:
 - Never start with: "Look...", "Listen...", "Frankly...", "Well...", "Here's the thing..."
