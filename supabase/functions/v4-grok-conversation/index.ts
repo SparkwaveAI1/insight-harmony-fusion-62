@@ -775,10 +775,9 @@ function synthesizePersonaOpinion(selectedTraits, userInput, questionDomain) {
 
 // Specific Opinion Synthesis Engine
 function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
-  console.log("=== TRAIT DEBUG START ===");
-  console.log("TRAIT DEBUG - Input selectedTraits:", JSON.stringify(selectedTraits, null, 2));
-  console.log("TRAIT DEBUG - Input demographics:", JSON.stringify(demographics, null, 2));
-  console.log("TRAIT DEBUG - User input:", userInput);
+  console.log("OPINION SYNTHESIS - Received", selectedTraits?.length || 0, "traits");
+  console.log("OPINION SYNTHESIS - Demographics:", demographics?.name);
+  console.log("OPINION SYNTHESIS - User input length:", userInput?.length);
   
   const traitMap = {};
   selectedTraits.forEach(trait => {
@@ -835,6 +834,8 @@ function synthesizeSpecificOpinion(selectedTraits, userInput, demographics) {
 
 // Persona-Specific Communication Execution Engine
 function buildCommunicationExecution(selectedTraits, demographics, communicationStyle) {
+  console.log("COMMUNICATION EXECUTION - Received", selectedTraits?.length || 0, "traits");
+  console.log("COMMUNICATION EXECUTION - Demographics:", demographics?.name);
   let instructions = [];
   
   // CULTURAL/REGIONAL SPECIFIC INSTRUCTIONS
@@ -1451,15 +1452,19 @@ function extractDemographics(conversationSummary, fullProfile) {
 
 // V4-Native instruction builder using trait analysis results
 function buildV4NativeInstructions(v4Analysis, conversationSummary, userInput, fullProfile) {
+  console.log("INSTRUCTION BUILDER - Start with", v4Analysis.selected_traits?.length || 0, "traits");
   const demographics = extractDemographics(conversationSummary, fullProfile);
   const selectedTraits = v4Analysis.selected_traits || [];
   
   // Generate specific opinion
+  console.log("INSTRUCTION BUILDER - Calling synthesizeSpecificOpinion");
   const specificOpinion = synthesizeSpecificOpinion(selectedTraits, userInput, demographics);
+  console.log("INSTRUCTION BUILDER - Opinion generated:", specificOpinion?.substring(0, 100) + "...");
   
   // Build communication execution
+  console.log("INSTRUCTION BUILDER - Calling buildCommunicationExecution");
   const communicationExecution = buildCommunicationExecution(
-    selectedTraits, 
+    selectedTraits,
     demographics, 
     fullProfile.communication_style
   );
@@ -1733,17 +1738,9 @@ serve(async (req) => {
     console.log("5. TRAITS SELECTED:", v4TraitAnalysis.selected_traits?.length || 0);
     console.log("6. TRAIT VALUES:", v4TraitAnalysis.selected_traits?.map(t => ({trait: t.trait, value: t.data_value})));
 
-    // Generate specific opinion using synthesizeSpecificOpinion
-    const specificOpinion = synthesizeSpecificOpinion(persona.full_profile, v4TraitAnalysis.selected_traits, user_message);
-    console.log("7. OPINION GENERATED:", specificOpinion);
-
-    // Build communication execution style
-    const communicationStyle = buildCommunicationExecution(persona.full_profile, v4TraitAnalysis.selected_traits);
-    console.log("8. COMMUNICATION STYLE:", communicationStyle);
-
     // Build V4-native instructions using trait analysis
     const instructions = buildV4NativeInstructions(v4TraitAnalysis, persona.conversation_summary, user_message, persona.full_profile)
-    console.log("9. FINAL PROMPT LENGTH:", instructions?.length);
+    console.log("7. FINAL PROMPT LENGTH:", instructions?.length);
     
     // Debug flag: return prompt if requested
     if (include_prompt) {
