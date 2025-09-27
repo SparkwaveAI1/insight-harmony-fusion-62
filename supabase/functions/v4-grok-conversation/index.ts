@@ -64,61 +64,24 @@ function formatTraits(dominant: any[]): string {
   }
 }
 
-// V4-NATIVE TRAIT RELEVANCE ANALYZER
+// V4-NATIVE COMPREHENSIVE TRAIT RELEVANCE ANALYZER
 class V4TraitRelevanceAnalyzer {
-  private static readonly V4_TRAIT_PATHS = [
-    // MOTIVATION PROFILE PATHS
-    { path: 'motivation_profile.primary_drivers.self_interest', weight: 0.9, contexts: ['personal', 'decision', 'advice'] },
-    { path: 'motivation_profile.primary_drivers.family', weight: 1.0, contexts: ['family', 'relationships', 'children', 'parenting'] },
-    { path: 'motivation_profile.primary_drivers.status', weight: 0.8, contexts: ['career', 'achievement', 'recognition', 'success'] },
-    { path: 'motivation_profile.primary_drivers.mastery', weight: 0.8, contexts: ['learning', 'skill', 'improvement', 'expertise'] },
-    { path: 'motivation_profile.primary_drivers.care', weight: 0.7, contexts: ['helping', 'support', 'community', 'service'] },
-    { path: 'motivation_profile.primary_drivers.security', weight: 0.9, contexts: ['safety', 'stability', 'financial', 'planning'] },
-    { path: 'motivation_profile.primary_drivers.belonging', weight: 0.6, contexts: ['group', 'team', 'community', 'social'] },
-    { path: 'motivation_profile.primary_drivers.novelty', weight: 0.5, contexts: ['new', 'change', 'adventure', 'innovation'] },
-    { path: 'motivation_profile.primary_drivers.meaning', weight: 0.7, contexts: ['purpose', 'values', 'belief', 'philosophy'] },
-
-    // GOAL ORIENTATION
-    { path: 'motivation_profile.goal_orientation.strength', weight: 0.8, contexts: ['goals', 'planning', 'achievement'] },
-    { path: 'motivation_profile.goal_orientation.primary_goals', weight: 0.9, contexts: ['specific', 'objectives', 'targets'] },
-
-    // INHIBITOR PROFILE
-    { path: 'inhibitor_profile.social_cost_sensitivity', weight: 0.7, contexts: ['social', 'judgment', 'reputation'] },
-    { path: 'inhibitor_profile.consequence_aversion', weight: 0.6, contexts: ['risk', 'caution', 'safety'] },
-    { path: 'inhibitor_profile.confidence_level', weight: 0.8, contexts: ['assertion', 'opinion', 'leadership'] },
-    { path: 'inhibitor_profile.perfectionism', weight: 0.7, contexts: ['quality', 'standards', 'criticism'] },
-    { path: 'inhibitor_profile.confirmation_bias', weight: 0.8, contexts: ['information', 'evidence', 'belief'] },
-
-    // EMOTIONAL PROFILE
-    { path: 'emotional_profile.positive_triggers', weight: 1.0, contexts: ['motivation', 'energy', 'enthusiasm'] },
-    { path: 'emotional_profile.negative_triggers', weight: 1.0, contexts: ['frustration', 'anger', 'stress'] },
-    { path: 'emotional_profile.explosive_triggers', weight: 1.2, contexts: ['extreme', 'passionate', 'intense'] },
-
-    // KNOWLEDGE PROFILE
-    { path: 'knowledge_profile.expertise_domains', weight: 0.9, contexts: ['professional', 'work', 'technical'] },
-    { path: 'knowledge_profile.knowledge_gaps', weight: 0.6, contexts: ['learning', 'unfamiliar', 'limitations'] },
-    { path: 'knowledge_profile.education_level', weight: 0.5, contexts: ['academic', 'formal', 'theoretical'] },
-
-    // COMMUNICATION STYLE
-    { path: 'communication_style.voice_foundation.directness_level', weight: 0.8, contexts: ['opinion', 'feedback', 'criticism'] },
-    { path: 'communication_style.voice_foundation.formality_default', weight: 0.7, contexts: ['professional', 'casual', 'social'] },
-    { path: 'communication_style.linguistic_signature.signature_phrases', weight: 0.3, contexts: ['all'] },
-    { path: 'communication_style.linguistic_signature.conversation_enders', weight: 0.7, contexts: ['conclusion', 'farewell'] },
-    { path: 'communication_style.authenticity_filters.forbidden_phrases', weight: 1.0, contexts: ['all'] },
-
-    // IDENTITY SALIENCE
-    { path: 'identity_salience.political_identity.orientation', weight: 0.9, contexts: ['politics', 'policy', 'government'] },
-    { path: 'identity_salience.political_identity.strength', weight: 0.8, contexts: ['political', 'ideology'] },
-    { path: 'identity_salience.political_identity.tribal_loyalty', weight: 0.9, contexts: ['group', 'loyalty', 'opposition'] },
-    { path: 'identity_salience.community_identities', weight: 0.8, contexts: ['identity', 'background', 'culture'] },
-
-    // CONTRADICTIONS
-    { path: 'contradictions.primary_tension', weight: 0.9, contexts: ['conflict', 'dilemma', 'inconsistency'] },
-    { path: 'contradictions.secondary_tensions', weight: 0.7, contexts: ['complexity', 'nuance'] },
-
-    // TRUTH/HONESTY
-    { path: 'truth_honesty_profile.baseline_honesty', weight: 0.7, contexts: ['truth', 'honesty', 'disclosure'] },
-    { path: 'truth_honesty_profile.truth_flexibility_by_context', weight: 0.8, contexts: ['context', 'audience', 'situation'] },
+  // Trait categories for intelligent discovery and weighting
+  private static readonly TRAIT_CATEGORIES = [
+    { name: 'identity', baseWeight: 0.9, contexts: ['demographic', 'personal', 'occupation'] },
+    { name: 'daily_life', baseWeight: 0.7, contexts: ['routine', 'lifestyle', 'habits'] },
+    { name: 'health_profile', baseWeight: 0.6, contexts: ['health', 'medical', 'wellness'] },
+    { name: 'relationships', baseWeight: 0.8, contexts: ['social', 'family', 'romantic'] },
+    { name: 'money_profile', baseWeight: 0.8, contexts: ['financial', 'money', 'spending'] },
+    { name: 'motivation_profile', baseWeight: 0.9, contexts: ['goals', 'drive', 'purpose'] },
+    { name: 'communication_style', baseWeight: 0.8, contexts: ['speaking', 'conversation', 'dialogue'] },
+    { name: 'humor_profile', baseWeight: 0.5, contexts: ['humor', 'jokes', 'comedy'] },
+    { name: 'truth_honesty_profile', baseWeight: 0.7, contexts: ['honesty', 'truth', 'disclosure'] },
+    { name: 'bias_profile', baseWeight: 0.8, contexts: ['thinking', 'decision', 'judgment'] },
+    { name: 'cognitive_profile', baseWeight: 0.9, contexts: ['reasoning', 'thinking', 'analysis'] },
+    { name: 'emotional_profile', baseWeight: 0.8, contexts: ['emotion', 'feeling', 'stress'] },
+    { name: 'adoption_profile', baseWeight: 0.7, contexts: ['technology', 'change', 'innovation'] },
+    { name: 'prompt_shaping', baseWeight: 0.6, contexts: ['communication', 'expression'] }
   ];
 
   static analyzeTraitRelevance(userInput: string, fullProfile: any, conversationSummary: any) {
@@ -126,28 +89,249 @@ class V4TraitRelevanceAnalyzer {
     
     // 1. CLASSIFY THE TURN AND DETERMINE QUESTION DOMAIN
     const classification = this.classifyTurn(userInput);
-    const questionDomain = this.determineQuestionDomain(userInput);
+    
+    // 2. DISCOVER ALL TRAIT PATHS DYNAMICALLY
+    const allTraitPaths = this.discoverAllTraitPaths(fullProfile);
+    console.log(`Discovered ${allTraitPaths.length} trait paths dynamically`);
+    
+    // 3. CALCULATE RELEVANCE FOR ALL DISCOVERED TRAITS
+    const scoredTraits = allTraitPaths.map(traitPath => {
+      const value = this.getNestedValue(fullProfile, traitPath.path);
+      if (value === null || value === undefined || value === '') return null;
+      
+      const relevanceScore = this.calculateDynamicTraitRelevance(
+        userInput, traitPath, value, classification
+      );
+      
+      return {
+        trait: traitPath.path,
+        score: relevanceScore,
+        relevance_reason: this.getDynamicRelevanceReason(userInput, traitPath, value, classification),
+        data_value: value
+      };
+    }).filter(trait => trait && trait.score > 0.3);
 
-    // 2. SELECT RELEVANT TRAITS BASED ON QUESTION DOMAIN (MAX 5)
-    const selectedTraits = this.selectDomainRelevantTraits(input, fullProfile, questionDomain, classification);
+    // 4. SELECT DIVERSE TOP TRAITS
+    const selectedTraits = this.selectDiverseTraits(scoredTraits, 8);
 
-    // 3. EXTRACT LINGUISTIC SIGNATURE
+    // 5. EXTRACT LINGUISTIC SIGNATURE
     const linguisticSignature = this.extractLinguisticSignature(fullProfile);
 
-    // 4. DETERMINE BEHAVIORAL MODIFIERS
+    // 6. DETERMINE BEHAVIORAL MODIFIERS
     const behavioralModifiers = this.calculateBehavioralModifiers(selectedTraits, fullProfile);
 
-    // 5. CALCULATE KNOWLEDGE BOUNDARIES
+    // 7. CALCULATE KNOWLEDGE BOUNDARIES
     const knowledgeBoundary = this.calculateKnowledgeBoundaries(classification.topics, fullProfile);
 
     return {
-      selected_traits: selectedTraits.slice(0, 5), // Max 5 relevant traits
+      selected_traits: selectedTraits,
       context_classification: classification,
       linguistic_signature: linguisticSignature,
       behavioral_modifiers: behavioralModifiers,
-      knowledge_boundary: knowledgeBoundary,
-      question_domain: questionDomain
+      knowledge_boundary: knowledgeBoundary
     };
+  }
+
+  // DYNAMIC TRAIT PATH DISCOVERY
+  private static discoverAllTraitPaths(fullProfile: any): Array<{path: string, weight: number, contexts: string[]}> {
+    const traitPaths: Array<{path: string, weight: number, contexts: string[]}> = [];
+    
+    const traverseObject = (obj: any, currentPath: string = '', depth: number = 0) => {
+      if (!obj || typeof obj !== 'object' || depth > 4) return;
+      
+      for (const [key, value] of Object.entries(obj)) {
+        const fullPath = currentPath ? `${currentPath}.${key}` : key;
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          // Continue traversing nested objects
+          traverseObject(value, fullPath, depth + 1);
+        } else if (value !== null && value !== undefined && value !== '') {
+          // This is a leaf node with actual data
+          const weight = this.calculatePathWeight(fullPath);
+          const contexts = this.inferTraitContexts(fullPath);
+          
+          traitPaths.push({
+            path: fullPath,
+            weight,
+            contexts
+          });
+        }
+      }
+    };
+    
+    traverseObject(fullProfile);
+    return traitPaths;
+  }
+
+  private static calculatePathWeight(path: string): number {
+    const pathParts = path.toLowerCase().split('.');
+    
+    // Base weight from trait category
+    const category = this.getTraitCategory(path);
+    let weight = category ? category.baseWeight : 0.5;
+    
+    // Boost important psychological traits
+    if (path.includes('emotional_profile') || path.includes('motivation_profile')) weight += 0.2;
+    if (path.includes('communication_style') || path.includes('truth_honesty')) weight += 0.1;
+    if (path.includes('cognitive_profile') || path.includes('bias_profile')) weight += 0.15;
+    
+    // Reduce weight for overly specific nested paths
+    if (pathParts.length > 3) weight -= 0.1;
+    
+    return Math.max(0.1, Math.min(1.0, weight));
+  }
+
+  private static inferTraitContexts(path: string): string[] {
+    const pathLower = path.toLowerCase();
+    const contexts: string[] = [];
+    
+    // Category-based contexts
+    const category = this.getTraitCategory(path);
+    if (category) contexts.push(...category.contexts);
+    
+    // Specific trait contexts
+    if (pathLower.includes('work') || pathLower.includes('professional')) contexts.push('work', 'career');
+    if (pathLower.includes('family') || pathLower.includes('children')) contexts.push('family', 'personal');
+    if (pathLower.includes('money') || pathLower.includes('financial')) contexts.push('money', 'finance');
+    if (pathLower.includes('social') || pathLower.includes('relationship')) contexts.push('social', 'relationships');
+    if (pathLower.includes('stress') || pathLower.includes('emotion')) contexts.push('emotional', 'stress');
+    if (pathLower.includes('opinion') || pathLower.includes('honesty')) contexts.push('opinion', 'values');
+    
+    return contexts.length > 0 ? contexts : ['general'];
+  }
+
+  private static getTraitCategory(path: string) {
+    const topLevelCategory = path.split('.')[0];
+    return this.TRAIT_CATEGORIES.find(cat => cat.name === topLevelCategory);
+  }
+
+  // ENHANCED RELEVANCE CALCULATION
+  private static calculateDynamicTraitRelevance(
+    userInput: string, 
+    traitPath: any, 
+    value: any, 
+    classification: any
+  ): number {
+    const input = userInput.toLowerCase();
+    let relevanceScore = traitPath.weight;
+    
+    // Context matching
+    const contextMatch = traitPath.contexts.some((context: string) => 
+      input.includes(context) || classification.topics.includes(context)
+    );
+    if (contextMatch) relevanceScore += 0.3;
+    
+    // Topic relevance
+    const topicRelevance = this.calculateTopicRelevance(input, traitPath.path, classification.topics);
+    relevanceScore += topicRelevance;
+    
+    // Content relevance
+    if (this.checkContentRelevance(input, value)) relevanceScore += 0.2;
+    
+    // Intent matching
+    const intentRelevance = this.calculateIntentRelevance(classification.intent, traitPath.path);
+    relevanceScore += intentRelevance;
+    
+    return Math.max(0, Math.min(1.0, relevanceScore));
+  }
+
+  private static calculateTopicRelevance(input: string, traitPath: string, topics: string[]): number {
+    const pathLower = traitPath.toLowerCase();
+    let relevance = 0;
+    
+    // Topic-specific trait relevance
+    const topicTraitMap: Record<string, string[]> = {
+      'work': ['identity.occupation', 'communication_style.context_switches.work', 'daily_life.primary_activities.work'],
+      'family': ['motivation_profile.primary_drivers.family', 'relationships.household', 'daily_life.primary_activities.family_time'],
+      'money': ['money_profile', 'motivation_profile.primary_drivers.security'],
+      'health': ['health_profile', 'daily_life.sleep_hours', 'emotional_profile.stress_responses'],
+      'technology': ['adoption_profile.risk_tolerance', 'cognitive_profile.abstract_reasoning'],
+      'social': ['relationships', 'communication_style', 'emotional_profile.positive_triggers']
+    };
+    
+    for (const topic of topics) {
+      const relevantPaths = topicTraitMap[topic] || [];
+      if (relevantPaths.some(path => pathLower.includes(path.toLowerCase()))) {
+        relevance += 0.2;
+      }
+    }
+    
+    return Math.min(0.5, relevance);
+  }
+
+  private static calculateIntentRelevance(intent: string, traitPath: string): number {
+    const pathLower = traitPath.toLowerCase();
+    
+    const intentTraitMap: Record<string, string[]> = {
+      'opinion': ['truth_honesty_profile', 'communication_style.voice_foundation.directness'],
+      'advice': ['motivation_profile.primary_drivers', 'bias_profile.cognitive'],
+      'story': ['communication_style.style_markers.storytelling', 'emotional_profile'],
+      'compare': ['cognitive_profile.abstract_reasoning', 'bias_profile.cognitive.confirmation'],
+      'critique': ['truth_honesty_profile.baseline_honesty', 'emotional_profile.negative_triggers']
+    };
+    
+    const relevantPaths = intentTraitMap[intent] || [];
+    return relevantPaths.some(path => pathLower.includes(path.toLowerCase())) ? 0.15 : 0;
+  }
+
+  private static checkContentRelevance(input: string, value: any): boolean {
+    if (typeof value === 'string') {
+      const valueLower = value.toLowerCase();
+      return input.split(' ').some(word => word.length > 3 && valueLower.includes(word));
+    }
+    return false;
+  }
+
+  // DIVERSE TRAIT SELECTION
+  private static selectDiverseTraits(scoredTraits: any[], maxTraits: number): any[] {
+    // Sort by score
+    scoredTraits.sort((a, b) => b.score - a.score);
+    
+    const selected: any[] = [];
+    const usedCategories = new Set<string>();
+    
+    // First pass: Select top trait from each category
+    for (const trait of scoredTraits) {
+      if (selected.length >= maxTraits) break;
+      
+      const category = trait.trait.split('.')[0];
+      if (!usedCategories.has(category)) {
+        selected.push(trait);
+        usedCategories.add(category);
+      }
+    }
+    
+    // Second pass: Fill remaining slots with highest scoring traits
+    for (const trait of scoredTraits) {
+      if (selected.length >= maxTraits) break;
+      if (!selected.find(s => s.trait === trait.trait)) {
+        selected.push(trait);
+      }
+    }
+    
+    return selected;
+  }
+
+  private static getDynamicRelevanceReason(
+    userInput: string, 
+    traitPath: any, 
+    value: any, 
+    classification: any
+  ): string {
+    const category = this.getTraitCategory(traitPath.path);
+    const categoryName = category ? category.name.replace('_', ' ') : 'personality trait';
+    
+    let reason = `${categoryName} trait`;
+    
+    if (traitPath.contexts.some((ctx: string) => userInput.toLowerCase().includes(ctx))) {
+      reason += ` relevant to ${traitPath.contexts.join(', ')} context`;
+    }
+    
+    if (classification.topics.length > 0) {
+      reason += ` applicable to ${classification.topics.join(', ')} discussion`;
+    }
+    
+    return reason;
   }
 
   static classifyTurn(userInput: string) {
@@ -221,138 +405,13 @@ class V4TraitRelevanceAnalyzer {
     return 'general';
   }
 
-  static flattenPersonaProfile(fullProfile: any) {
-    const traits: Array<{path: string, value: any}> = [];
-    
-    function extractTraits(obj: any, prefix = '') {
-      for (const [key, value] of Object.entries(obj)) {
-        const path = prefix ? `${prefix}.${key}` : key;
-        
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          extractTraits(value, path);
-        } else if (value !== null && value !== undefined && value !== '') {
-          traits.push({ path, value });
-        }
-      }
-    }
-    
-    extractTraits(fullProfile);
-    return traits;
+  // UTILITY METHOD FOR NESTED VALUE ACCESS
+  static getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((current, key) => {
+      return current && typeof current === 'object' ? current[key] : undefined;
+    }, obj);
   }
 
-  static selectDomainRelevantTraits(userInput: string, fullProfile: any, domain: string, classification: any) {
-    const selectedTraits = [];
-    
-    // Extract ALL traits from the full persona profile
-    const allTraits = this.flattenPersonaProfile(fullProfile);
-    
-    // Filter out narrative traits and verbose descriptive text blocks
-    const filteredTraits = allTraits.filter(({ path, value }) => {
-      // Exclude narrative sections that provide generic verbose descriptions
-      if (path.includes('attitude_narrative') || path.includes('political_narrative')) {
-        return false;
-      }
-      
-      // Exclude overly verbose text blocks that don't provide specific behavioral guidance
-      if (typeof value === 'string' && value.length > 300) {
-        return false;
-      }
-      
-      return true;
-    });
-    
-    // ALWAYS include thought_coherence first if it exists
-    const thoughtCoherence = this.getNestedValue(fullProfile, 'cognitive_profile.thought_coherence');
-    if (thoughtCoherence !== null && thoughtCoherence !== undefined) {
-      selectedTraits.push({
-        trait: 'cognitive_profile.thought_coherence',
-        score: 1.0, // Always highest priority
-        relevance_reason: `Thought coherence (${thoughtCoherence}) affects how clearly and logically this person processes and expresses complex ideas like AI in healthcare`,
-        data_value: thoughtCoherence
-      });
-    }
-    
-    // Score ALL filtered traits using existing relevance logic
-    for (const { path, value } of filteredTraits) {
-      if (path === 'cognitive_profile.thought_coherence') continue; // Already added
-      
-      if (value !== null && value !== undefined && value !== '') {
-        const relevanceScore = this.calculateContextualRelevance(userInput, path, value, domain, classification);
-        if (relevanceScore > 0.3) { // Higher threshold for quality
-          selectedTraits.push({
-            trait: path,
-            score: relevanceScore,
-            relevance_reason: this.getDetailedRelevanceReason(userInput, path, value, domain, classification),
-            data_value: value
-          });
-        }
-      }
-    }
-    
-    // Sort by relevance and return top 6 (including thought_coherence)
-    selectedTraits.sort((a, b) => b.score - a.score);
-    return selectedTraits.slice(0, 6);
-  }
-
-  static calculateContextualRelevance(userInput: string, traitPath: string, traitValue: any, domain: string, classification: any) {
-    const input = userInput.toLowerCase();
-    const pathParts = traitPath.toLowerCase().split('.');
-    let score = 0;
-    
-    // Question topic analysis
-    const questionTopics = {
-      technology: ['ai', 'technology', 'tech', 'artificial', 'intelligence', 'digital', 'automation'],
-      healthcare: ['medical', 'health', 'doctor', 'patient', 'diagnosis', 'radiology', 'hospital'],
-      professional: ['work', 'job', 'career', 'professional', 'workplace', 'business'],
-      opinion: ['think', 'feel', 'opinion', 'view', 'believe', 'perspective'],
-      ethics: ['ethical', 'moral', 'right', 'wrong', 'should', 'responsibility'],
-      risk: ['risk', 'danger', 'safe', 'concern', 'worry', 'cautious']
-    };
-    
-    // Trait relevance by question context
-    const traitRelevanceMap = {
-      // For AI/technology questions
-      'cognitive_profile.abstract_reasoning': () => input.includes('ai') || input.includes('technology') ? 0.9 : 0.3,
-      'adoption_profile.risk_tolerance': () => questionTopics.technology.some(t => input.includes(t)) ? 0.8 : 0.2,
-      'bias_profile.cognitive.overconfidence': () => input.includes('ai') && input.includes('replace') ? 0.7 : 0.2,
-      
-      // For professional contexts
-      'identity.occupation': () => questionTopics.healthcare.some(t => input.includes(t)) ? 0.9 : 0.3,
-      'knowledge_profile.expertise_domains': () => questionTopics.professional.some(t => input.includes(t)) ? 0.8 : 0.3,
-      'communication_style.context_switches.work': () => questionTopics.professional.some(t => input.includes(t)) ? 0.7 : 0.2,
-      
-      // For opinion/values questions  
-      'truth_honesty_profile.baseline_honesty': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.8 : 0.3,
-      'motivation_profile.primary_drivers.meaning': () => questionTopics.ethics.some(t => input.includes(t)) ? 0.8 : 0.3,
-      
-      // For emotional responses
-      'emotional_profile.stress_responses': () => questionTopics.risk.some(t => input.includes(t)) ? 0.8 : 0.2,
-      'emotional_profile.negative_triggers': () => input.includes('frustrat') || input.includes('concern') ? 0.7 : 0.2,
-      'emotional_profile.positive_triggers': () => input.includes('excit') || input.includes('thrill') ? 0.7 : 0.2,
-      
-      // Communication traits - higher for opinion questions
-      'communication_style.voice_foundation.directness': () => questionTopics.opinion.some(t => input.includes(t)) ? 0.6 : 0.3,
-      
-      // Default scoring
-      'default': () => 0.3
-    };
-    
-    // Calculate trait-specific relevance
-    const relevanceFunc = (traitRelevanceMap as any)[traitPath] || traitRelevanceMap['default'];
-    score = relevanceFunc();
-    
-    // Boost for high-value traits
-    if (typeof traitValue === 'number' && (traitValue > 0.7 || traitValue < 0.3)) {
-      score += 0.2; // Extreme values are more interesting
-    }
-    
-    // Boost for rich content
-    if (typeof traitValue === 'string' && traitValue.length > 50) {
-      score += 0.1;
-    }
-    
-    return Math.min(score, 1.0);
-  }
 
   static getDetailedRelevanceReason(userInput: string, traitPath: string, traitValue: any, domain: string, classification: any) {
     const input = userInput.toLowerCase();
