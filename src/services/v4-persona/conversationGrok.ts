@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface V4GrokConversationRequest {
   persona_id: string;
   user_message: string;
+  imageData?: string;
   conversation_history?: Array<{
     role: 'user' | 'assistant';
     content: string;
@@ -29,6 +30,7 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
       body: {
         persona_id: request.persona_id,
         user_message: request.user_message,
+        imageData: request.imageData,
         conversation_history: request.conversation_history || []
       }
     });

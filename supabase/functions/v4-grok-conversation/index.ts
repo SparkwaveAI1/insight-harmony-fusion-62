@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { persona_id, user_message, conversation_history } = await req.json()
+    const { persona_id, user_message, imageData, conversation_history } = await req.json()
     
     console.log(`1. FUNCTION START - persona_id: ${persona_id}`)
 
@@ -67,11 +67,24 @@ serve(async (req) => {
       grokMessages.push(...conversation_history)
     }
 
-    // Add current user message
-    grokMessages.push({
+    // Add current user message (with image support)
+    const userMessage: any = {
       role: "user",
-      content: user_message
-    })
+      content: imageData ? [
+        {
+          type: "text",
+          text: user_message
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${imageData}`
+          }
+        }
+      ] : user_message
+    }
+    
+    grokMessages.push(userMessage)
 
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -80,7 +93,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: GROK_MODEL,
+        model: imageData ? "grok-vision-beta" : GROK_MODEL,
         messages: grokMessages,
         temperature: 0.8,
         max_tokens: 2000

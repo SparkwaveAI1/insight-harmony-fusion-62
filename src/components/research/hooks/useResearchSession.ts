@@ -318,6 +318,7 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
         const v4Response = await sendV4Message({
           persona_id: personaId,
           user_message: fullMessage,
+          imageData: messageToSend.image,
           conversation_history: conversationHistory
         });
         

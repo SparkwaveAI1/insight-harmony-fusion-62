@@ -90,6 +90,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       const response = await sendV4Message({
         persona_id: personaId,
         user_message: message,
+        imageData: imageData,
         conversation_history: [...messagesRef.current, userMessage].map(m => ({
           role: m.role,
           content: m.content

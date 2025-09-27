@@ -4,6 +4,7 @@ import { sendV4GrokMessage } from './conversationGrok';
 export interface V4ConversationRequest {
   persona_id: string;
   user_message: string;
+  imageData?: string;
   conversation_history?: Array<{
     role: 'user' | 'assistant';
     content: string;
@@ -28,6 +29,7 @@ export async function sendV4Message(request: V4ConversationRequest): Promise<V4C
     const grokResponse = await sendV4GrokMessage({
       persona_id: request.persona_id,
       user_message: request.user_message,
+      imageData: request.imageData,
       conversation_history: request.conversation_history || []
     });
 
@@ -94,6 +96,7 @@ export async function sendMessageToAnyPersona(
     return await sendV4Message({
       persona_id: personaId,
       user_message: userMessage,
+      imageData: undefined, // No image support for this function
       conversation_history: conversationHistory
     });
   } else {
@@ -123,6 +126,7 @@ export async function sendMessageToMultipleV4Personas(
       const response = await sendV4Message({
         persona_id: personaId,
         user_message: userMessage,
+        imageData: undefined, // No image support for batch processing
         conversation_history: conversationHistories[personaId] || []
       });
       results[personaId] = response;
