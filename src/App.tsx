@@ -50,6 +50,7 @@ import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationCom
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 import { JobCompletionNotifier } from "./components/persona-creation/JobCompletionNotifier";
+import ScrollToTop from "./components/layout/ScrollToTop";
 
 
 
@@ -87,6 +88,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <PersonaProvider>
             <DeploymentVerifier />
