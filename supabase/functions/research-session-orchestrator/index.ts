@@ -10,6 +10,11 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// Declare EdgeRuntime interface for type safety
+declare const EdgeRuntime: {
+  waitUntil(promise: Promise<any>): void;
+} | undefined;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -23,12 +28,20 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     if (action === 'start') {
-      // Start the research session orchestration in background
-      orchestrateResearchSession(session_id, supabase).catch(console.error);
+      // Use EdgeRuntime.waitUntil to ensure background task continues even after response
+      const backgroundTask = orchestrateResearchSession(session_id, supabase);
+      
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime && EdgeRuntime.waitUntil) {
+        EdgeRuntime.waitUntil(backgroundTask);
+        console.log(`Background task registered with EdgeRuntime for session ${session_id}`);
+      } else {
+        // Fallback for environments without EdgeRuntime
+        backgroundTask.catch(console.error);
+      }
       
       return new Response(JSON.stringify({ 
         success: true, 
-        message: 'Research session started in background' 
+        message: 'Research session started in persistent background mode' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -51,12 +64,20 @@ serve(async (req) => {
     }
 
     if (action === 'resume') {
-      // Resume interrupted session
-      resumeResearchSession(session_id, supabase).catch(console.error);
+      // Use EdgeRuntime.waitUntil for resume task as well
+      const resumeTask = resumeResearchSession(session_id, supabase);
+      
+      if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime && EdgeRuntime.waitUntil) {
+        EdgeRuntime.waitUntil(resumeTask);
+        console.log(`Resume task registered with EdgeRuntime for session ${session_id}`);
+      } else {
+        // Fallback for environments without EdgeRuntime
+        resumeTask.catch(console.error);
+      }
       
       return new Response(JSON.stringify({ 
         success: true, 
-        message: 'Research session resumed in background' 
+        message: 'Research session resumed in persistent background mode' 
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -85,6 +106,27 @@ serve(async (req) => {
 async function orchestrateResearchSession(sessionId: string, supabase: any) {
   console.log(`Starting orchestration for session ${sessionId}`);
   
+  let totalResponses = 0;
+  let expectedResponses = 0;
+  
+  // Register shutdown handler to save progress
+  const shutdownHandler = (event: any) => {
+    console.log(`Function shutting down for session ${sessionId}, reason:`, event.detail?.reason);
+    // Mark session as requiring resume if still in progress
+    supabase
+      .from('research_survey_sessions')
+      .update({ 
+        status: 'active', // Mark as active so it can be resumed
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', sessionId)
+      .eq('status', 'in_progress')
+      .then(() => console.log(`Session ${sessionId} marked for resumption`))
+      .catch((error: any) => console.error('Error marking session for resumption:', error));
+  };
+  
+  addEventListener('beforeunload', shutdownHandler);
+  
   try {
     // Get session details
     const { data: session, error: sessionError } = await supabase
@@ -101,20 +143,22 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
       return;
     }
 
-    // Update session to started
+    // Update session to started with heartbeat
     await supabase
       .from('research_survey_sessions')
       .update({ 
         status: 'in_progress',
-        started_at: new Date().toISOString()
+        started_at: new Date().toISOString(),
+        last_heartbeat: new Date().toISOString()
       })
       .eq('id', sessionId);
 
-    console.log(`Session ${sessionId} marked as in_progress`);
+    console.log(`Session ${sessionId} marked as in_progress with heartbeat`);
 
     // Execute survey for each persona
     const questions = session.research_surveys?.questions || [];
     const personas = session.selected_personas || [];
+    expectedResponses = personas.length * questions.length;
 
     for (const personaId of personas) {
       console.log(`Processing persona ${personaId}`);
@@ -125,10 +169,22 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
         continue;
       }
       
+      // Update heartbeat periodically
+      const heartbeatInterval = setInterval(async () => {
+        try {
+          await supabase
+            .from('research_survey_sessions')
+            .update({ last_heartbeat: new Date().toISOString() })
+            .eq('id', sessionId);
+        } catch (error) {
+          console.error('Error updating heartbeat:', error);
+        }
+      }, 30000); // Every 30 seconds
+      
       for (let questionIndex = 0; questionIndex < questions.length; questionIndex++) {
         const question = questions[questionIndex];
         
-        // Check if response already exists
+        // Check if response already exists (for recovery)
         const { data: existingResponse } = await supabase
           .from('research_survey_responses')
           .select('id')
@@ -139,45 +195,82 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
 
         if (existingResponse) {
           console.log(`Response already exists for persona ${personaId}, question ${questionIndex}`);
+          totalResponses++;
           continue;
         }
 
-        // Generate response using V4 Grok conversation
-        try {
-          const response = await supabase.functions.invoke('v4-grok-conversation', {
-            body: {
-              persona_id: personaId,
-              user_message: question.text
-            }
-          });
-
-          console.log(`V4 Grok response for ${personaId}:`, response);
-
-          if (response.data?.success && response.data?.response) {
-            // Store the response
-            await supabase
-              .from('research_survey_responses')
-              .insert({
-                session_id: sessionId,
+        // Generate response using V4 Grok conversation with retry logic
+        let retryCount = 0;
+        const maxRetries = 3;
+        let success = false;
+        
+        while (retryCount < maxRetries && !success) {
+          try {
+            console.log(`Attempting response generation for ${personaId}, question ${questionIndex} (attempt ${retryCount + 1})`);
+            
+            const response = await supabase.functions.invoke('v4-grok-conversation', {
+              body: {
                 persona_id: personaId,
-                question_index: questionIndex,
-                question_text: question.text,
-                response_text: response.data.response
-              });
+                user_message: question.text
+              }
+            });
 
-            console.log(`Stored response for persona ${personaId}, question ${questionIndex}`);
-          } else {
-            console.error(`Invalid response from V4 Grok for persona ${personaId}:`, response.data);
+            if (response.data?.success && response.data?.response) {
+              // Store the response atomically
+              await supabase
+                .from('research_survey_responses')
+                .insert({
+                  session_id: sessionId,
+                  persona_id: personaId,
+                  question_index: questionIndex,
+                  question_text: question.text,
+                  response_text: response.data.response
+                });
+
+              totalResponses++;
+              success = true;
+              
+              // Update progress in session
+              const progressPercent = Math.round((totalResponses / expectedResponses) * 100);
+              await supabase
+                .from('research_survey_sessions')
+                .update({ 
+                  progress_data: { 
+                    completed_responses: totalResponses,
+                    total_expected: expectedResponses,
+                    progress_percent: progressPercent
+                  },
+                  last_heartbeat: new Date().toISOString()
+                })
+                .eq('id', sessionId);
+
+              console.log(`Stored response for persona ${personaId}, question ${questionIndex}. Progress: ${progressPercent}%`);
+            } else {
+              throw new Error(`Invalid response from V4 Grok: ${JSON.stringify(response.data)}`);
+            }
+
+          } catch (error) {
+            retryCount++;
+            console.error(`Error generating response for persona ${personaId}, question ${questionIndex} (attempt ${retryCount}):`, error);
+            
+            if (retryCount < maxRetries) {
+              // Exponential backoff with jitter
+              const delay = Math.min(1000 * Math.pow(2, retryCount - 1) + Math.random() * 1000, 10000);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
           }
-
-          // Add delay between requests to avoid rate limits
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
-        } catch (error) {
-          console.error(`Error generating response for persona ${personaId}, question ${questionIndex}:`, error);
-          // Continue with next question rather than failing entire session
         }
+        
+        if (!success) {
+          console.error(`Failed to generate response for persona ${personaId}, question ${questionIndex} after ${maxRetries} attempts`);
+        }
+
+        // Add delay between requests to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
+      
+      // Clear heartbeat interval for this persona
+      clearInterval(heartbeatInterval);
     }
 
     // Mark session as completed
@@ -185,11 +278,16 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
       .from('research_survey_sessions')
       .update({ 
         status: 'completed',
-        completed_at: new Date().toISOString()
+        completed_at: new Date().toISOString(),
+        progress_data: { 
+          completed_responses: totalResponses,
+          total_expected: expectedResponses,
+          progress_percent: 100
+        }
       })
       .eq('id', sessionId);
 
-    console.log(`Session ${sessionId} completed, starting insights generation`);
+    console.log(`Session ${sessionId} completed with ${totalResponses}/${expectedResponses} responses, starting insights generation`);
 
     // Generate insights
     try {
@@ -212,14 +310,23 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
   } catch (error) {
     console.error(`Error orchestrating session ${sessionId}:`, error);
     
-    // Mark session as failed
+    // Mark session as failed with progress data
     await supabase
       .from('research_survey_sessions')
       .update({ 
         status: 'failed',
-        completed_at: new Date().toISOString()
+        completed_at: new Date().toISOString(),
+        progress_data: { 
+          completed_responses: totalResponses,
+          total_expected: expectedResponses,
+          progress_percent: Math.round((totalResponses / expectedResponses) * 100),
+          error_message: error instanceof Error ? error.message : String(error)
+        }
       })
       .eq('id', sessionId);
+  } finally {
+    // Clean up event listener
+    removeEventListener('beforeunload', shutdownHandler);
   }
 }
 
