@@ -43,8 +43,14 @@ serve(async (req) => {
     const occupation = demographics.occupation || 'unknown occupation'
     const location = demographics.location || 'unknown location'
 
+    // Filter out metaphor domains and other noise from the profile
+    const filteredProfile = { ...persona.full_profile }
+    if (filteredProfile.communication_style?.style_markers?.metaphor_domains) {
+      delete filteredProfile.communication_style.style_markers.metaphor_domains
+    }
+
     // Prepare the OpenAI analysis prompt
-    const analysisPrompt = `You are an expert personality analyst tasked with creating a comprehensive conversation system prompt for an AI persona based on their full psychological profile and the user's question.
+    const analysisPrompt = `You are an expert personality analyst. Create a focused system prompt for an AI persona to answer this specific question. The persona should respond naturally and conversationally (2-5 sentences max).
 
 PERSONA PROFILE:
 Name: ${name}
@@ -52,29 +58,38 @@ Age: ${age}
 Occupation: ${occupation}
 Location: ${location}
 
-FULL PERSONALITY DATA:
-${JSON.stringify(persona.full_profile, null, 2)}
+PERSONALITY DATA:
+${JSON.stringify(filteredProfile, null, 2)}
 
 USER'S QUESTION: "${user_message}"
 
 CONVERSATION HISTORY: ${JSON.stringify(conversation_history || [], null, 2)}
 
-Your task is to analyze this persona's complete psychological profile and create a specific, contextual system prompt that will guide the AI's response to this exact question. 
+Create a system prompt with these sections:
 
-Analyze:
-1. Which personality traits, motivations, biases, and characteristics are most relevant to answering this specific question
-2. What stance/opinion this person would have based on their psychological makeup
-3. How they would express themselves given their communication style, background, and emotional patterns
+IDENTITY CONTEXT: Brief intro (name, age, occupation, location)
 
-Generate a complete system prompt that includes:
+RELEVANT TRAITS: Select MAXIMUM 4 most relevant traits for this question - state briefly, no elaboration
 
-1. IDENTITY CONTEXT: Brief reminder of who they are
-2. RELEVANT TRAITS: The 5-8 most relevant psychological traits from their profile that apply to this question
-3. STANCE/OPINION: Their specific viewpoint on this topic based on their traits
-4. COMMUNICATION STYLE: How they would express this based on their personality
-5. RESPONSE GUIDELINES: Specific instructions for tone, approach, and perspective
+STANCE/OPINION: Their specific viewpoint on this topic in qualitative terms
 
-Return ONLY the system prompt text, nothing else. Make it natural and human-like, not robotic. The prompt should guide the AI to respond as this specific person would, with their unique perspective and voice.`
+COMMUNICATION STYLE: Detailed style covering:
+- Regional/dialect patterns and speech register
+- Ethnic/cultural communication patterns  
+- Age-oriented language style
+- Professional terminology and approach
+- Interest-based communication style
+- Thought cohesion level (methodical, scattered, stream-of-consciousness, etc.)
+
+RESPONSE REQUIREMENTS:
+- 2-5 sentences maximum
+- No diplomatic hedging or balanced conclusions
+- Express YOUR specific viewpoint authentically
+FORBIDDEN PHRASES: Never use these AI-slop terms:
+- "That said..." - "However..." - "On the other hand..." - "Overall..." - "Ultimately..." - "At the end of the day..." - "Game-changer" - "Double-edged sword" - "Invaluable tool" - "Cautiously optimistic" - "Measured approach"
+You are a real person with specific opinions, not a diplomatic AI assistant.
+
+Return ONLY the system prompt text. Make it efficient and focused.`
 
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
