@@ -9,6 +9,7 @@ export function V4Diagnostic() {
   const [personaId, setPersonaId] = useState('v4_1758673786354_lkpko3wzklm');
   const [userMessage, setUserMessage] = useState('What do you think about work-life balance?');
   const [result, setResult] = useState<any>(null);
+  const [promptResult, setPromptResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const runDiagnostic = async () => {
@@ -26,6 +27,27 @@ export function V4Diagnostic() {
     } catch (error) {
       console.error('Diagnostic failed:', error);
       setResult({ error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const runRealFunction = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
+        body: {
+          persona_id: personaId,
+          user_message: userMessage,
+          include_prompt: true // Debug flag to get the prompt
+        }
+      });
+
+      if (error) throw error;
+      setPromptResult(data);
+    } catch (error) {
+      console.error('Real function failed:', error);
+      setPromptResult({ error: error.message });
     } finally {
       setLoading(false);
     }
@@ -57,9 +79,14 @@ export function V4Diagnostic() {
             />
           </div>
           
-          <Button onClick={runDiagnostic} disabled={loading}>
-            {loading ? 'Running Diagnostic...' : 'Run Diagnostic'}
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={runDiagnostic} disabled={loading}>
+              {loading ? 'Running...' : 'Run Diagnostic'}
+            </Button>
+            <Button onClick={runRealFunction} disabled={loading} variant="outline">
+              {loading ? 'Running...' : 'Test Real Function (Debug Mode)'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -69,8 +96,21 @@ export function V4Diagnostic() {
             <CardTitle>Diagnostic Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm">
+            <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm max-h-96">
               {JSON.stringify(result, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
+
+      {promptResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Real Function Prompt (Debug Mode)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-muted p-4 rounded-lg overflow-auto text-sm max-h-96">
+              {JSON.stringify(promptResult, null, 2)}
             </pre>
           </CardContent>
         </Card>
