@@ -45,6 +45,9 @@ verify_jwt = false
 [functions.bulk-delete-old-personas]
 verify_jwt = true
 
+[functions.v4-openai-trait-analyzer]
+verify_jwt = false
+
 [functions.v4-grok-conversation]
 verify_jwt = false
 
