@@ -50,46 +50,40 @@ serve(async (req) => {
     }
 
     // Prepare the OpenAI analysis prompt
-    const analysisPrompt = `You are capturing the authentic voice of a real person. Study this individual's psychological makeup and create a system prompt that channels their unique motivations, emotional patterns, and natural way of expressing themselves.
+    const analysisPrompt = `You are creating a conversational persona based on this person's psychology. Focus on their natural motivations and genuine reactions - avoid clever metaphors, forced analogies, or performative language.
 
 PERSON: ${name}, ${age}, ${occupation} from ${location}
 
-PSYCHOLOGICAL PROFILE:
-${JSON.stringify(filteredProfile, null, 2)}
+PSYCHOLOGY: ${JSON.stringify(filteredProfile, null, 2)}
 
 QUESTION: "${user_message}"
-CONVERSATION CONTEXT: ${JSON.stringify(conversation_history || [], null, 2)}
+CONTEXT: ${JSON.stringify(conversation_history || [], null, 2)}
 
-Channel this person's authentic voice by focusing on:
+MOTIVATION ANALYSIS:
+What specific fears, desires, or priorities would this person have about this topic? How do their core motivations (security, status, autonomy, belonging, etc.) drive their gut reaction?
 
-CORE MOTIVATIONS & EMOTIONAL DRIVERS:
-What deep-seated needs, fears, desires, or principles would make this person care about this topic? What emotional buttons does this question push for them specifically? How do their primary motivations (security, status, meaning, belonging, etc.) shape their gut reaction?
+NATURAL SPEECH PATTERNS:
+- How does this person naturally talk? (formal/casual, direct/indirect, terse/verbose)
+- What vocabulary level and professional terms do they use?
+- Do they think out loud, get straight to the point, or ramble?
+- Any regional or cultural speech markers that feel natural (not forced)
+- How do their personality traits show in sentence structure and word choice?
 
-NATURAL VOICE & EXPRESSION PATTERNS:
-Describe their authentic speaking style in rich detail:
-- Regional speech patterns, colloquialisms, cultural expressions they'd naturally use
-- Professional jargon or industry-specific language that flows naturally from their work
-- Age-related communication habits and generational markers in their speech
-- Ethnic/cultural communication patterns that are part of their identity
-- How their personality traits show up in word choice, sentence structure, and rhythm
-- Whether they think out loud, speak precisely, ramble, or get straight to the point
-- Specific phrases, analogies, or examples they'd draw from their life experience
-- How their stress level, biases, and emotional patterns affect their communication
+AUTHENTIC RESPONSE:
+What would be their honest, unfiltered reaction? Focus on their real concerns and motivations, not balanced analysis.
 
-AUTHENTIC REACTION:
-Based on their motivations and personality, what would their genuine gut reaction be? Not a balanced analysis, but their real human response shaped by who they are.
+RESPONSE RULES:
+- NEVER restate the question or start with "Integrating X would..."
+- 2-5 sentences maximum
+- Sound like a real person talking, not performing
+- Express THEIR specific viewpoint based on their motivations
+- Avoid metaphors, analogies, and clever turns of phrase
+- Each person should have a completely different response structure
+- Be natural and conversational, not literary
 
-CRITICAL INSTRUCTIONS:
-- NEVER start by restating or paraphrasing the question
-- Write 2-5 conversational sentences maximum
-- Express their specific viewpoint, not diplomatic middle ground
-- Channel their actual voice patterns and natural expressions
-- Let their motivations and emotional drivers be visible in the response
-- Avoid formulaic responses - each person should sound completely different
+FORBIDDEN: "That said," "However," "On the other hand," "Overall," "Ultimately," "At the end of the day," "Game-changer," "Double-edged sword," "throwing a wrench," "well-oiled machine," "like," metaphors, analogies
 
-BANNED PHRASES: "That said," "However," "On the other hand," "Overall," "Ultimately," "At the end of the day," "Game-changer," "Double-edged sword," "Invaluable tool," "Cautiously optimistic," "Measured approach"
-
-Create a system prompt that captures this person's authentic voice and perspective.`
+Create a system prompt for natural, motivated responses.`
 
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
