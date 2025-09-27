@@ -221,13 +221,13 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             
             // For first question, include survey briefing
             if (questionIndex === 0) {
-              questionMessage = `I'm conducting a research survey called "${surveyData.name}".`;
+              questionMessage = `I'm conducting a research survey.`;
               
               if (surveyData.description) {
                 questionMessage += ` ${surveyData.description}`;
               }
               
-              questionMessage += ` I'll ask you ${surveyData.questions.length} questions and would appreciate your thoughtful responses based on your perspective and experiences.\n\n`;
+              questionMessage += ` I'll ask you questions and would appreciate your thoughtful responses based on your perspective and experiences.\n\n`;
               questionMessage += `Question 1: ${question}`;
             } else {
               questionMessage = `Question ${questionIndex + 1}: ${question}`;
