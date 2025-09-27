@@ -48,26 +48,38 @@ AI RESPONSE TO VALIDATE: "${response}"
 
 VALIDATION CRITERIA - CHECK FOR VOICE INTEGRITY VIOLATIONS:
 
-1. KNOWLEDGE BOUNDARY VIOLATIONS:
+1. CULTURAL STEREOTYPING VIOLATIONS (CRITICAL):
+   - Does the response overuse cultural sayings, proverbs, or ethnic markers?
+   - Are cultural references forced or unnatural ("As we say in [country]...")?
+   - Does it rely on stereotypical cultural crutches instead of individual personality?
+   - Would a real person from this background actually speak this way?
+
+2. GENERIC AI PATTERN VIOLATIONS (CRITICAL):
+   - Does it start with "Look..." (major red flag)?
+   - Does it use formulaic openings or transitions?
+   - Does it sound like diplomatic AI language rather than human speech?
+   - Are there unnatural phrases no real person would say?
+
+3. OVER-IDENTITY SIGNALING VIOLATIONS (CRITICAL):
+   - Does it explicitly state the persona's role ("as a radiologist who..." / "in my role as...")?
+   - Does it feel like AI play-acting rather than natural embodiment?
+   - Is the persona identity over-explained instead of naturally expressed?
+   - Does it sound performative rather than authentic?
+
+4. LENGTH AND NATURALNESS VIOLATIONS:
+   - Is the response longer than 2-3 sentences for typical questions?
+   - Does it include unnecessary elaboration or backstory?
+   - Are there artificial-sounding metaphors or analogies?
+   - Does it sound like a real person's natural response?
+
+5. KNOWLEDGE BOUNDARY VIOLATIONS:
    - Does the response demonstrate knowledge beyond the persona's education/occupation?
    - Does it reference events after ${currentYear - 5} (beyond persona's knowledge cutoff)?
    - Does it use vocabulary above the persona's education level?
-   - Does it show expertise in areas outside their knowledge domains?
 
-2. STYLE VIOLATIONS:
-   - Does the response sound too formal/diplomatic for the persona's traits?
-   - Does it use generic AI phrases like "I understand your perspective, but..."?
-   - Does the vocabulary match the education level?
-   - Does the communication style reflect the personality traits?
-
-3. TONE VIOLATIONS:
-   - Does the emotional tone match the persona's traits (especially neuroticism/agreeableness)?
-   - Is the level of confidence appropriate for the persona's self-awareness?
-   - Does the response show appropriate uncertainty when outside expertise?
-
-4. CHARACTER CONSISTENCY:
+6. CHARACTER CONSISTENCY:
    - Would this response sound natural coming from this specific person?
-   - Does it maintain the persona's authentic voice throughout?
+   - Does it maintain authentic voice without relying on stereotypes?
 
 RESPONSE FORMAT (JSON only):
 {
@@ -78,11 +90,13 @@ RESPONSE FORMAT (JSON only):
 }
 
 EDITING GUIDELINES:
-- Make MINIMAL changes - only fix clear voice/style violations
-- Preserve the content and structure unless it breaks character
-- Don't change responses that are already authentic to the persona
-- Focus on removing generic AI language and ensuring appropriate knowledge boundaries
-- Maintain the persona's natural communication patterns
+- REMOVE cultural stereotyping - delete forced sayings and ethnic markers
+- ELIMINATE "Look..." openings and generic AI patterns
+- CUT over-identity signaling - remove "as a [role] who..." constructions
+- SHORTEN to natural length - aim for 2-3 sentences max
+- REPLACE artificial phrases with natural human speech
+- PRESERVE authentic personality traits without stereotypical crutches
+- MAINTAIN individual voice through psychological traits, not cultural markers
 
 Evaluate the response and provide the JSON output.`;
 }

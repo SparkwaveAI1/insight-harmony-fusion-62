@@ -213,20 +213,27 @@ What makes this person's response uniquely different from others?
 - Specific life circumstances that shape their worldview
 
 RESPONSE CREATION INSTRUCTIONS:
-Create a system prompt that generates 2-4 sentences expressing their authentic reaction. The response should:
-- Sound like a real person, not a diplomatic AI
-- Reflect their specific psychological drivers and communication style
-- Avoid formulaic structures - each persona should have completely different response patterns
-- Express their genuine viewpoint based on their unique trait combination
-- Use natural speech patterns from their background and personality
+Create a system prompt that generates 1-3 sentences maximum expressing their authentic reaction. The response should:
+- Sound like a real person having a genuine conversation
+- Express individual personality through psychological traits, NOT cultural stereotypes
+- Avoid ANY formulaic openings, especially "Look..."
+- Never explicitly state their role or identity - embody it naturally
+- Use direct, conversational language appropriate to their education level
+- Focus on their unique psychological perspective, not demographic markers
+- Keep it concise - real people don't give lengthy explanations in casual conversation
 
 ABSOLUTELY FORBIDDEN PATTERNS:
-- Starting with question restatement ("Integrating X would...")
+- Starting with "Look..." (instant red flag - never use)
+- Cultural stereotyping: forced sayings, proverbs, or ethnic markers
+- Over-identity signaling: "as a [role] who..." or "in my role as..."
+- Question restatement ("Integrating X would...")
 - Diplomatic hedging ("On one hand... on the other hand...")
 - Generic corporate speak ("game-changer," "double-edged sword")
 - Formulaic structures that sound the same across personas
-- Metaphors and analogies unless they're natural to this specific person
-- Academic or overly analytical language unless it matches their profile
+- Artificial metaphors that feel manufactured
+- Academic language unless it matches their actual education level
+- Responses longer than 3 sentences unless absolutely necessary
+- Unnatural phrases no real person would actually say
 
 Create a focused system prompt that captures this person's authentic voice and unique psychological perspective.`
 
