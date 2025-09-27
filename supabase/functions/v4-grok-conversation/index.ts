@@ -104,6 +104,28 @@ serve(async (req) => {
     console.log(`5. GROK RESPONSE RECEIVED`)
     console.log(`✅ PIPELINE COMPLETE - OpenAI→Grok successful`)
 
+    // Log the Grok prompt for monitoring
+    try {
+      await supabase.functions.invoke('log-grok-prompt', {
+        body: {
+          source: 'v4-grok-conversation',
+          persona_id,
+          persona_name: analysisData.persona_name,
+          user_message,
+          system_instructions: analysisData.system_prompt,
+          conversation_history,
+          extra: {
+            grok_model: GROK_MODEL,
+            analysis_model: analysisData.model_used,
+            traits_selected: analysisData.traits_selected
+          }
+        }
+      })
+    } catch (logError) {
+      console.error('Failed to log Grok prompt:', logError)
+      // Don't fail the main request if logging fails
+    }
+
     // Return the Grok response directly (no post-processing)
     return new Response(JSON.stringify({
       success: true,
