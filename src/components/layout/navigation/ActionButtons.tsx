@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Wallet, LogIn, LogOut } from "lucide-react";
+import { Wallet, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -23,7 +23,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   showWalletOptions = false,
   isDarkRoute = false
 }) => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -58,21 +58,8 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         </>
       )}
 
-      {/* Auth buttons - always show these */}
-      {user ? (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={cn(
-            "border-gray-300 text-foreground hover:bg-gray-100",
-            "bg-white/80"
-          )}
-          onClick={() => signOut()}
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Logout
-        </Button>
-      ) : (
+      {/* Auth buttons - show Sign In only when not logged in */}
+      {!user && (
         <Link to="/sign-in">
           <Button 
             size="sm" 

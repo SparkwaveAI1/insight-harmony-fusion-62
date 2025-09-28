@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/drawer";
 import { navigationMenuItems } from "@/components/layout/config/navigationConfig";
 import { Button } from "@/components/ui/button";
-import { X, LogOut, UserRound } from "lucide-react";
+import { X, UserRound } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface MobileDrawerMenuProps {
@@ -21,12 +21,8 @@ interface MobileDrawerMenuProps {
 
 const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   
-  const handleLogout = () => {
-    signOut();
-    onOpenChange(false);
-  };
   
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -62,25 +58,15 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
         </div>
         <DrawerFooter className="border-t border-gray-200 bg-gray-100 pt-4 flex flex-col gap-3">
           {user && (
-            <>
-              <Link to="/profile" onClick={() => onOpenChange(false)} className="w-full">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start gap-3"
-                >
-                  <UserRound className="h-5 w-5" />
-                  <span>Your Profile</span>
-                </Button>
-              </Link>
+            <Link to="/profile" onClick={() => onOpenChange(false)} className="w-full">
               <Button 
                 variant="outline" 
-                className="w-full justify-start gap-3 border-red-200 hover:bg-red-50 text-red-600"
-                onClick={handleLogout}
+                className="w-full justify-start gap-3"
               >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
+                <UserRound className="h-5 w-5" />
+                <span>Your Profile</span>
               </Button>
-            </>
+            </Link>
           )}
           <Link to="/dashboard" onClick={() => onOpenChange(false)} className="w-full">
             <Button variant="default" className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-lg font-bold">
