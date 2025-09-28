@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { checkUserCredits } from '@/utils/creditCheck';
 import { Persona } from '@/services/persona/types';
 import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectById, getProjectDocuments } from '@/services/collections';
@@ -193,6 +194,21 @@ export const useResearchSession = (projectId?: string): UseResearchSessionReturn
     if (!sessionId) {
       toast.error('No active session');
       throw new Error('No active session');
+    }
+
+    // Get current user for credit check
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      toast.error('Authentication required');
+      throw new Error('Authentication required');
+    }
+
+    // Check if user has enough credits for research message
+    const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 2);
+
+    if (!hasEnoughCredits) {
+      toast.error(`Insufficient credits. Need 2 credits to send message, you have ${currentBalance}. Please purchase more credits.`);
+      throw new Error('Insufficient credits');
     }
 
     try {

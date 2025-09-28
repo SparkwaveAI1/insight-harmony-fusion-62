@@ -4,6 +4,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { sendV4Message } from '@/services/v4-persona';
+import { useAuth } from '@/context/AuthContext';
+import { checkUserCredits } from '@/utils/creditCheck';
+import { toast } from 'sonner';
 
 interface PersonaChatProps {
   persona: any; // V4 persona object
@@ -13,6 +16,7 @@ interface PersonaChatProps {
 }
 
 export function PersonaChat({ persona, personaId, title, height = "h-96" }: PersonaChatProps) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Array<{
     role: 'user' | 'assistant' | 'system';
     content: string;
@@ -25,6 +29,22 @@ export function PersonaChat({ persona, personaId, title, height = "h-96" }: Pers
 
   const sendMessage = async () => {
     if (!userMessage.trim()) return;
+
+    // Check if user has enough credits for conversation message
+    if (user) {
+      const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 2);
+
+      if (!hasEnoughCredits) {
+        toast(`Insufficient credits. Need 2 credits to send message, you have ${currentBalance}. Please purchase more credits.`, {
+          description: "Conversation messages require 2 credits.",
+          action: {
+            label: "View Billing",
+            onClick: () => window.location.href = "/billing"
+          }
+        });
+        return; // Stop message sending
+      }
+    }
 
     setIsLoading(true);
     setError('');

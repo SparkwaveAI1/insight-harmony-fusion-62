@@ -12,12 +12,15 @@ import { sendV4Message } from '@/services/v4-persona';
 import { getV4PersonaById } from '@/services/v4-persona';
 import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { checkUserCredits } from '@/utils/creditCheck';
 
 interface PersonaChatInterfaceProps {
   personaId: string;
 }
 
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
+  const { user } = useAuth();
   const [activePersona, setActivePersona] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const messagesRef = useRef<any[]>([]);
@@ -60,7 +63,23 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
   // Ensure hooks are declared before any early returns
   const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {
-    if (!activePersona || isResponding) return;
+    if (!activePersona || isResponding || !message.trim()) return;
+
+    // Check if user has enough credits for conversation message
+    if (user) {
+      const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 2);
+
+      if (!hasEnoughCredits) {
+        toast(`Insufficient credits. Need 2 credits to send message, you have ${currentBalance}. Please purchase more credits.`, {
+          description: "Conversation messages require 2 credits.",
+          action: {
+            label: "View Billing",
+            onClick: () => window.location.href = "/billing"
+          }
+        });
+        return; // Stop message sending
+      }
+    }
     
     try {
       setIsResponding(true);
