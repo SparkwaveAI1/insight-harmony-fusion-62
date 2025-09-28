@@ -108,8 +108,6 @@ const Header = () => {
           <div className="flex items-center gap-2">
             {/* Action Buttons (right side) - Desktop */}
             <div className="hidden md:flex items-center gap-4">
-              {user && <CreditBalance onDark={isDarkRoute && !isScrolled} />}
-              {user && <JobStatusIndicator />}
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -125,19 +123,39 @@ const Header = () => {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuItem className="font-medium">{user.email}</DropdownMenuItem>
+                  <DropdownMenuContent className="w-64 bg-background/95 backdrop-blur-md shadow-lg border" align="end" forceMount>
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-medium">{user.email}</p>
+                    </div>
                     <DropdownMenuSeparator />
+                    
+                    {/* Credits Section */}
+                    <div className="px-3 py-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">Credits</span>
+                        <CreditBalance size="sm" variant="secondary" />
+                      </div>
+                    </div>
+                    
+                    {/* Job Status Section */}
+                    <div className="px-3 py-1">
+                      <JobStatusIndicator />
+                    </div>
+                    
+                    <DropdownMenuSeparator />
+                    
                     <DropdownMenuItem asChild>
                       <Link to="/profile" className="flex items-center">
                         <UserRound className="mr-2 h-4 w-4" />
                         <span>Your Profile</span>
                       </Link>
                     </DropdownMenuItem>
+                    
                     <DropdownMenuSeparator />
+                    
                     <DropdownMenuItem 
                       onClick={() => signOut()}
-                      className="text-red-600 cursor-pointer"
+                      className="text-red-600 focus:text-red-600 cursor-pointer"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
