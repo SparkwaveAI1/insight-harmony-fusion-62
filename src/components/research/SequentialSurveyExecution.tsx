@@ -12,6 +12,8 @@ import { Message } from '@/components/persona-chat/types';
 import { sendV4Message } from '@/services/v4-persona';
 import { updateSurveySessionStatus } from '@/components/research/services/surveySessionService';
 import { SurveyQuestion } from './QuestionUpload';
+import { getStudyCostBreakdown } from '@/utils/surveyBilling';
+import { useAuth } from '@/context/AuthContext';
 
 interface SurveyData {
   name: string;
@@ -61,10 +63,12 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
   onBack
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [personaProgress, setPersonaProgress] = useState<PersonaProgress[]>([]);
   const [currentPersonaIndex, setCurrentPersonaIndex] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [ledgerId, setLedgerId] = useState<string | null>(null);
 
   // Initialize persona progress tracking
   useEffect(() => {
@@ -99,9 +103,45 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
       return;
     }
 
+    if (!user) {
+      toast.error('User authentication required');
+      return;
+    }
+
     console.log('Starting sequential survey execution with isolated conversations...');
     console.log('Using survey session ID:', surveySessionId);
     console.log('Using conversation session ID:', sessionId);
+
+    // Reserve credits for the study
+    const validQuestions = surveyData.questions.filter(q => q.trim());
+    const costBreakdown = getStudyCostBreakdown(validQuestions.length, selectedPersonas.length);
+    
+    console.log(`Reserving ${costBreakdown.requiredCredits} credits for study (${costBreakdown.totalCost} USD)`);
+    
+    try {
+      const { data: reservation, error: reserveError } = await supabase.rpc(
+        'billing_reserve_credits',
+        {
+          p_user_id: user.id,
+          p_action_type: 'insights_survey',
+          p_required_credits: costBreakdown.requiredCredits,
+          p_idempotency_key: `survey_${surveySessionId || sessionId}_${Date.now()}`
+        }
+      );
+
+      if (reserveError) {
+        console.error('Credit reservation failed:', reserveError);
+        toast.error(`Credit reservation failed: ${reserveError.message}`);
+        return;
+      }
+
+      setLedgerId(reservation[0]?.ledger_id);
+      console.log('Credits reserved successfully, ledger ID:', reservation[0]?.ledger_id);
+    } catch (creditError) {
+      console.error('Error reserving credits:', creditError);
+      toast.error('Failed to reserve credits for study');
+      return;
+    }
     
     // Fetch processed research context if available
     let researchContext = null;
@@ -405,6 +445,52 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
       
       console.log(`Sequential survey complete: ${completedCount} completed, ${errorCount} errors`);
       
+      // Finalize credits based on actual usage
+      if (ledgerId && completedCount > 0) {
+        try {
+          // Calculate actual cost based on completed responses
+          const actualCost = getStudyCostBreakdown(validQuestions.length, completedCount);
+          console.log(`Finalizing ${actualCost.requiredCredits} credits for ${completedCount} completed personas`);
+          
+          const { data: usageId, error: finalizeError } = await supabase.rpc(
+            'billing_finalize_credits',
+            {
+              p_ledger_id: ledgerId,
+              p_credits_final: actualCost.requiredCredits,
+              p_usage_metadata: {
+                survey_session_id: surveySessionId,
+                survey_name: surveyData.name,
+                questions_asked: validQuestions.length,
+                personas_completed: completedCount,
+                personas_failed: errorCount,
+                total_responses: completedCount * validQuestions.length,
+                cost_per_response: 0.02
+              }
+            }
+          );
+
+          if (finalizeError) {
+            console.error('Credit finalization failed:', finalizeError);
+            toast.error('Failed to finalize billing, but survey completed');
+          } else {
+            console.log('Credits finalized successfully, usage ID:', usageId);
+            toast.success(`Survey completed! Charged for ${completedCount} personas.`);
+          }
+        } catch (finalizeErr) {
+          console.error('Error finalizing credits:', finalizeErr);
+          toast.error('Billing finalization error, but survey completed');
+        }
+      } else if (ledgerId && completedCount === 0) {
+        // Reverse credits if no personas completed
+        try {
+          await supabase.rpc('billing_reverse_credits', { p_ledger_id: ledgerId });
+          console.log('Credits reversed due to no completed personas');
+          toast.error('Survey failed - no charges applied');
+        } catch (reverseErr) {
+          console.error('Error reversing credits:', reverseErr);
+        }
+      }
+      
       // Auto-generate insights when survey completes
       if (surveySessionId && completedCount > 0) {
         try {
@@ -449,8 +535,21 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
 
     } catch (error) {
       console.error('Error in sequential survey execution:', error);
-      toast.error('Failed to complete sequential survey execution');
       setIsRunning(false);
+      
+      // Reverse credits on survey failure
+      if (ledgerId) {
+        try {
+          await supabase.rpc('billing_reverse_credits', { p_ledger_id: ledgerId });
+          console.log('Credits reversed due to survey failure');
+          toast.error('Survey failed - no charges applied');
+        } catch (reverseErr) {
+          console.error('Error reversing credits:', reverseErr);
+          toast.error(`Survey failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      } else {
+        toast.error(`Survey execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   };
 

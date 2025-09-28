@@ -18,6 +18,9 @@ import DocumentManager from './DocumentManager';
 import { PersonaSourceSelector } from './PersonaSourceSelector';
 import { KnowledgeBaseDocument } from '@/services/collections';
 import { getProjectQuestionSets, saveQuestionSet, ProjectQuestionSet } from '@/services/questionSets/questionSetService';
+import { checkUserCredits } from '@/utils/creditCheck';
+import { getStudyCostBreakdown, formatCurrency } from '@/utils/surveyBilling';
+import { StudyCostDisplay } from './StudyCostDisplay';
 
 interface UnifiedSurveyInterfaceProps {
   onBack?: () => void;
@@ -195,6 +198,28 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
 
     if (selectedPersonas.length > 10) {
       toast.error('Please select no more than 10 personas for surveys');
+      return;
+    }
+
+    // Check if user has enough credits for the study
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      toast.error('Authentication required');
+      return;
+    }
+
+    const validQuestions = surveyData.questions.filter(q => q.trim());
+    const costBreakdown = getStudyCostBreakdown(validQuestions.length, selectedPersonas.length);
+    
+    console.log(`Study cost check: ${validQuestions.length} questions × ${selectedPersonas.length} personas = ${formatCurrency(costBreakdown.totalCost)} (${costBreakdown.requiredCredits} credits)`);
+    
+    const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, costBreakdown.requiredCredits);
+    
+    if (!hasEnoughCredits) {
+      toast.error(
+        `Insufficient credits. Need ${costBreakdown.requiredCredits} credits (${formatCurrency(costBreakdown.totalCost)}) for this study. Current balance: ${currentBalance} credits.`,
+        { duration: 6000 }
+      );
       return;
     }
 
@@ -566,12 +591,19 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
           )}
         </div>
 
-        <PersonaSourceSelector
-          projectId={selectedProjectId || undefined}
-          selectedPersonas={selectedPersonas}
-          onPersonaSelectionChange={handlePersonaSelectionChange}
-          maxPersonas={10}
-        />
+        <div className="space-y-6">
+          <PersonaSourceSelector
+            projectId={selectedProjectId || undefined}
+            selectedPersonas={selectedPersonas}
+            onPersonaSelectionChange={handlePersonaSelectionChange}
+            maxPersonas={10}
+          />
+          
+          <StudyCostDisplay 
+            questionCount={surveyData.questions.filter(q => q.trim()).length}
+            personaCount={selectedPersonas.length}
+          />
+        </div>
       </div>
 
       <div className="flex justify-end">
