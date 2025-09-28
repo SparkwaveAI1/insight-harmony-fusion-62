@@ -125,7 +125,7 @@ export function CreditPackPicker({ open, onOpenChange, onPurchaseComplete }: Cre
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          ${(pack.price / pack.credits * 100).toFixed(1)}¢ per credit
+                          ${(pack.price / pack.credits).toFixed(2)} per credit
                         </div>
                       </div>
                       <div className="text-right">
