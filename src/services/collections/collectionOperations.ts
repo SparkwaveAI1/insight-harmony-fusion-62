@@ -26,49 +26,21 @@ export const getCollectionById = async (id: string): Promise<Collection | null> 
 /**
  * Fetches all collections for the current user (both public and private)
  */
-export const getUserCollections = async (): Promise<Collection[]> => {
-  console.log('🔍 getUserCollections() started');
-  
+export const getUserCollections = async (userIdParam?: string): Promise<Collection[]> => {
   try {
-    console.log('🔍 Calling supabase.auth.getUser()...');
-    const authResponse = await supabase.auth.getUser();
-    console.log('🔍 Auth response:', {
-      data: authResponse.data,
-      error: authResponse.error,
-      userId: authResponse.data.user?.id,
-      hasUser: !!authResponse.data.user
-    });
+    const userId = userIdParam ?? (await supabase.auth.getUser()).data.user?.id;
+    if (!userId) return [];
 
-    const userId = authResponse.data.user?.id;
-    if (!userId) {
-      console.log('🔍 No user ID found, returning empty array');
-      return [];
-    }
-
-    console.log('🔍 Making database query with userId:', userId);
     const { data, error } = await supabase
       .from("collections")
       .select("*")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
-    console.log('🔍 Database query response:', {
-      data: data,
-      dataLength: data?.length,
-      error: error,
-      hasData: !!data
-    });
-
-    if (error) {
-      console.log('🔍 Database error:', error);
-      throw error;
-    }
-    
-    console.log('🔍 getUserCollections() returning:', data?.length || 0, 'collections');
+    if (error) throw error;
     return data || [];
   } catch (error) {
-    console.error("🔍 Error fetching user collections:", error);
-    toast.error("Failed to fetch collections");
+    console.error("Error fetching user collections:", error);
     return [];
   }
 };

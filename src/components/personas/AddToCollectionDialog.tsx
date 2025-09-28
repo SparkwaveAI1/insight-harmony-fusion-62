@@ -15,8 +15,8 @@ import {
   getUserCollections,
   addPersonaToCollection,
   removePersonaFromCollection,
-  isPersonaInCollection,
   createCollection,
+  getCollectionsForPersona,
 } from "@/services/collections";
 
 interface AddToCollectionDialogProps {
@@ -41,34 +41,29 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
 
   const fetchCollections = useCallback(async () => {
     if (!user?.id || authLoading) return; // Exit early if not ready
-    
+
     try {
       setLoading(true);
-      const collectionsData = await getUserCollections();
-      setCollections(collectionsData || []); // Handle null/undefined
-      
-      // Check which collections already contain this persona
-      const selected = new Set<string>();
-      for (const collection of collectionsData || []) {
-        const isInCollection = await isPersonaInCollection(collection.id, personaId);
-        if (isInCollection) {
-          selected.add(collection.id);
-        }
-      }
-      setSelectedCollections(selected);
-      setLoading(false);
+      const [collectionsData, membershipIds] = await Promise.all([
+        getUserCollections(user.id),
+        getCollectionsForPersona(personaId),
+      ]);
+
+      setCollections(collectionsData || []);
+      setSelectedCollections(new Set(membershipIds || []));
     } catch (error) {
       console.error('Error fetching collections:', error);
       setCollections([]);
+    } finally {
       setLoading(false);
     }
   }, [user?.id, authLoading, personaId]);
 
   useEffect(() => {
-    if (open && user?.id && !authLoading && collections.length === 0) {
+    if (open && user?.id && !authLoading) {
       fetchCollections();
     }
-  }, [open, user?.id, authLoading]); // Don't include collections or fetchCollections in dependencies
+  }, [open, user?.id, authLoading, personaId, fetchCollections]);
 
   const handleToggleCollection = async (collectionId: string) => {
     setToggleLoadingId(collectionId);
@@ -202,6 +197,11 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
                 <>
                   <p className="text-muted-foreground">No collections found</p>
                   <p className="text-sm">Create your first collection above</p>
+                  <div className="mt-4">
+                    <Button size="sm" variant="outline" onClick={fetchCollections}>
+                      Retry
+                    </Button>
+                  </div>
                 </>
               )}
             </div>

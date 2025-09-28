@@ -112,6 +112,28 @@ export const isPersonaInCollection = async (
 };
 
 /**
+ * Get collection IDs that contain a given persona
+ */
+export const getCollectionsForPersona = async (personaId: string): Promise<string[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('collection_personas')
+      .select('collection_id')
+      .eq('persona_id', personaId);
+
+    if (error) {
+      console.error('Error getting collections for persona:', error);
+      return [];
+    }
+
+    return (data || []).map((row) => row.collection_id as string);
+  } catch (error) {
+    console.error('Error getting collections for persona:', error);
+    return [];
+  }
+};
+
+/**
  * Get all personas in a collection
  */
 export const getPersonasInCollection = async (collectionId: string) => {
