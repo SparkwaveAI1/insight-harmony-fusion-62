@@ -14,6 +14,8 @@ import MobileDrawerMenu from '@/components/navigation/MobileDrawerMenu';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { checkUserCredits } from '@/utils/creditCheck';
+import { CreditBalance } from '@/components/ui/CreditBalance';
+import { useCreditBalance } from '@/hooks/useCreditBalance';
 
 interface PersonaChatInterfaceProps {
   personaId: string;
@@ -21,6 +23,7 @@ interface PersonaChatInterfaceProps {
 
 const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const { user } = useAuth();
+  const { refreshBalance } = useCreditBalance();
   const [activePersona, setActivePersona] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const messagesRef = useRef<any[]>([]);
@@ -124,6 +127,9 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         };
         
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Refresh credit balance after message
+        refreshBalance();
       } else {
         throw new Error(response.error || 'Failed to get response');
       }
@@ -263,10 +269,16 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
           />
         </ScrollArea>
         
-        <MessageInput
-          onSendMessage={handleSendMessageWithImage}
-          isResponding={isResponding}
-        />
+        <div className="border-t p-3">
+          <div className="flex justify-between items-center mb-2">
+            <CreditBalance size="sm" />
+            <span className="text-xs text-muted-foreground">2 credits per message</span>
+          </div>
+          <MessageInput
+            onSendMessage={handleSendMessageWithImage}
+            isResponding={isResponding}
+          />
+        </div>
       </Card>
       
       

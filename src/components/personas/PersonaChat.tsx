@@ -7,6 +7,8 @@ import { sendV4Message } from '@/services/v4-persona';
 import { useAuth } from '@/context/AuthContext';
 import { checkUserCredits } from '@/utils/creditCheck';
 import { toast } from 'sonner';
+import { CreditBalance } from '@/components/ui/CreditBalance';
+import { useCreditBalance } from '@/hooks/useCreditBalance';
 
 interface PersonaChatProps {
   persona: any; // V4 persona object
@@ -17,6 +19,7 @@ interface PersonaChatProps {
 
 export function PersonaChat({ persona, personaId, title, height = "h-96" }: PersonaChatProps) {
   const { user } = useAuth();
+  const { refreshBalance } = useCreditBalance();
   const [messages, setMessages] = useState<Array<{
     role: 'user' | 'assistant' | 'system';
     content: string;
@@ -79,6 +82,9 @@ export function PersonaChat({ persona, personaId, title, height = "h-96" }: Pers
           traits_used: response.traits_selected
         };
         setMessages(prev => [...prev, personaResponse]);
+        
+        // Refresh credit balance after message
+        refreshBalance();
         
         console.log('V4 conversation successful:', response.persona_name);
         console.log('Traits used:', response.traits_selected);
@@ -159,6 +165,12 @@ export function PersonaChat({ persona, personaId, title, height = "h-96" }: Pers
             rows={3}
             disabled={isLoading}
           />
+        </div>
+
+        {/* Credit Balance */}
+        <div className="flex justify-between items-center">
+          <CreditBalance size="sm" />
+          <span className="text-xs text-muted-foreground">2 credits per message</span>
         </div>
 
         {/* Controls */}

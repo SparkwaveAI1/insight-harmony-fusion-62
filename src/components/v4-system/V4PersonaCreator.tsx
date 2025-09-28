@@ -14,11 +14,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { checkUserCredits } from '@/utils/creditCheck';
+import { CreditBalance } from '@/components/ui/CreditBalance';
+import { useCreditBalance } from '@/hooks/useCreditBalance';
 
 export function V4PersonaCreator() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { refreshBalance } = useCreditBalance();
   const [prompt, setPrompt] = useState('');
   const [generateImage, setGenerateImage] = useState(true);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
@@ -168,6 +171,9 @@ export function V4PersonaCreator() {
         description: `"${unifiedResponse.persona_name}" is ready to chat with.`,
       });
 
+      // Refresh credit balance after creation
+      refreshBalance();
+
     } catch (error) {
       console.error('Error creating V4 persona:', error);
       backgroundJobService.failJob(jobId, error instanceof Error ? error.message : 'Unknown error occurred');
@@ -231,13 +237,19 @@ export function V4PersonaCreator() {
             onSelectionChange={setSelectedCollectionIds}
           />
 
-          <Button
-            onClick={handleCreatePersona}
-            disabled={!!isCreating || !prompt.trim() || !user}
-            className="w-full"
-          >
-            {isCreating ? 'Creating Persona...' : 'Create Persona'}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <CreditBalance />
+              <span className="text-sm text-muted-foreground">3 credits required</span>
+            </div>
+            <Button
+              onClick={handleCreatePersona}
+              disabled={!!isCreating || !prompt.trim() || !user}
+              className="flex-1"
+            >
+              {isCreating ? 'Creating Persona...' : 'Create Persona'}
+            </Button>
+          </div>
 
           {currentJob && (
             <Alert className={currentJob.status === 'failed' ? 'border-red-200 bg-red-50' : 
