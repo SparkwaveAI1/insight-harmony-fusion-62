@@ -13,6 +13,7 @@ import { usePersonaCreationJob } from '@/hooks/useBackgroundPersonaJobs';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { checkUserCredits } from '@/utils/creditCheck';
 
 export function V4PersonaCreator() {
   const { user } = useAuth();
@@ -28,6 +29,20 @@ export function V4PersonaCreator() {
 
   const handleCreatePersona = async () => {
     if (!user || !prompt.trim()) return;
+
+    // Check if user has enough credits for persona creation
+    const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 3);
+
+    if (!hasEnoughCredits) {
+      toast({
+        title: "Insufficient credits",
+        description: `Need 3 credits for persona creation, you have ${currentBalance}. Please purchase more credits.`,
+        variant: "destructive",
+      });
+      return; // Stop persona creation
+    }
+
+    // If we get here, user has enough credits - proceed with normal persona creation
 
     // Create background job
     const job = backgroundJobService.createJob({

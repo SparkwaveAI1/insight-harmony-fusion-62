@@ -9,6 +9,7 @@ import { createV4PersonaUnified } from '@/services/v4-persona/createV4PersonaUni
 import { addPersonaToCollection } from '@/services/collections/collectionsService';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { checkUserCredits } from '@/utils/creditCheck';
 
 interface CreatePersonaInCollectionDialogProps {
   collectionId: string;
@@ -33,6 +34,22 @@ export function CreatePersonaInCollectionDialog({
 
   const handleCreatePersona = async () => {
     if (!prompt.trim() || !user) return;
+
+    // Check if user has enough credits for persona creation
+    const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 3);
+
+    if (!hasEnoughCredits) {
+      toast(`Insufficient credits. Need 3 credits, you have ${currentBalance}. Please purchase more credits.`, {
+        description: "Persona creation requires 3 credits.",
+        action: {
+          label: "View Billing",
+          onClick: () => window.location.href = "/billing"
+        }
+      });
+      return; // Stop persona creation
+    }
+
+    // If we get here, user has enough credits - proceed with normal persona creation
 
     try {
       setStage('creating');

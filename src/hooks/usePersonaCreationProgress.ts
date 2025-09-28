@@ -4,6 +4,7 @@ import { PersonaCreationProgress, CREATION_STEPS, createProgressUpdate } from '@
 import { createV4PersonaUnified } from '@/services/v4-persona/createV4PersonaUnified';
 import { useAuth } from '@/context/AuthContext';
 import { V4Persona } from '@/types/persona-v4';
+import { checkUserCredits } from '@/utils/creditCheck';
 
 export const usePersonaCreationProgress = () => {
   const { user } = useAuth();
@@ -18,6 +19,16 @@ export const usePersonaCreationProgress = () => {
       setProgress(createProgressUpdate(CREATION_STEPS.VALIDATION, true, "You must be logged in to create personas"));
       return null;
     }
+
+    // Check if user has enough credits for persona creation
+    const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 3);
+
+    if (!hasEnoughCredits) {
+      setProgress(createProgressUpdate(CREATION_STEPS.VALIDATION, true, `Insufficient credits. Need 3 credits, you have ${currentBalance}. Please purchase more credits.`));
+      return null;
+    }
+
+    // If we get here, user has enough credits - proceed with normal persona creation
 
     setIsCreating(true);
     setCreatedPersona(null);
