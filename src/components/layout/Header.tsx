@@ -87,7 +87,7 @@ const Header = () => {
                     key={link.title}
                     to={link.href}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 font-medium font-orbitron transition-colors",
+                      "flex items-center gap-2 px-3 py-2 font-medium font-orbitron transition-colors whitespace-nowrap",
                       isScrolled || !isDarkRoute 
                         ? "text-foreground hover:text-primary" 
                         : "text-gray-300 hover:text-white",
@@ -108,7 +108,7 @@ const Header = () => {
           <div className="flex items-center gap-2">
             {/* Action Buttons (right side) - Desktop */}
             <div className="hidden md:flex items-center gap-4">
-              {user && <CreditBalance />}
+              {user && <CreditBalance onDark={isDarkRoute && !isScrolled} />}
               {user && <JobStatusIndicator />}
               {user && (
                 <DropdownMenu>

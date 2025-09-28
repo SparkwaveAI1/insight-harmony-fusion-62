@@ -13,6 +13,7 @@ import { navigationMenuItems } from "@/components/layout/config/navigationConfig
 import { Button } from "@/components/ui/button";
 import { X, LogOut, UserRound } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { CreditBalance } from '@/components/ui/CreditBalance';
 
 interface MobileDrawerMenuProps {
   open: boolean;
@@ -63,6 +64,9 @@ const MobileDrawerMenu = ({ open, onOpenChange }: MobileDrawerMenuProps) => {
         <DrawerFooter className="border-t border-gray-200 bg-gray-100 pt-4 flex flex-col gap-3">
           {user && (
             <>
+              <div className="w-full flex justify-center mb-2">
+                <CreditBalance />
+              </div>
               <Link to="/profile" onClick={() => onOpenChange(false)} className="w-full">
                 <Button 
                   variant="outline" 
