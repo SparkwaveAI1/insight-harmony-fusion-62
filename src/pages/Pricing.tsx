@@ -198,9 +198,13 @@ const Pricing = () => {
               </Reveal>
               
               <Reveal delay={200}>
-                <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
+                <p className="mb-4 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
                   Purchase credits to power your AI persona creation and research simulations. Credits never expire and can be used for any PersonaAI features.
                 </p>
+                <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full text-primary font-medium">
+                  <Zap className="h-4 w-4" />
+                  New users get 200 free credits to get started!
+                </div>
               </Reveal>
             </div>
           </div>
