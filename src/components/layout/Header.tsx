@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, UserRound, LogOut } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "../ui/button";
 import { CreditBalance } from '@/components/ui/CreditBalance';
 import {
@@ -87,7 +87,7 @@ const Header = () => {
                     key={link.title}
                     to={link.href}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 font-medium font-orbitron transition-colors whitespace-nowrap",
+                      "px-3 py-2 font-medium font-orbitron transition-colors whitespace-nowrap",
                       isScrolled || !isDarkRoute 
                         ? "text-foreground hover:text-primary" 
                         : "text-gray-300 hover:text-white",
@@ -96,7 +96,6 @@ const Header = () => {
                         : "text-white")
                     )}
                   >
-                    {link.icon && <link.icon className="w-4 h-4" />}
                     {displayText}
                   </Link>
                 );
@@ -145,17 +144,15 @@ const Header = () => {
                     <DropdownMenuSeparator />
                     
                     <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center">
-                        <UserRound className="mr-2 h-4 w-4" />
+                      <Link to="/profile">
                         <span>Your Profile</span>
                       </Link>
                     </DropdownMenuItem>
                     
                     <DropdownMenuItem 
                       onClick={signOut}
-                      className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
