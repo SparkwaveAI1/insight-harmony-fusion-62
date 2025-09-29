@@ -271,7 +271,7 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
                 )}
                  {/* Description (Character Essence) */}
                  {persona.conversation_summary?.character_description && (
-                   <div className="space-y-1">
+                    <div className="space-y-1 mt-6">
                      <div className="flex items-center justify-between">
                        <span className="text-sm font-medium text-muted-foreground">Description</span>
                        <span className={`text-xs ${getCharacterCount(persona.conversation_summary.character_description, 300)}`}>
