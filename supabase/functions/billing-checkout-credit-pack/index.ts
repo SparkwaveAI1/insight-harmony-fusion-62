@@ -106,7 +106,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      success_url: `${req.headers.get("origin")}/billing/success`,
+      success_url: `${req.headers.get("origin")}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/billing/cancel`,
       client_reference_id: userId,
       metadata: {

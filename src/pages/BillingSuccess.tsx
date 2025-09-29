@@ -19,14 +19,36 @@ const BillingSuccess = () => {
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
-    // Simulate processing time and then refetch billing data
-    const timer = setTimeout(() => {
-      setIsProcessing(false);
-      refetch(); // Refetch to get updated credit balance
-    }, 3000);
+    let pollCount = 0;
+    const maxPolls = 60; // Poll for up to 2 minutes (60 * 2s = 120s)
+    let initialBalance = billingData?.balance || 0;
+    
+    const pollForCredits = () => {
+      pollCount++;
+      
+      refetch().then(() => {
+        // If balance increased or we've polled enough times, stop processing
+        if ((billingData && billingData.balance > initialBalance) || pollCount >= maxPolls) {
+          setIsProcessing(false);
+        } else {
+          // Continue polling every 2 seconds
+          setTimeout(pollForCredits, 2000);
+        }
+      }).catch(() => {
+        // On error, continue polling but cap at maxPolls
+        if (pollCount >= maxPolls) {
+          setIsProcessing(false);
+        } else {
+          setTimeout(pollForCredits, 2000);
+        }
+      });
+    };
 
+    // Start polling after a brief delay
+    const timer = setTimeout(pollForCredits, 1000);
+    
     return () => clearTimeout(timer);
-  }, [refetch]);
+  }, []); // Remove refetch dependency to avoid restart loops
 
   return (
     <SidebarProvider defaultOpen={true}>
