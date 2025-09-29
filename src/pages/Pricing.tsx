@@ -144,6 +144,8 @@ const Pricing = () => {
 
   const handleCheckout = async (packType: string) => {
     try {
+      console.log('Starting checkout for pack type:', packType);
+      
       const { data, error } = await supabase.functions.invoke('billing-checkout-credit-pack', {
         body: { 
           userId: (await supabase.auth.getUser()).data.user?.id,
@@ -151,10 +153,20 @@ const Pricing = () => {
         }
       });
 
+      console.log('Checkout response:', { data, error });
+
       if (error) throw error;
 
       if (data?.url) {
-        window.location.href = data.url; // Navigate to Stripe checkout
+        console.log('Redirecting to Stripe:', data.url);
+        // Use window.open to avoid potential blocking
+        const stripeWindow = window.open(data.url, '_blank');
+        if (!stripeWindow) {
+          // Fallback if popup blocked
+          window.location.href = data.url;
+        }
+      } else {
+        throw new Error('No checkout URL returned');
       }
     } catch (error) {
       console.error('Checkout error:', error);

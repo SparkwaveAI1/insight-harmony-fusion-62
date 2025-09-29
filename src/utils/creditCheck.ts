@@ -6,7 +6,7 @@ export async function checkUserCredits(userId: string, requiredCredits: number) 
       .from('billing_credit_available') 
       .select('available')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('Error checking credits:', error);
