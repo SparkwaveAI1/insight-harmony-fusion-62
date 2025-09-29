@@ -187,9 +187,40 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
           // Get legacy public personas
           const legacyPublicPersonas = await getPersonasForListing();
           
-          // For now, V4 personas are not public, but we could add them here in the future
-          // when V4 personas support public sharing
-          personas = legacyPublicPersonas;
+          // Get public V4 personas
+          const { data: publicV4Data, error: publicV4Error } = await supabase
+            .from('v4_personas')
+            .select('persona_id, name, created_at, updated_at, user_id, is_public')
+            .eq('is_public', true)
+            .order('created_at', { ascending: false });
+          
+          if (publicV4Error) {
+            console.error('Error fetching public V4 personas:', publicV4Error);
+          }
+          
+          const publicV4Personas = (publicV4Data || []).map(v4Persona => ({
+            persona_id: v4Persona.persona_id,
+            name: v4Persona.name,
+            description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
+            user_id: v4Persona.user_id,
+            is_public: true,
+            created_at: v4Persona.created_at || '',
+            updated_at: v4Persona.updated_at || '',
+            metadata: {},
+            trait_profile: {},
+            behavioral_modulation: {},
+            linguistic_profile: {},
+            emotional_triggers: null,
+            preinterview_tags: [],
+            simulation_directives: {},
+            interview_sections: [],
+            prompt: null
+          } as Persona));
+          
+          // Combine both types and sort by creation date
+          personas = [...legacyPublicPersonas, ...publicV4Personas].sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
           break;
       }
       
