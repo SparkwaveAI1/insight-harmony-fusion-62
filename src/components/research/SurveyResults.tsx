@@ -13,7 +13,7 @@ import { PersonaSurveyStatus } from './utils/responseUtils';
 interface SurveyResultsProps {
   surveyName: string;
   surveyDescription?: string;
-  questions: string[];
+  questions: any[]; // Can be string[] or Array<{text: string, images?: string[]}>
   sessionId: string;
   surveySessionId?: string | null;
   loadedPersonas: Persona[];
@@ -103,6 +103,13 @@ interface StoredResponse {
   created_at: string;
 }
 
+// Helper to extract text from question (handles both string and object formats)
+const getQuestionText = (q: any): string => {
+  if (typeof q === 'string') return q;
+  if (q && typeof q === 'object' && q.text) return q.text;
+  return '';
+};
+
 export const SurveyResults: React.FC<SurveyResultsProps> = ({
   surveyName,
   surveyDescription,
@@ -119,6 +126,12 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
   const [personaStatuses, setPersonaStatuses] = useState<PersonaSurveyStatus[]>([]);
   const [compiledInsights, setCompiledInsights] = useState<CompiledInsights | null>(null);
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+  
+  // Normalize questions to always be strings
+  const questionsNormalized = React.useMemo(
+    () => (questions || []).map(getQuestionText),
+    [questions]
+  );
 
   // Load responses from database
   useEffect(() => {
@@ -258,7 +271,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
   };
 
   // Group responses by question
-  const responsesByQuestion = questions.map((questionText, qIndex) => {
+  const responsesByQuestion = questionsNormalized.map((questionText, qIndex) => {
     const questionResponses = responses
       .filter(r => r.question_index === qIndex)
       .map(response => {
@@ -301,7 +314,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
       surveyName,
       surveyDescription,
       timestamp: new Date().toISOString(),
-      questions,
+      questions: questionsNormalized,
       totalResponses: responses.length,
       sessionId: surveySessionId || sessionId,
       responsesByQuestion: responsesByQuestion.map(q => ({
@@ -345,7 +358,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
       <SurveyReportGenerator
         surveyName={surveyName}
         surveyDescription={surveyDescription}
-        questions={questions}
+        questions={questionsNormalized}
         personaStatuses={personaStatuses}
         onBack={() => setShowReport(false)}
       />
@@ -767,7 +780,7 @@ export const SurveyResults: React.FC<SurveyResultsProps> = ({
                     {personaData.personaName}
                   </CardTitle>
                   <CardDescription>
-                    {personaData.responses.length} of {questions.length} questions answered
+                    {personaData.responses.length} of {questionsNormalized.length} questions answered
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
