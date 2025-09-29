@@ -1544,36 +1544,6 @@ export type Database = {
         }
         Relationships: []
       }
-      personas_union: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          is_public: boolean | null
-          name: string | null
-          profile_image_url: string | null
-          source: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          is_public?: boolean | null
-          name?: string | null
-          profile_image_url?: string | null
-          source?: never
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          is_public?: boolean | null
-          name?: string | null
-          profile_image_url?: string | null
-          source?: never
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       v4_personas_public_safe: {
         Row: {
           age: string | null
