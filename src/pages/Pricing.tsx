@@ -24,69 +24,64 @@ type PlanType = {
   contact?: boolean;
 };
 
-const PLANS: Record<string, PlanType> = {
-  starter: {
-    name: "Starter",
-    description: "Perfect for individuals and small teams getting started with AI research.",
+const CREDIT_PACKS: Record<string, PlanType> = {
+  small: {
+    name: "Starter Pack",
+    description: "Perfect for trying out PersonaAI with your first research projects.",
     features: [
-      "5 AI focus groups per month",
-      "1 custom AI persona",
+      "100 credits included",
+      "Create 5-10 AI personas",
+      "Run 10-20 research simulations",
       "Basic analytics dashboard",
       "Email support"
     ],
-    priceMonthly: 29,
-    priceYearly: 290,
-    priceIdMonthly: "price_starter_monthly",
-    priceIdYearly: "price_starter_yearly",
+    priceMonthly: 10,
+    priceYearly: null,
+    priceIdMonthly: "CREDITS_100",
   },
-  pro: {
-    name: "Professional",
-    description: "Ideal for growing businesses and research teams.",
+  medium: {
+    name: "Professional Pack",
+    description: "Ideal for regular researchers and growing teams.",
     features: [
-      "15 AI focus groups per month",
-      "3 custom AI personas",
+      "500 credits included",
+      "Create 25-50 AI personas",
+      "Run 50-100 research simulations", 
       "Advanced analytics dashboard",
       "Priority email support",
-      "API access",
-      "Custom integrations"
+      "Export research data"
     ],
-    priceMonthly: 79,
-    priceYearly: 790,
-    priceIdMonthly: "price_pro_monthly",
-    priceIdYearly: "price_pro_yearly",
+    priceMonthly: 45,
+    priceYearly: null,
+    priceIdMonthly: "CREDITS_500",
     popular: true,
   },
-  enterprise: {
-    name: "Enterprise",
-    description: "Tailored solutions for large teams and organizations.",
+  large: {
+    name: "Enterprise Pack",
+    description: "For teams and organizations running extensive research.",
     features: [
-      "Unlimited AI focus groups",
-      "Unlimited custom AI personas",
+      "1000 credits included",
+      "Create 50-100 AI personas",
+      "Run 100-200 research simulations",
       "Enterprise analytics dashboard",
-      "Dedicated account manager",
-      "Custom API integration",
-      "SSO and advanced security features",
-      "Priority support"
+      "Priority support",
+      "Custom integrations",
+      "Team collaboration tools"
     ],
-    priceMonthly: null,
+    priceMonthly: 80,
     priceYearly: null,
-    contact: true,
+    priceIdMonthly: "CREDITS_1000",
   },
 };
 
 const PricingTier = ({ 
   plan,
-  isYearly,
   onCheckout
 }: { 
   plan: PlanType;
-  isYearly: boolean;
-  onCheckout: (priceId: string) => void;
+  onCheckout: (packType: string) => void;
 }) => {
-  const price = plan.contact ? "Custom" : isYearly ? plan.priceYearly : plan.priceMonthly;
-  const priceId = isYearly ? plan.priceIdYearly : plan.priceIdMonthly;
-  const savings = plan.priceMonthly && plan.priceYearly ? 
-    Math.round(((plan.priceMonthly * 12 - plan.priceYearly) / (plan.priceMonthly * 12)) * 100) : 0;
+  const price = plan.contact ? "Custom" : plan.priceMonthly;
+  const packType = plan.priceIdMonthly;
 
   return (
     <Card className={`p-8 flex flex-col h-full relative ${plan.popular ? 'border-primary border-2' : ''}`}>
@@ -107,12 +102,7 @@ const PricingTier = ({
         ) : (
           <div className="flex items-baseline gap-1">
             <span className="text-3xl font-bold">${price}</span>
-            <span className="text-muted-foreground">/{isYearly ? 'year' : 'month'}</span>
-          </div>
-        )}
-        {isYearly && savings > 0 && (
-          <div className="text-sm text-green-600 font-medium">
-            Save {savings}% annually
+            <span className="text-muted-foreground">one-time</span>
           </div>
         )}
       </div>
@@ -139,10 +129,10 @@ const PricingTier = ({
         <Button 
           className="w-full group" 
           variant={plan.popular ? "primary" : "outline"}
-          onClick={() => priceId && onCheckout(priceId)}
-          disabled={!priceId}
+          onClick={() => packType && onCheckout(packType)}
+          disabled={!packType}
         >
-          Get Started
+          Buy Credits
           <Zap className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       )}
@@ -151,18 +141,20 @@ const PricingTier = ({
 };
 
 const Pricing = () => {
-  const [isYearly, setIsYearly] = useState(false);
 
-  const handleCheckout = async (priceId: string) => {
+  const handleCheckout = async (packType: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('billing-checkout-subscription', {
-        body: { priceId }
+      const { data, error } = await supabase.functions.invoke('billing-checkout-credit-pack', {
+        body: { 
+          userId: (await supabase.auth.getUser()).data.user?.id,
+          packType 
+        }
       });
 
       if (error) throw error;
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        window.location.href = data.url; // Navigate to Stripe checkout
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -187,38 +179,16 @@ const Pricing = () => {
                 </p>
               </Reveal>
               
-              <Reveal delay={100} animation="blur-in">
+              <Reveal>
                 <h1 className="mb-6 text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl font-plasmik text-balance">
-                  Choose the Plan That Works for You
+                  Credit Packs for PersonaAI
                 </h1>
               </Reveal>
               
               <Reveal delay={200}>
                 <p className="mb-10 text-lg text-muted-foreground text-pretty max-w-2xl mx-auto">
-                  From individual researchers to enterprise teams, we have flexible pricing options to scale with your needs.
+                  Purchase credits to power your AI persona creation and research simulations. Credits never expire and can be used for any PersonaAI features.
                 </p>
-              </Reveal>
-
-              {/* Billing Toggle */}
-              <Reveal delay={300}>
-                <div className="flex items-center justify-center gap-4 mb-8">
-                  <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    Monthly
-                  </span>
-                  <Switch
-                    checked={isYearly}
-                    onCheckedChange={setIsYearly}
-                    className="data-[state=checked]:bg-primary"
-                  />
-                  <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    Yearly
-                  </span>
-                  {isYearly && (
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                      Save up to 20%
-                    </span>
-                  )}
-                </div>
               </Reveal>
             </div>
           </div>
@@ -230,24 +200,21 @@ const Pricing = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <Reveal>
                 <PricingTier
-                  plan={PLANS.starter}
-                  isYearly={isYearly}
+                  plan={CREDIT_PACKS.small}
                   onCheckout={handleCheckout}
                 />
               </Reveal>
               
               <Reveal delay={200}>
                 <PricingTier
-                  plan={PLANS.pro}
-                  isYearly={isYearly}
+                  plan={CREDIT_PACKS.medium}
                   onCheckout={handleCheckout}
                 />
               </Reveal>
               
               <Reveal delay={400}>
                 <PricingTier
-                  plan={PLANS.enterprise}
-                  isYearly={isYearly}
+                  plan={CREDIT_PACKS.large}
                   onCheckout={handleCheckout}
                 />
               </Reveal>
@@ -268,29 +235,29 @@ const Pricing = () => {
               <div className="space-y-6">
                 <Reveal>
                   <div className="p-6 bg-background rounded-lg shadow-sm">
-                    <h3 className="text-xl font-bold mb-2">Can I upgrade or downgrade my plan?</h3>
-                    <p className="text-muted-foreground">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
+                    <h3 className="text-xl font-bold mb-2">How do credits work?</h3>
+                    <p className="text-muted-foreground">Credits are used to power AI processing for persona creation and research simulations. Each feature has a clear credit cost, and credits never expire.</p>
                   </div>
                 </Reveal>
                 
                 <Reveal delay={100}>
                   <div className="p-6 bg-background rounded-lg shadow-sm">
-                    <h3 className="text-xl font-bold mb-2">Do you offer a free trial?</h3>
-                    <p className="text-muted-foreground">We offer a 14-day free trial on all our plans. No credit card required to start your trial.</p>
+                    <h3 className="text-xl font-bold mb-2">Can I buy more credits later?</h3>
+                    <p className="text-muted-foreground">Yes! You can purchase additional credit packs at any time. Your credits are cumulative and never expire.</p>
                   </div>
                 </Reveal>
                 
                 <Reveal delay={200}>
                   <div className="p-6 bg-background rounded-lg shadow-sm">
                     <h3 className="text-xl font-bold mb-2">What payment methods do you accept?</h3>
-                    <p className="text-muted-foreground">We accept all major credit cards, PayPal, and for Enterprise customers, we also offer invoicing.</p>
+                    <p className="text-muted-foreground">We accept all major credit cards through Stripe's secure payment processing.</p>
                   </div>
                 </Reveal>
                 
                 <Reveal delay={300}>
                   <div className="p-6 bg-background rounded-lg shadow-sm">
                     <h3 className="text-xl font-bold mb-2">What kind of support is included?</h3>
-                    <p className="text-muted-foreground">Basic plans include email support with a 48-hour response time. Professional plans include priority email support with a 24-hour response time. Enterprise plans include dedicated account management and phone support.</p>
+                    <p className="text-muted-foreground">All credit packs include email support. Larger packs include priority support with faster response times.</p>
                   </div>
                 </Reveal>
               </div>
