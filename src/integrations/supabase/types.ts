@@ -1574,6 +1574,51 @@ export type Database = {
         }
         Relationships: []
       }
+      v4_personas_public_safe: {
+        Row: {
+          age: string | null
+          character_description: string | null
+          conversation_summary: Json | null
+          created_at: string | null
+          is_public: boolean | null
+          location: string | null
+          name: string | null
+          occupation: string | null
+          persona_id: string | null
+          profile_image_url: string | null
+          schema_version: string | null
+          user_id: string | null
+        }
+        Insert: {
+          age?: never
+          character_description?: never
+          conversation_summary?: Json | null
+          created_at?: string | null
+          is_public?: boolean | null
+          location?: never
+          name?: string | null
+          occupation?: never
+          persona_id?: string | null
+          profile_image_url?: string | null
+          schema_version?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age?: never
+          character_description?: never
+          conversation_summary?: Json | null
+          created_at?: string | null
+          is_public?: boolean | null
+          location?: never
+          name?: string | null
+          occupation?: never
+          persona_id?: string | null
+          profile_image_url?: string | null
+          schema_version?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       billing_available_credits: {

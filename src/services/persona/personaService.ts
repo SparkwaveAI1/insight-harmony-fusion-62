@@ -11,24 +11,12 @@ export interface GetPublicV4PersonasOptions {
  */
 export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Promise<V4Persona[]> {
   const { data, error } = await supabase
-    .from('v4_personas')
-    .select('persona_id, name, schema_version, full_profile, created_at, is_public')
-    .eq('is_public', true)
+    .from('v4_personas_public_safe')
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  const rows = data ?? [];
-
-  // Always require schema_version v4*
-  const v4Only = rows.filter(p => p?.schema_version?.startsWith('v4'));
-
-  // Library view: allow personas even if trait_profile is missing
-  if (opts?.allowIncomplete) {
-    return v4Only as unknown as V4Persona[];
-  }
-
-  // Strict mode (kept for other views)
-  return v4Only.filter(p => (p?.full_profile as any)?.trait_profile) as unknown as V4Persona[];
+  return (data ?? []) as unknown as V4Persona[];
 }
 
 /**
@@ -37,9 +25,8 @@ export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Pr
  */
 export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
   const { data, error } = await supabase
-    .from('v4_personas')
-    .select('persona_id, name, schema_version, full_profile, created_at, is_public, profile_image_url, conversation_summary')
-    .eq('is_public', true)
+    .from('v4_personas_public_safe')
+    .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
