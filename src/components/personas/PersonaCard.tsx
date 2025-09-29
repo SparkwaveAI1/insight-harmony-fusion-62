@@ -128,106 +128,109 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
         </Button>
       )}
       
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
-        <div className="flex items-start gap-4 flex-1 min-w-0 pr-4">
-          {/* Profile Photo */}
-          <Avatar className="h-24 w-24 border-2 border-border rounded-lg flex-shrink-0">
-            <AvatarImage 
-              src={persona.profile_image_url} 
-              alt={persona.name}
-              className="object-cover rounded-lg"
-              loading="lazy"
-            />
-            <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg text-lg">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          
-          {/* Name and Owner Badge */}
-          <div className="flex flex-col space-y-2 flex-1 min-w-0">
-            <div className="flex flex-col gap-2">
+      <CardHeader className="flex flex-col space-y-4 pb-4">
+        {/* Top row with avatar, name section, and actions */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            {/* Profile Photo */}
+            <Avatar className="h-20 w-20 border-2 border-border rounded-lg flex-shrink-0">
+              <AvatarImage 
+                src={persona.profile_image_url} 
+                alt={persona.name}
+                className="object-cover rounded-lg"
+                loading="lazy"
+              />
+              <AvatarFallback className="bg-accent text-accent-foreground font-semibold rounded-lg text-lg">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            
+            {/* Name section */}
+            <div className="flex flex-col space-y-2 flex-1 min-w-0">
               <div 
-                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors truncate group-hover:text-primary leading-tight" 
+                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors group-hover:text-primary leading-tight" 
                 onClick={handleViewDetails}
                 title={persona.name}
               >
                 {persona.name}
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-               {isOwner && (
-                  <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                    <UserCheck className="h-3 w-3 mr-1" />
-                    Owner
-                  </Badge>
-                )}
-                {!persona.full_profile?.identity && (
-                  <Badge variant="destructive" className="text-xs px-2 py-0.5">
-                    Incomplete
-                  </Badge>
-                )}
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Clock className="h-3 w-3 mr-1" />
+                <span>Created {new Date(persona.created_at).toLocaleDateString()}</span>
               </div>
             </div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>Created {new Date(persona.created_at).toLocaleDateString()}</span>
-            </div>
+          </div>
+          
+          {/* Right actions - Chat and Menu */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {!hideChat && (
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/persona-detail/${persona.persona_id}/chat`);
+                }}
+                size="sm"
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <MessageCircle className="mr-1 h-4 w-4" />
+                Chat
+              </Button>
+            )}
+            
+            {/* Actions dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 opacity-70 hover:opacity-100 transition-opacity">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-popover border shadow-md z-50">
+                <DropdownMenuItem onClick={handleViewDetails}>
+                  View Details
+                </DropdownMenuItem>
+                {isOwner && (
+                  <>
+                    <DropdownMenuItem onClick={handleVisibilityChange}>
+                      {currentIsPublic ? (
+                        <>
+                          <EyeOff className="mr-2 h-4 w-4" />
+                          Make Private
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Make Public
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                    {!hideChat && (
+                      <DropdownMenuItem asChild>
+                        <Link to={`/persona-detail/${persona.persona_id}/chat`}>
+                          Chat with Persona
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         
-        {/* Upper right actions */}
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          {!hideChat && (
-            <Button 
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/persona-detail/${persona.persona_id}/chat`);
-              }}
-              size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap"
-            >
-              <MessageCircle className="mr-1 h-4 w-4" />
-              Chat
-            </Button>
+        {/* Badges row */}
+        <div className="flex items-center gap-2 flex-wrap px-2">
+          {isOwner && (
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
+              <UserCheck className="h-3 w-3 mr-1" />
+              Owner
+            </Badge>
           )}
-          
-          {/* Actions dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover border shadow-md z-50">
-            <DropdownMenuItem onClick={handleViewDetails}>
-              View Details
-            </DropdownMenuItem>
-            {isOwner && (
-              <>
-                <DropdownMenuItem onClick={handleVisibilityChange}>
-                  {currentIsPublic ? (
-                    <>
-                      <EyeOff className="mr-2 h-4 w-4" />
-                      Make Private
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Make Public
-                    </>
-                  )}
-                </DropdownMenuItem>
-                {!hideChat && (
-                  <DropdownMenuItem asChild>
-                    <Link to={`/persona-detail/${persona.persona_id}/chat`}>
-                      Chat with Persona
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {!persona.full_profile?.identity && (
+            <Badge variant="destructive" className="text-xs px-2 py-0.5">
+              Incomplete
+            </Badge>
+          )}
         </div>
       </CardHeader>
       
