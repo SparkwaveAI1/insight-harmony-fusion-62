@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import Logo from "../ui-custom/Logo";
 import { useWeb3Wallet } from "@/hooks/useWeb3Wallet";
 import ActionButtons from "./navigation/ActionButtons";
-import { Menu, X, UserRound } from "lucide-react";
+import { Menu, X, UserRound, LogOut } from "lucide-react";
 import { Button } from "../ui/button";
 import { CreditBalance } from '@/components/ui/CreditBalance';
 import {
@@ -26,7 +26,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { isWalletConnected, connectWallet, disconnectWallet } = useWeb3Wallet();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   // We'll only show the wallet options on the ecosystem page, not the prsna page
   const isEarnPage = location.pathname === "/prsna-ecosystem";
   
@@ -149,6 +149,14 @@ const Header = () => {
                         <UserRound className="mr-2 h-4 w-4" />
                         <span>Your Profile</span>
                       </Link>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem 
+                      onClick={signOut}
+                      className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
