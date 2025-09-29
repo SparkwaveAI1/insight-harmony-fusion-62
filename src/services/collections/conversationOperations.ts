@@ -45,13 +45,22 @@ export const getConversationMessages = async (conversationId: string): Promise<C
 /**
  * Fetches all conversations for a specific project
  */
-export const getProjectConversations = async (projectId: string): Promise<Conversation[]> => {
+export const getProjectConversations = async (
+  projectId: string,
+  sessionType?: string
+): Promise<Conversation[]> => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("conversations")
       .select("*")
-      .eq("project_id", projectId)
-      .order("updated_at", { ascending: false });
+      .eq("project_id", projectId);
+    
+    // Apply session_type filter if provided
+    if (sessionType) {
+      query = query.eq("session_type", sessionType);
+    }
+    
+    const { data, error } = await query.order("updated_at", { ascending: false });
 
     if (error) throw error;
     return data as Conversation[] || [];

@@ -49,7 +49,7 @@ const ProjectDetail = () => {
       
       const [projectData, conversationData, researchData] = await Promise.all([
         getProjectById(projectId),
-        getProjectConversations(projectId),
+        getProjectConversations(projectId, 'chat'),
         getProjectResearchSessions(projectId)
       ]);
       
