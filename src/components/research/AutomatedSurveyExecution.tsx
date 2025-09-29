@@ -9,6 +9,11 @@ import { Persona } from '@/services/persona/types';
 import { PersonaSurveyStatus, SurveyResponse, parsePersonaResponse, formatSurveyResultsForExport } from './utils/responseUtils';
 import { processPersonasInParallel, ProcessingProgress } from './utils/parallelProcessing';
 
+// Helper to extract question text (handles both old string format and new object format)
+const getQuestionText = (question: string | {text: string, images?: string[]}): string => {
+  return typeof question === 'string' ? question : question.text;
+};
+
 interface SurveyData {
   name: string;
   description?: string;
@@ -83,7 +88,7 @@ export const AutomatedSurveyExecution: React.FC<AutomatedSurveyExecutionProps> =
     
     message += `SURVEY QUESTIONS:\n`;
     surveyData.questions.forEach((question, index) => {
-      message += `${index + 1}. ${question}\n\n`;
+      message += `${index + 1}. ${getQuestionText(question)}\n\n`;
     });
 
     message += `RESPONSE FORMAT:\nPlease structure your response as follows:
@@ -211,7 +216,7 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
               personaId: result.personaId,
               personaName: persona?.name || `Persona ${result.personaId.slice(-4)}`,
               questionIndex: i,
-              questionText: surveyData.questions[i],
+              questionText: getQuestionText(surveyData.questions[i]),
               responseText: parsedAnswers[i] || `[No response found for question ${i + 1}]`,
               timestamp: new Date()
             };
@@ -222,7 +227,7 @@ Please ensure each answer is complete and reflects your persona's perspective.`;
             await storeSurveyResponse(
               result.personaId,
               i,
-              surveyData.questions[i],
+              getQuestionText(surveyData.questions[i]),
               parsedAnswers[i] || `[No response found for question ${i + 1}]`
             );
           }

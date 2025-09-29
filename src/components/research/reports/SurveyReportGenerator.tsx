@@ -11,6 +11,11 @@ import { QuestionAnalysis } from './QuestionAnalysis';
 import { PersonaInsights } from './PersonaInsights';
 import { ReportExport } from './ReportExport';
 
+// Helper to extract question text (handles both old string format and new object format)
+const getQuestionText = (question: string | {text: string, images?: string[]}): string => {
+  return typeof question === 'string' ? question : question.text;
+};
+
 interface SurveyReportGeneratorProps {
   surveyName: string;
   surveyDescription?: string;
@@ -165,7 +170,7 @@ Provide key insights as a JSON array of strings, focusing on the most important 
 
       // Generate themes using AI
       const responsesText = questionResponses.map(r => r.responseText).join('\n---\n');
-      const themesPrompt = `Analyze these responses to the question "${questions[i]}" and identify the main themes:
+      const themesPrompt = `Analyze these responses to the question "${getQuestionText(questions[i])}" and identify the main themes:
 
 ${responsesText.substring(0, 3000)}
 
@@ -196,7 +201,7 @@ Return themes as a JSON array of 3-5 short theme descriptions.`;
 
       analyses.push({
         questionIndex: i,
-        questionText: questions[i],
+        questionText: getQuestionText(questions[i]),
         themes,
         notableQuotes,
         sentimentDistribution: { positive: 40, neutral: 35, negative: 25 }, // Simplified

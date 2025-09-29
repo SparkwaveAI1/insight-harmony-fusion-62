@@ -15,6 +15,11 @@ import { SurveyQuestion } from './QuestionUpload';
 import { getStudyCostBreakdown } from '@/utils/surveyBilling';
 import { useAuth } from '@/context/AuthContext';
 
+// Helper to extract question text (handles both old string format and new object format)
+const getQuestionText = (question: string | {text: string, images?: string[]}): string => {
+  return typeof question === 'string' ? question : question.text;
+};
+
 interface SurveyData {
   name: string;
   description?: string;
@@ -257,7 +262,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             ));
 
             // Create conversational question message
-            let questionMessage = question;
+            let questionMessage = getQuestionText(question);
             
             // For first question, include survey briefing
             if (questionIndex === 0) {
@@ -268,9 +273,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               }
               
               questionMessage += ` I'll ask you questions and would appreciate your thoughtful responses based on your perspective and experiences.\n\n`;
-              questionMessage += `Question 1: ${question}`;
+              questionMessage += `Question 1: ${getQuestionText(question)}`;
             } else {
-              questionMessage = `Question ${questionIndex + 1}: ${question}`;
+              questionMessage = `Question ${questionIndex + 1}: ${getQuestionText(question)}`;
             }
 
             // Add image context if present (handle both single and multiple images)
@@ -368,7 +373,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             // Store the response
             const responseData = {
               questionIndex,
-              questionText: question,
+              questionText: getQuestionText(question),
               responseText: response,
               timestamp: new Date()
             };
@@ -394,7 +399,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                     session_id: sessionIdToUse,
                     persona_id: currentPersona.personaId,
                     question_index: questionIndex,
-                    question_text: question,
+                    question_text: getQuestionText(question),
                     response_text: response
                   });
                 
@@ -647,7 +652,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                      
                      {persona.status === 'in-progress' && (
                        <div className="text-xs text-blue-600">
-                         Question {persona.currentQuestionIndex + 1}: {surveyData.questions[persona.currentQuestionIndex]?.substring(0, 50)}...
+                         Question {persona.currentQuestionIndex + 1}: {getQuestionText(surveyData.questions[persona.currentQuestionIndex])?.substring(0, 50)}...
                        </div>
                      )}
                     

@@ -10,6 +10,11 @@ import { Label } from '@/components/ui/label';
 import { uploadKnowledgeBaseDocument } from '@/services/collections';
 import { toast } from 'sonner';
 
+// Helper to extract question text (handles both old string format and new object format)
+const getQuestionText = (question: string | {text: string, images?: string[]}): string => {
+  return typeof question === 'string' ? question : question.text;
+};
+
 interface SurveyData {
   name: string;
   description?: string;
@@ -87,7 +92,7 @@ export const ResearchSurveyExecution: React.FC<SurveyExecutionProps> = ({
     
     try {
       // Send first question to all personas
-      const firstQuestion = surveyData.questions[0];
+      const firstQuestion = getQuestionText(surveyData.questions[0]);
       await sendMessage(`Survey Question ${currentQuestionIndex + 1}/${totalQuestions}: ${firstQuestion}`);
       
       // Give personas time to respond, then collect responses
@@ -141,7 +146,7 @@ export const ResearchSurveyExecution: React.FC<SurveyExecutionProps> = ({
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
       
-      const nextQuestion = surveyData.questions[nextIndex];
+      const nextQuestion = getQuestionText(surveyData.questions[nextIndex]);
       await sendMessage(`Survey Question ${nextIndex + 1}/${totalQuestions}: ${nextQuestion}`);
       
       setTimeout(() => {
@@ -298,7 +303,7 @@ export const ResearchSurveyExecution: React.FC<SurveyExecutionProps> = ({
               
               <div className="p-4 bg-muted rounded-lg">
                 <p className="font-medium text-sm mb-2">Question:</p>
-                <p>{surveyData.questions[currentQuestionIndex]}</p>
+                <p>{getQuestionText(surveyData.questions[currentQuestionIndex])}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
