@@ -69,6 +69,34 @@ serve(async (req) => {
 
     console.log('Successfully granted 200 signup credits to user:', userId);
 
+    // Create admin alert for new user signup
+    try {
+      const { data: userData } = await supabase.auth.admin.getUserById(userId);
+      
+      if (userData?.user?.email) {
+        await supabase
+          .from('admin_alerts')
+          .insert({
+            type: 'user_signup',
+            severity: 'low',
+            message: `New user signed up: ${userData.user.email}`,
+            user_id: userId,
+            user_email: userData.user.email,
+            status: 'active',
+            metadata: {
+              credits_granted: 200,
+              signup_date: new Date().toISOString(),
+              signup_bonus_ledger_id: creditEntry.ledger_id
+            }
+          });
+        
+        console.log('✅ Admin alert created for new user signup:', userData.user.email);
+      }
+    } catch (alertError) {
+      // Don't let alert creation failure affect signup
+      console.error('⚠️ Failed to create admin alert (non-critical):', alertError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
