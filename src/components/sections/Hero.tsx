@@ -117,8 +117,8 @@ const Hero = () => {
           
           <Reveal delay={250}>
             <div className="mb-8">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm border border-blue-400/30 px-6 py-3 rounded-full text-white font-semibold shadow-lg">
-                <Zap className="h-4 w-4 text-yellow-400" />
+              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 px-8 py-4 rounded-full text-white text-lg font-bold shadow-2xl shadow-yellow-500/50 animate-pulse">
+                <Zap className="h-6 w-6 text-white fill-white" />
                 New users get 200 free credits to get started!
               </div>
             </div>
