@@ -1727,6 +1727,10 @@ export type Database = {
           user_id: string
         }
       }
+      normalize_question: {
+        Args: { q: Json }
+        Returns: Json
+      }
       pop_next_persona_queue: {
         Args: Record<PropertyKey, never>
         Returns: {
