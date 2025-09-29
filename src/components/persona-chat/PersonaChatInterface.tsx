@@ -34,6 +34,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const inFlightRef = useRef(false); // Prevents race condition double-sends
 
   // Load V4 persona directly
   useEffect(() => {
@@ -67,12 +68,17 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
   // Ensure hooks are declared before any early returns
   const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {
     if (!activePersona || isResponding || !message.trim()) return;
+    
+    // Prevent race condition: if already in-flight, bail immediately
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
 
     // Check if user has enough credits for conversation message
     if (user) {
       const { hasEnoughCredits, currentBalance } = await checkUserCredits(user.id, 2);
 
       if (!hasEnoughCredits) {
+        inFlightRef.current = false; // Reset on early exit
         toast(`Insufficient credits. Need 2 credits to send message, you have ${currentBalance}. Please purchase more credits.`, {
           description: "Conversation messages require 2 credits.",
           action: {
@@ -139,6 +145,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
       toast.error(`Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setMessages(prev => prev.slice(0, -1));
     } finally {
+      inFlightRef.current = false; // Always reset guard
       setIsResponding(false);
     }
   }, [activePersona, isResponding, personaId]);
