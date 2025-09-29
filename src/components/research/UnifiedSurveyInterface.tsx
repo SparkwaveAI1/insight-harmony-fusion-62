@@ -160,7 +160,10 @@ const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack 
         .insert({
           name: surveyData.name.trim(),
           description: surveyData.description.trim() || null,
-          questions: surveyData.questions.filter(q => q.trim()),
+          questions: surveyData.surveyQuestions?.map(q => ({
+            text: q.text,
+            images: q.images || []
+          })).filter(q => q.text.trim()) || surveyData.questions.filter(q => q.trim()),
           project_id: actualProjectId,
           user_id: user.id,
           status: 'active'
