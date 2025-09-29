@@ -309,6 +309,54 @@ const ProjectDetail = () => {
                   <div className="space-y-6">
                     <ProjectKnowledgeBase projectId={project.id} />
 
+                    {/* Research Reports */}
+                    <Card className="mb-6">
+                      <CardHeader>
+                        <CardTitle className="flex items-center space-x-2">
+                          <FileText className="h-5 w-5" />
+                          <span>Research Reports</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {researchSessions.length === 0 ? (
+                          <div className="text-center py-8">
+                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <h3 className="text-lg font-medium mb-2">No research reports yet</h3>
+                            <p className="text-muted-foreground mb-4">
+                              Launch Insights Engine to generate research reports
+                            </p>
+                            <Link to="/research">
+                              <Button className="flex items-center space-x-2">
+                                <Play className="h-4 w-4" />
+                                <span>Launch Insights Engine</span>
+                              </Button>
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {researchSessions.slice(0, 5).map((session) => (
+                              <div key={session.id} className="flex items-center justify-between p-3 rounded-lg border">
+                                <div className="flex-1">
+                                  <h4 className="font-medium">{session.survey_name || 'Research Survey'}</h4>
+                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
+                                    <span>{formatDate(session.created_at)}</span>
+                                    <Badge className={getStatusColor(session.status)}>
+                                      {session.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                                <Link to={`/research-results/${session.id}`}>
+                                  <Button variant="outline" size="sm">
+                                    View Report
+                                  </Button>
+                                </Link>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
                     {/* 1-on-1 Conversations */}
                     <Card className="mb-6">
                       <CardHeader>
@@ -360,55 +408,6 @@ const ProjectDetail = () => {
                                 <Link to={`/conversations/${conversation.id}`}>
                                   <Button variant="outline" size="sm">
                                     View
-                                  </Button>
-                                </Link>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    {/* Research Reports */}
-                    <Card className="mb-6">
-                      <CardHeader>
-                        <CardTitle className="flex items-center space-x-2">
-                          <FileText className="h-5 w-5" />
-                          <span>Research Reports</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {researchSessions.length === 0 ? (
-                          <div className="text-center py-8">
-                            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-lg font-medium mb-2">No research reports yet</h3>
-                            <p className="text-muted-foreground mb-4">
-                              Launch Insights Engine to generate research reports
-                            </p>
-                            <Link to="/research">
-                              <Button className="flex items-center space-x-2">
-                                <Play className="h-4 w-4" />
-                                <span>Launch Insights Engine</span>
-                              </Button>
-                            </Link>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {researchSessions.slice(0, 5).map((session) => (
-                              <div key={session.id} className="flex items-center justify-between p-3 rounded-lg border">
-                                <div className="flex-1">
-                                  <h4 className="font-medium">{session.survey_name || 'Research Survey'}</h4>
-                                  <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                                    <span>{formatDate(session.updated_at)}</span>
-                                    <span>{session.selected_personas.length} personas</span>
-                                    <Badge className={`text-xs ${getStatusColor(session.status)}`}>
-                                      {session.status}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <Link to={`/research/results/${session.id}`}>
-                                  <Button variant="outline" size="sm">
-                                    View Results
                                   </Button>
                                 </Link>
                               </div>
