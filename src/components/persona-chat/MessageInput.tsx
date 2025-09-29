@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Send, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
 interface MessageInputProps {
@@ -74,19 +75,13 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, isResponding
         )}
         
         <form onSubmit={handleSubmit} className="flex gap-2" style={{ width: '100%' }}>
-          <input
-            type="text"
+          <Textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e as any);
-              }
-            }}
             placeholder={selectedImage ? "Add a message with your image..." : "Type your message..."}
-            className="flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 resize-none"
             disabled={isResponding}
+            rows={3}
           />
           
           <Button
