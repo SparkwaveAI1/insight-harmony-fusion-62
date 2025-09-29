@@ -315,6 +315,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 const v4Response = await sendV4Message({
                   persona_id: persona.persona_id,
                   user_message: finalQuestionMessage,
+                  imageData: typeof imagesToSend === 'string' ? imagesToSend : imagesToSend?.[0],
                   conversation_history: conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content
@@ -334,6 +335,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 const retryResponse = await sendV4Message({
                   persona_id: persona.persona_id,
                   user_message: finalQuestionMessage,
+                  imageData: typeof imagesToSend === 'string' ? imagesToSend : imagesToSend?.[0],
                   conversation_history: conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content
