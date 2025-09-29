@@ -182,7 +182,11 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
       }, 30000); // Every 30 seconds
       
       for (let questionIndex = 0; questionIndex < questions.length; questionIndex++) {
-        const question = questions[questionIndex];
+        // Normalize question to handle both string and object formats
+        const rawQuestion = questions[questionIndex];
+        const question = typeof rawQuestion === 'string' 
+          ? { text: rawQuestion } 
+          : rawQuestion;
         
         // Check if response already exists (for recovery)
         const { data: existingResponse } = await supabase
@@ -211,7 +215,8 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
             const response = await supabase.functions.invoke('v4-grok-conversation', {
               body: {
                 persona_id: personaId,
-                user_message: question.text
+                user_message: question.text,
+                imageData: question.image?.data || question.image?.url
               }
             });
 
