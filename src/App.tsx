@@ -12,6 +12,8 @@ import PersonaChat from "./pages/PersonaChat";
 import PersonaProfile from "./pages/PersonaProfile";
 import Dashboard from "./pages/Dashboard";
 import Billing from "./pages/Billing";
+import BillingSuccess from "./pages/BillingSuccess";
+import BillingCancel from "./pages/BillingCancel";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import ConversationDetail from "./pages/ConversationDetail";
@@ -128,6 +130,8 @@ function App() {
                 {/* Protected Routes - Require authentication */}
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
+                <Route path="/billing/success" element={<ProtectedRoute><BillingSuccess /></ProtectedRoute>} />
+                <Route path="/billing/cancel" element={<ProtectedRoute><BillingCancel /></ProtectedRoute>} />
                 <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
                 <Route path="/persona-library" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
                 <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
