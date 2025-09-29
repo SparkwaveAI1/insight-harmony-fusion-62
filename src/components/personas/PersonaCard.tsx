@@ -129,9 +129,9 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
       )}
       
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-4">
-        <div className="flex items-start gap-4 flex-1 min-w-0">
+        <div className="flex items-start gap-4 flex-1 min-w-0 pr-4">
           {/* Profile Photo */}
-          <Avatar className="h-24 w-24 border-2 border-border rounded-lg">
+          <Avatar className="h-24 w-24 border-2 border-border rounded-lg flex-shrink-0">
             <AvatarImage 
               src={persona.profile_image_url} 
               alt={persona.name}
@@ -145,25 +145,27 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
           
           {/* Name and Owner Badge */}
           <div className="flex flex-col space-y-2 flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-col gap-2">
               <div 
-                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors truncate group-hover:text-primary" 
+                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors truncate group-hover:text-primary leading-tight" 
                 onClick={handleViewDetails}
                 title={persona.name}
               >
                 {persona.name}
               </div>
+              <div className="flex items-center gap-2 flex-wrap">
                {isOwner && (
-                 <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
-                   <UserCheck className="h-3 w-3 mr-1" />
-                   Owner
-                 </Badge>
-               )}
-               {!persona.full_profile?.identity && (
-                 <Badge variant="destructive" className="text-xs px-2 py-0.5">
-                   Incomplete
-                 </Badge>
-               )}
+                  <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400">
+                    <UserCheck className="h-3 w-3 mr-1" />
+                    Owner
+                  </Badge>
+                )}
+                {!persona.full_profile?.identity && (
+                  <Badge variant="destructive" className="text-xs px-2 py-0.5">
+                    Incomplete
+                  </Badge>
+                )}
+              </div>
             </div>
             <div className="flex items-center text-xs text-muted-foreground">
               <Clock className="h-3 w-3 mr-1" />
@@ -173,7 +175,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
         </div>
         
         {/* Upper right actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-2 flex-shrink-0">
           {!hideChat && (
             <Button 
               onClick={(e) => {
@@ -181,7 +183,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
                 navigate(`/persona-detail/${persona.persona_id}/chat`);
               }}
               size="sm"
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap"
             >
               <MessageCircle className="mr-1 h-4 w-4" />
               Chat
