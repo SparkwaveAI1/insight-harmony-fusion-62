@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Users, Beaker, Search, LogIn, CreditCard } from "lucide-react";
+import { Users, Beaker, Search, LogIn, CreditCard, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import Button from "../ui-custom/Button";
 import Reveal from "../ui-custom/Reveal";
@@ -113,6 +113,15 @@ const Hero = () => {
               Behaviorally rich AI personas for research, testing, and decision forecasting. 
               From real interviews to strategic simulations, PersonaAI lets you model human thinking for research and insight.
             </p>
+          </Reveal>
+          
+          <Reveal delay={250}>
+            <div className="mb-8">
+              <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full text-primary font-medium">
+                <Zap className="h-4 w-4" />
+                New users get 200 free credits to get started!
+              </div>
+            </div>
           </Reveal>
           
           <Reveal delay={300}>
