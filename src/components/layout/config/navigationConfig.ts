@@ -21,11 +21,6 @@ export const navigationMenuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Billing",
-    url: "/dashboard/billing",
-    icon: CreditCard,
-  },
-  {
     title: "Persona Library",
     url: "/persona-library",
     icon: Users,
@@ -59,6 +54,11 @@ export const navigationMenuItems = [
     title: "PRSNA Token",
     url: "/prsna",
     icon: Coins,
+  },
+  {
+    title: "Billing",
+    url: "/dashboard/billing",
+    icon: CreditCard,
   },
 ];
 
