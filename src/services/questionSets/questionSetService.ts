@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+import { FlexibleQuestionArray, toLegacyQuestions } from '@/types/question';
+
 export interface ProjectQuestionSet {
   id: string;
   project_id: string;
@@ -12,6 +14,8 @@ export interface ProjectQuestionSet {
   status: string;
   created_at: string;
   updated_at: string;
+  // Support for new question format
+  flexibleQuestions?: FlexibleQuestionArray;
 }
 
 export const saveQuestionSet = async (

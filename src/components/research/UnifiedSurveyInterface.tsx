@@ -17,6 +17,7 @@ import ProjectSelector from './ProjectSelector';
 import DocumentManager from './DocumentManager';
 import { PersonaSourceSelector } from './PersonaSourceSelector';
 import { KnowledgeBaseDocument } from '@/services/collections';
+import { FlexibleQuestionArray, normalizeQuestions, toLegacyQuestions } from '@/types/question';
 import { getProjectQuestionSets, saveQuestionSet, ProjectQuestionSet } from '@/services/questionSets/questionSetService';
 import { checkUserCredits } from '@/utils/creditCheck';
 import { getStudyCostBreakdown, formatCurrency } from '@/utils/surveyBilling';
@@ -32,6 +33,8 @@ interface SurveyData {
   description: string;
   questions: string[];
   surveyQuestions?: SurveyQuestion[];
+  // New flexible questions format (supports both string and object)
+  flexibleQuestions?: FlexibleQuestionArray;
 }
 
 const UnifiedSurveyInterface: React.FC<UnifiedSurveyInterfaceProps> = ({ onBack }) => {
