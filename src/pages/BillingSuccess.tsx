@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -18,36 +18,57 @@ const BillingSuccess = () => {
   
   const sessionId = searchParams.get('session_id');
 
+  const initialBalanceRef = useRef<number>(0);
+  
   useEffect(() => {
     let pollCount = 0;
     const maxPolls = 60; // Poll for up to 2 minutes (60 * 2s = 120s)
-    let initialBalance = billingData?.balance || 0;
     
-    const pollForCredits = () => {
-      pollCount++;
-      
-      refetch().then(() => {
+    const pollForCredits = async () => {
+      try {
+        pollCount++;
+        
+        // Get fresh data from the hook
+        const freshData = await refetch();
+        const currentBalance = freshData?.balance || 0;
+        
+        console.log(`Poll ${pollCount}: Initial balance: ${initialBalanceRef.current}, Current balance: ${currentBalance}`);
+        
         // If balance increased or we've polled enough times, stop processing
-        if ((billingData && billingData.balance > initialBalance) || pollCount >= maxPolls) {
+        if (currentBalance > initialBalanceRef.current || pollCount >= maxPolls) {
+          console.log('Credits processed successfully, stopping polling');
           setIsProcessing(false);
         } else {
           // Continue polling every 2 seconds
           setTimeout(pollForCredits, 2000);
         }
-      }).catch(() => {
+      } catch (error) {
+        console.error('Polling error:', error);
         // On error, continue polling but cap at maxPolls
         if (pollCount >= maxPolls) {
           setIsProcessing(false);
         } else {
           setTimeout(pollForCredits, 2000);
         }
-      });
+      }
     };
 
-    // Start polling after a brief delay
-    const timer = setTimeout(pollForCredits, 1000);
-    
-    return () => clearTimeout(timer);
+    // Initialize baseline balance and start polling
+    const initializePolling = async () => {
+      try {
+        const initialData = await refetch();
+        initialBalanceRef.current = initialData?.balance || 0;
+        console.log('Starting polling with initial balance:', initialBalanceRef.current);
+        
+        // Start polling after a brief delay
+        setTimeout(pollForCredits, 1000);
+      } catch (error) {
+        console.error('Failed to initialize polling:', error);
+        setIsProcessing(false);
+      }
+    };
+
+    initializePolling();
   }, []); // Remove refetch dependency to avoid restart loops
 
   return (

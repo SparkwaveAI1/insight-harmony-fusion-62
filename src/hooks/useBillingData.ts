@@ -17,7 +17,7 @@ export function useBillingData() {
   const fetchBillingData = async () => {
     if (!user?.id) {
       setLoading(false);
-      return;
+      return null;
     }
 
     try {
@@ -60,8 +60,10 @@ export function useBillingData() {
       };
 
       setBillingData(data);
+      return data;
     } catch (error) {
       console.error("Error fetching billing data:", error);
+      return null;
     } finally {
       setLoading(false);
     }

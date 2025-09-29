@@ -22,7 +22,7 @@ async function verifyStripeSignature(req: Request): Promise<Stripe.Event> {
   }
 
   try {
-    return stripe.webhooks.constructEvent(body, sig, WEBHOOK_SECRET);
+    return await stripe.webhooks.constructEventAsync(body, sig, WEBHOOK_SECRET);
   } catch (err: any) {
     throw new Error(`Webhook signature verification failed: ${err.message}`);
   }
