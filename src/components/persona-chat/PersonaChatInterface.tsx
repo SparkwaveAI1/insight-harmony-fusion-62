@@ -119,7 +119,7 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
         persona_id: personaId,
         user_message: message,
         imageData: imageData,
-        conversation_history: [...messagesRef.current, userMessage].map(m => ({
+        conversation_history: messagesRef.current.map(m => ({
           role: m.role,
           content: m.content
         }))

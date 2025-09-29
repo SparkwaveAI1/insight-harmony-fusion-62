@@ -101,7 +101,17 @@ serve(async (req) => {
       ] : user_message
     }
     
-    grokMessages.push(userMessage)
+    // Avoid duplicate current user message if the history already ends with the same user content
+    const lastMsg = Array.isArray(conversation_history) && conversation_history.length > 0
+      ? conversation_history[conversation_history.length - 1]
+      : null;
+    const isDuplicateLastUser = !!(lastMsg && lastMsg.role === 'user' && typeof lastMsg.content === 'string' &&
+      lastMsg.content.trim() === (typeof user_message === 'string' ? user_message.trim() : ''));
+    if (!isDuplicateLastUser) {
+      grokMessages.push(userMessage)
+    } else {
+      console.log('🛡️ Skipping duplicate user message appended from conversation_history')
+    }
 
     // Select model based on whether we have image data
     const modelToUse = normalizedImageData ? GROK_VISION_MODEL : GROK_MODEL
