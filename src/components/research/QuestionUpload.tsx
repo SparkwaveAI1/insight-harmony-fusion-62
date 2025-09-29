@@ -308,11 +308,14 @@ export const QuestionUpload: React.FC<QuestionUploadProps> = ({
               <div className="space-y-2">
                 <Label>Imported Questions ({questions.length})</Label>
                 <div className="max-h-40 overflow-y-auto border rounded p-3 space-y-2">
-                  {questions.slice(0, 5).map((question, index) => (
-                    <div key={index} className="text-sm">
-                      <span className="font-medium text-muted-foreground">Q{index + 1}:</span> {question}
-                    </div>
-                  ))}
+                  {questions.slice(0, 5).map((question, index) => {
+                    const questionText = typeof question === 'string' ? question : (question as any).text;
+                    return (
+                      <div key={index} className="text-sm">
+                        <span className="font-medium text-muted-foreground">Q{index + 1}:</span> {questionText}
+                      </div>
+                    );
+                  })}
                   {questions.length > 5 && (
                     <div className="text-xs text-muted-foreground">
                       ...and {questions.length - 5} more questions

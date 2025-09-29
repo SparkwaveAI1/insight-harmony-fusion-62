@@ -223,11 +223,14 @@ export const ResearchCSVImport: React.FC<ResearchCSVImportProps> = ({
             <div className="space-y-2">
               <Label>Preview ({previewQuestions.length} questions found)</Label>
               <div className="max-h-40 overflow-y-auto border rounded p-3 space-y-2">
-                {previewQuestions.slice(0, 5).map((question, index) => (
-                  <div key={index} className="text-sm">
-                    <span className="font-medium text-muted-foreground">Q{index + 1}:</span> {question}
-                  </div>
-                ))}
+                {previewQuestions.slice(0, 5).map((question, index) => {
+                  const questionText = typeof question === 'string' ? question : (question as any).text;
+                  return (
+                    <div key={index} className="text-sm">
+                      <span className="font-medium text-muted-foreground">Q{index + 1}:</span> {questionText}
+                    </div>
+                  );
+                })}
                 {previewQuestions.length > 5 && (
                   <div className="text-xs text-muted-foreground">
                     ...and {previewQuestions.length - 5} more questions
