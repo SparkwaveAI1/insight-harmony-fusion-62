@@ -216,7 +216,9 @@ async function orchestrateResearchSession(sessionId: string, supabase: any) {
               body: {
                 persona_id: personaId,
                 user_message: question.text,
-                imageData: question.images?.[0]?.data || question.images?.[0]?.url || question.image?.data || question.image?.url
+                imageData: typeof question.images?.[0] === 'string' 
+                  ? question.images[0] 
+                  : (question.images?.[0]?.data || question.images?.[0]?.url || question.image?.data || question.image?.url)
               }
             });
 
