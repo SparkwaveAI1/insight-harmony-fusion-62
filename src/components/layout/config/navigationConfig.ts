@@ -84,6 +84,11 @@ export const headerNavItems = [
     icon: Users,
   },
   {
+    title: "Pricing",
+    href: "/pricing",
+    icon: DollarSign,
+  },
+  {
     title: "Contact",
     href: "/contact",
     icon: Mail,

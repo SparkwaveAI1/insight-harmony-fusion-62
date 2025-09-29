@@ -61,9 +61,14 @@ const Footer = () => {
               <p className="text-sm text-muted-foreground order-2 md:order-1">
                 © {currentYear} PersonaAI. All rights reserved.
               </p>
-              <p className="text-sm text-muted-foreground mb-4 md:mb-0 order-1 md:order-2">
-                Crafted with precision. Designed for insight.
-              </p>
+              <div className="flex items-center gap-6 mb-4 md:mb-0 order-1 md:order-2">
+                <a href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Pricing
+                </a>
+                <p className="text-sm text-muted-foreground">
+                  Crafted with precision. Designed for insight.
+                </p>
+              </div>
             </div>
           </Reveal>
         </div>
