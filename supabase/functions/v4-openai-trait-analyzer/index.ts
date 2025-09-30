@@ -137,11 +137,25 @@ serve(async (req) => {
       throw new Error('Missing required parameters: persona_id and user_message')
     }
 
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Initialize Supabase clients - service for persona data, user-scoped for memories (RLS)
+    const supabaseService = createClient(supabaseUrl, supabaseServiceKey)
+    
+    // Extract authorization from request for user-scoped memory access
+    const authHeader = req.headers.get('authorization')
+    const supabaseAnon = createClient(
+      supabaseUrl, 
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      authHeader ? {
+        global: {
+          headers: {
+            Authorization: authHeader
+          }
+        }
+      } : {}
+    )
 
-    // Fetch the full persona profile
-    const { data: persona, error } = await supabase
+    // Fetch the full persona profile using service key
+    const { data: persona, error } = await supabaseService
       .from('v4_personas')
       .select('*')
       .eq('persona_id', persona_id)
@@ -149,6 +163,33 @@ serve(async (req) => {
 
     if (error || !persona) {
       throw new Error(`Persona not found: ${persona_id}`)
+    }
+
+    // Fetch recent persona memories using user-scoped client (respects RLS)
+    let memoriesContext = ''
+    try {
+      const { data: memories, error: memoriesError } = await supabaseAnon
+        .from('persona_memories')
+        .select('type, title, content, tags, created_at')
+        .eq('persona_id', persona_id)
+        .order('created_at', { ascending: false })
+        .limit(15)
+
+      if (!memoriesError && memories && memories.length > 0) {
+        console.log(`📝 Retrieved ${memories.length} persona memories for ${persona_id}`)
+        const memoryBullets = memories.map(m => {
+          const contentText = m.content?.text || ''
+          const truncatedContent = contentText.length > 100 ? contentText.substring(0, 100) + '...' : contentText
+          return `• ${m.type}: ${m.title || 'untitled'} — ${truncatedContent}`
+        }).join('\n')
+        
+        memoriesContext = `\nRELEVANT PERSONA MEMORIES:\n${memoryBullets}\n`
+      } else {
+        console.log(`📝 No persona memories found for ${persona_id} (or access denied)`)
+      }
+    } catch (memoryError) {
+      console.log(`⚠️ Memory fetch failed for ${persona_id}:`, memoryError)
+      // Continue without memories - don't fail the whole request
     }
 
     // Extract demographics for context
@@ -179,7 +220,7 @@ SELECTED PSYCHOLOGICAL PROFILE:
 ${JSON.stringify(selectedTraits, null, 2)}
 
 USER QUESTION: "${user_message}"
-CONVERSATION CONTEXT: ${JSON.stringify(conversation_history || [], null, 2)}
+CONVERSATION CONTEXT: ${JSON.stringify(conversation_history || [], null, 2)}${memoriesContext}
 
 ANALYSIS FRAMEWORK:
 
