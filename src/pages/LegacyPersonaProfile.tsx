@@ -922,7 +922,7 @@ function PersonaProfile() {
           </TabsContent>
 
           <TabsContent value="knowledge" className="space-y-4">
-            <PersonaMemoriesTab personaId={personaId!} />
+            <PersonaMemoriesTab personaId={personaId!} isOwner={user?.id === persona?.user_id} />
           </TabsContent>
         </Tabs>
 

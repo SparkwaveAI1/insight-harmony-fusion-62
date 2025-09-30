@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface PersonaMemoriesTabProps {
   personaId: string;
+  isOwner?: boolean;
 }
 
 const typeIcons = {
@@ -32,7 +33,7 @@ const typeColors = {
   global: 'bg-purple-100 text-purple-800',
 };
 
-export default function PersonaMemoriesTab({ personaId }: PersonaMemoriesTabProps) {
+export default function PersonaMemoriesTab({ personaId, isOwner = false }: PersonaMemoriesTabProps) {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [cursor, setCursor] = useState<string | undefined>();
   const [allMemories, setAllMemories] = useState<PersonaMemory[]>([]);
@@ -192,87 +193,89 @@ export default function PersonaMemoriesTab({ personaId }: PersonaMemoriesTabProp
           </SelectContent>
         </Select>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Memory
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add New Memory</DialogTitle>
-              <DialogDescription>
-                Add a memory item to this persona's knowledge base
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <Select value={formData.type} onValueChange={(v) => setFormData(prev => ({ ...prev, type: v as any }))}>
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fact">Fact</SelectItem>
-                    <SelectItem value="note">Note</SelectItem>
-                    <SelectItem value="conversation">Conversation</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="title">Title (optional)</Label>
-                <Input
-                  id="title"
-                  placeholder="Memory title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="content">Content *</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Enter memory content..."
-                  rows={6}
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags (comma-separated)</Label>
-                <Input
-                  id="tags"
-                  placeholder="trading, risk-tolerance, personality"
-                  value={formData.tags}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="source">Source (optional)</Label>
-                <Input
-                  id="source"
-                  placeholder="e.g., Discord, Manual entry, Interview"
-                  value={formData.source}
-                  onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSubmitting}>
-                Cancel
+        {isOwner && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Memory
               </Button>
-              <Button onClick={handleAddMemory} disabled={isSubmitting}>
-                {isSubmitting ? 'Adding...' : 'Add Memory'}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Add New Memory</DialogTitle>
+                <DialogDescription>
+                  Add a memory item to this persona's knowledge base
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select value={formData.type} onValueChange={(v) => setFormData(prev => ({ ...prev, type: v as any }))}>
+                    <SelectTrigger id="type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fact">Fact</SelectItem>
+                      <SelectItem value="note">Note</SelectItem>
+                      <SelectItem value="conversation">Conversation</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title (optional)</Label>
+                  <Input
+                    id="title"
+                    placeholder="Memory title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="content">Content *</Label>
+                  <Textarea
+                    id="content"
+                    placeholder="Enter memory content..."
+                    rows={6}
+                    value={formData.content}
+                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags (comma-separated)</Label>
+                  <Input
+                    id="tags"
+                    placeholder="trading, risk-tolerance, personality"
+                    value={formData.tags}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="source">Source (optional)</Label>
+                  <Input
+                    id="source"
+                    placeholder="e.g., Discord, Manual entry, Interview"
+                    value={formData.source}
+                    onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddMemory} disabled={isSubmitting}>
+                  {isSubmitting ? 'Adding...' : 'Add Memory'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Memories List */}
