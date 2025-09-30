@@ -18,6 +18,7 @@ import { TraitsDashboard } from '@/components/TraitsDashboard';
 import { useAuth } from '@/context/AuthContext';
 import PersonaVisibilityToggle from '@/components/persona-details/PersonaVisibilityToggle';
 import DeletePersonaButton from '@/components/persona-details/DeletePersonaButton';
+import PersonaMemoriesTab from '@/components/persona-details/PersonaMemoriesTab';
 import { updatePersonaVisibility } from '@/services/persona';
 import { deleteV4Persona } from '@/services/v4-persona/deleteV4Persona';
 import { useQueryClient } from '@tanstack/react-query';
@@ -921,35 +922,7 @@ function PersonaProfile() {
           </TabsContent>
 
           <TabsContent value="knowledge" className="space-y-4">
-            <div className="space-y-6">
-              {/* Knowledge Items Section */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Knowledge Items</h3>
-                <div className="text-center p-8 text-muted-foreground bg-muted/30 rounded-lg border-2 border-dashed border-muted">
-                  <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No knowledge items recorded yet</p>
-                  <p className="text-xs mt-1">Knowledge base will be populated during conversations</p>
-                  <Button variant="outline" size="sm" className="mt-4" disabled>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Knowledge (Coming Soon)
-                  </Button>
-                </div>
-              </Card>
-
-              {/* Memories Section */}
-              <Card className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Memories</h3>
-                <div className="text-center p-8 text-muted-foreground bg-muted/30 rounded-lg border-2 border-dashed border-muted">
-                  <Heart className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No memories captured yet</p>
-                  <p className="text-xs mt-1">Personal memories and experiences will appear here</p>
-                  <Button variant="outline" size="sm" className="mt-4" disabled>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Memory (Coming Soon)
-                  </Button>
-                </div>
-              </Card>
-            </div>
+            <PersonaMemoriesTab personaId={personaId!} />
           </TabsContent>
         </Tabs>
 
