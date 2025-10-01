@@ -540,6 +540,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
         toast.success(`Sequential survey completed! ${completedCount} personas completed successfully.`);
       }
 
+      // Notify parent component of completion
+      onComplete();
+
     } catch (error) {
       console.error('Error in sequential survey execution:', error);
       setIsRunning(false);
