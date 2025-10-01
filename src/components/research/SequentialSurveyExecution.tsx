@@ -74,6 +74,8 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
   const [isRunning, setIsRunning] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [ledgerId, setLedgerId] = useState<string | null>(null);
+  const [completedPersonasCount, setCompletedPersonasCount] = useState(0);
+  const [errorPersonasCount, setErrorPersonasCount] = useState(0);
 
   // Initialize persona progress tracking
   useEffect(() => {
@@ -320,7 +322,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 const v4Response = await sendV4Message({
                   persona_id: persona.persona_id,
                   user_message: finalQuestionMessage,
-                  imageData: typeof imagesToSend === 'string' ? imagesToSend : imagesToSend?.[0],
+                  imageData: imagesToSend,
                   conversation_history: conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content
@@ -340,7 +342,7 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
                 const retryResponse = await sendV4Message({
                   persona_id: persona.persona_id,
                   user_message: finalQuestionMessage,
-                  imageData: typeof imagesToSend === 'string' ? imagesToSend : imagesToSend?.[0],
+                  imageData: imagesToSend,
                   conversation_history: conversationHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content
@@ -423,6 +425,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
           setPersonaProgress(prev => prev.map((p, i) => 
             i === personaIndex ? { ...p, status: 'completed' } : p
           ));
+          
+          // Track completion count
+          setCompletedPersonasCount(prev => prev + 1);
 
           console.log(`Completed all questions for ${currentPersona.personaName}`);
 
@@ -437,6 +442,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
               error: personaError instanceof Error ? personaError.message : 'Unknown error'
             } : p
           ));
+          
+          // Track error count
+          setErrorPersonasCount(prev => prev + 1);
         }
 
         // Small delay between personas
@@ -447,8 +455,9 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
       setIsRunning(false);
       setIsComplete(true);
       
-      const completedCount = personaProgress.filter(p => p.status === 'completed').length;
-      const errorCount = personaProgress.filter(p => p.status === 'error').length;
+      // Use tracked counts instead of reading stale React state
+      const completedCount = completedPersonasCount;
+      const errorCount = errorPersonasCount;
       
       console.log(`Sequential survey complete: ${completedCount} completed, ${errorCount} errors`);
       
