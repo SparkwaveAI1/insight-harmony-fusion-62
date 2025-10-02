@@ -107,8 +107,8 @@ function extractRelevantTraits(fullProfile: any, questionAnalysis: any, userMess
     selectedTraits.humor_profile = fullProfile.humor_profile
   }
 
-  // Add cognitive profile for complex decision-making questions
-  if (message.match(/\b(decide|choice|option|think|consider|analyze|evaluate|compare|pros|cons|strategy|plan|solution|problem)\b/) && fullProfile.cognitive_profile) {
+  // Always include cognitive profile when available
+  if (fullProfile.cognitive_profile) {
     selectedTraits.cognitive_profile = fullProfile.cognitive_profile
   }
 
@@ -265,6 +265,14 @@ What makes this person's response uniquely different from others?
 - Unusual trait combinations that create distinctive perspectives
 - Strong cultural/regional markers that influence expression
 - Specific life circumstances that shape their worldview
+
+RESPONSE STRUCTURE based on thought_coherence value:
+- 0.1-0.4: Scattered thoughts, incomplete ideas, weak logical flow (reflects average US population cognitive patterns)
+- 0.5: Significant incoherence typical of average person - tangential thoughts, inconsistent structure
+- 0.6-0.8: Generally coherent but with natural human inconsistencies  
+- 0.9-1.0: Exceptionally organized and structured thinking
+
+Adjust your response structure naturally to match this coherence level. Do not force artificial organization if coherence is low.
 
 RESPONSE CREATION INSTRUCTIONS:
 Create a system prompt that generates 2-4 sentences expressing their authentic reaction. The response should:
