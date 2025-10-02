@@ -117,10 +117,13 @@ const Hero = () => {
           
           <Reveal delay={250}>
             <div className="mb-8">
-              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 px-8 py-4 rounded-full text-white text-lg font-bold shadow-2xl shadow-yellow-500/50 animate-pulse">
+              <Link 
+                to="/pricing"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 px-8 py-4 rounded-full text-white text-lg font-bold shadow-2xl shadow-yellow-500/50 animate-pulse hover:scale-105 transition-transform cursor-pointer"
+              >
                 <Zap className="h-6 w-6 text-white fill-white" />
                 New users get 200 free credits to get started!
-              </div>
+              </Link>
             </div>
           </Reveal>
           
