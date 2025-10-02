@@ -303,11 +303,15 @@ export const SequentialSurveyExecution: React.FC<SequentialSurveyExecutionProps>
             conversationHistory.push(userMessage);
 
             // Send ALL images to persona using OpenAI native multi-image support
-            let imagesToSend: string[] | string | undefined;
+            let imagesToSend: string | undefined;
             
             if (surveyQuestion?.images?.length) {
-              // Send all images directly to OpenAI
-              imagesToSend = surveyQuestion.images;
+              // For now, send only the first image (backend doesn't support multi-image yet)
+              // TODO: Update backend to support multiple images
+              imagesToSend = surveyQuestion.images[0];
+              if (surveyQuestion.images.length > 1) {
+                console.warn(`⚠️ Multiple images detected (${surveyQuestion.images.length}), but backend only supports single image. Using first image only.`);
+              }
               userMessage.allImages = surveyQuestion.images;
             } else if (surveyQuestion?.image) {
               imagesToSend = surveyQuestion.image;
