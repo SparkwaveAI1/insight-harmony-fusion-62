@@ -61,8 +61,13 @@ export function CreditPackPicker({ open, onOpenChange, onPurchaseComplete }: Cre
 
       console.log("🚀 [BILLING] Redirecting to Stripe checkout:", data.url);
       
-      // Open Stripe checkout in a new tab (as per requirements)
-      window.open(data.url, '_blank');
+      // Open Stripe checkout in a new tab with popup fallback
+      const stripeWindow = window.open(data.url, '_blank');
+      if (!stripeWindow) {
+        // Fallback if popup blocked
+        toast.info("Popup blocked - redirecting...");
+        window.location.href = data.url;
+      }
       
       // Close the picker dialog
       onOpenChange(false);

@@ -90,30 +90,91 @@ serve(async (req) => {
 
     // Create checkout session
     console.log("💳 Creating checkout session...");
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: "payment",
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: pack.name,
-              description: `${pack.credits} credits for your account`,
+    
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: pack.name,
+                description: `${pack.credits} credits for your account`,
+              },
+              unit_amount: Math.round(pack.priceUSD * 100), // Convert to cents
             },
-            unit_amount: Math.round(pack.priceUSD * 100), // Convert to cents
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        success_url: `${req.headers.get("origin")}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.headers.get("origin")}/billing/cancel`,
+        client_reference_id: userId,
+        metadata: {
+          user_id: userId,
+          credits: pack.credits.toString(),
         },
-      ],
-      success_url: `${req.headers.get("origin")}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get("origin")}/billing/cancel`,
-      client_reference_id: userId,
-      metadata: {
-        user_id: userId,
-        credits: pack.credits.toString(),
-      },
-    });
+      });
+    } catch (err: any) {
+      // Handle orphaned Stripe customer ID
+      if (err.code === "resource_missing" && err.param === "customer") {
+        console.log("⚠️ Orphaned Stripe customer ID detected:", customerId);
+        
+        // Get user email for new customer creation
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+        if (userError || !userData.user?.email) {
+          throw new Error("Failed to get user email for customer recreation");
+        }
+
+        // Create new Stripe customer
+        const newCustomer = await stripe.customers.create({
+          email: userData.user.email,
+          metadata: { user_id: userId },
+        });
+        customerId = newCustomer.id;
+
+        // Update billing profile with new customer ID
+        await supabase
+          .from("billing_profiles")
+          .upsert({
+            user_id: userId,
+            stripe_customer_id: customerId,
+          });
+
+        console.log("✅ Created new Stripe customer after orphan detected:", customerId);
+
+        // Retry checkout session creation with new customer ID
+        session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          mode: "payment",
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: {
+                  name: pack.name,
+                  description: `${pack.credits} credits for your account`,
+                },
+                unit_amount: Math.round(pack.priceUSD * 100), // Convert to cents
+              },
+              quantity: 1,
+            },
+          ],
+          success_url: `${req.headers.get("origin")}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${req.headers.get("origin")}/billing/cancel`,
+          client_reference_id: userId,
+          metadata: {
+            user_id: userId,
+            credits: pack.credits.toString(),
+          },
+        });
+      } else {
+        // Re-throw other errors
+        throw err;
+      }
+    }
 
     console.log("✅ Checkout session created:", session.id);
 
