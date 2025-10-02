@@ -271,7 +271,7 @@ const Collections = () => {
                     <div className="flex flex-col h-full min-h-[200px]">
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-3">
-                          <h2 className="text-xl font-semibold line-clamp-2 leading-tight h-14 flex items-start">{collection.name}</h2>
+                          <h2 className="text-xl font-semibold line-clamp-2 leading-normal mb-2">{collection.name}</h2>
                           <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                             {collection.is_public ? (
                               <Badge variant="outline" className="text-xs">
