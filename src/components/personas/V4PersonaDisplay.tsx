@@ -231,20 +231,9 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
         </div>
 
         {/* Identity Header - Always Visible */}
-        <Card className="p-6 mb-6 relative">
-          {/* Chat Button - Upper Right */}
-          <div className="absolute top-4 right-4">
-            <Button 
-              onClick={() => navigate(`/persona-detail/${persona.persona_id}/chat`)}
-              size="lg"
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Chat with {displayName.split(' ')[0] || 'Persona'}
-            </Button>
-          </div>
-          
-          <div className="flex flex-col lg:flex-row gap-6 pr-0 lg:pr-60">
+        <Card className="p-6 mb-6">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-6">
             {/* Avatar/Photo */}
             <div className="flex-shrink-0">
               {persona.profile_image_url ? (
@@ -344,6 +333,19 @@ export const V4PersonaDisplay: React.FC<V4PersonaDisplayProps> = ({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Chat Button - Below Content */}
+          <div className="mt-6 pt-6 border-t flex justify-center">
+            <Button 
+              onClick={() => navigate(`/persona-detail/${persona.persona_id}/chat`)}
+              size="lg"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 text-lg font-semibold"
+            >
+              <MessageCircle className="mr-2 h-5 w-5" />
+              Chat with {displayName.split(' ')[0] || 'Persona'}
+            </Button>
+          </div>
           </div>
         </Card>
       
