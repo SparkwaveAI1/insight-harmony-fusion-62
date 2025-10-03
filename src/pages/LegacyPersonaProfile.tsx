@@ -333,31 +333,31 @@ function PersonaProfile() {
               {collections.length === 0 && (
                 <Badge variant="outline">No collections</Badge>
               )}
-            </div>
 
-            {/* Owner Actions */}
-            {user?.id === persona?.user_id && (
-              <div className="flex flex-col gap-3">
-                {/* Download JSON Button */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportJSON}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Download JSON
-                </Button>
-                
-                {/* Visibility Toggle */}
-                <PersonaVisibilityToggle
-                  personaId={persona.persona_id}
-                  isPublic={isPublic}
-                  isOwner={user?.id === persona?.user_id}
-                  onVisibilityChange={handleVisibilityChange}
-                />
-              </div>
-            )}
+              {/* Owner Actions */}
+              {user?.id === persona?.user_id && (
+                <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t">
+                  {/* Download JSON Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportJSON}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download JSON
+                  </Button>
+                  
+                  {/* Visibility Toggle */}
+                  <PersonaVisibilityToggle
+                    personaId={persona.persona_id}
+                    isPublic={isPublic}
+                    isOwner={user?.id === persona?.user_id}
+                    onVisibilityChange={handleVisibilityChange}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Chat Button - Below Content */}
