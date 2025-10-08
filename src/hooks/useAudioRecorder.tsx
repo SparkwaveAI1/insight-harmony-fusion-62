@@ -29,7 +29,7 @@ export const useAudioRecorder = ({
   const silenceTimerRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const dataArrayRef = useRef<Uint8Array | null>(null);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const silenceStartTimeRef = useRef<number | null>(null);
   const processorRef = useRef<AudioWorkletNode | null>(null);
 
@@ -161,7 +161,7 @@ export const useAudioRecorder = ({
       
       analyserRef.current.fftSize = 256;
       const bufferLength = analyserRef.current.frequencyBinCount;
-      dataArrayRef.current = new Uint8Array(bufferLength);
+      dataArrayRef.current = new Uint8Array(new ArrayBuffer(bufferLength));
       
       silenceTimerRef.current = window.setInterval(() => {
         if (!isRecording || !analyserRef.current || !dataArrayRef.current) return;

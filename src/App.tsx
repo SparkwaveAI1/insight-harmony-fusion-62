@@ -93,7 +93,6 @@ function App() {
         <ScrollToTop />
         <AuthProvider>
           <PersonaProvider>
-            <DeploymentVerifier />
             <JobCompletionNotifier />
             
             

@@ -16,7 +16,7 @@ export async function ensureTablesExist(): Promise<boolean> {
       console.log('Checking Supabase connection...');
       const { error: healthError } = await supabase
         .from('participants')
-        .select('count(*)')
+        .select('id')
         .limit(1);
       
       if (healthError) {
@@ -75,9 +75,9 @@ export async function checkTableExists(tableName: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from(tableName as any)
-      .select('count')
+      .select('id')
       .limit(1)
-      .single();
+      .maybeSingle();
     
     if (!error) {
       return true;
