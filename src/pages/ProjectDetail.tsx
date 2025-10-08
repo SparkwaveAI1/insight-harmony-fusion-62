@@ -345,7 +345,7 @@ const ProjectDetail = () => {
                                     </Badge>
                                   </div>
                                 </div>
-                                <Link to={`/research-results/${session.id}`}>
+                                <Link to={`/research/results/${session.id}`}>
                                   <Button variant="outline" size="sm">
                                     View Report
                                   </Button>
