@@ -143,10 +143,21 @@ export const deleteQueueItem = async (id: string) => {
 export const parsePersonaDescription = (text: string) => {
   const trimmedText = text.trim();
   
-  // Extract name from first line (remove ** markdown)
+  // Extract name from first line
   const lines = trimmedText.split('\n');
   const firstLine = lines[0] || '';
-  const name = firstLine.replace(/\*\*/g, '').trim() || 'Unnamed Persona';
+  
+  // Remove leading numbers and dots (e.g., "6. Caleb Whitaker" → "Caleb Whitaker")
+  // Remove ** markdown formatting
+  let name = firstLine
+    .replace(/^\d+\.\s*/, '')  // Remove "6. " prefix
+    .replace(/\*\*/g, '')       // Remove ** markdown
+    .trim();
+  
+  // Fallback if name is empty
+  if (!name) {
+    name = 'Unnamed Persona';
+  }
   
   // Extract collections if they exist
   const collectionsMatch = trimmedText.match(/(?:\*\*)?Collections:(?:\*\*)?\s*(.+?)(?:\n|$)/i);
@@ -159,4 +170,21 @@ export const parsePersonaDescription = (text: string) => {
     description: trimmedText,
     collections
   };
+};
+
+// Parse bulk persona descriptions (multiple numbered entries)
+export const parseBulkPersonaDescriptions = (text: string) => {
+  const trimmedText = text.trim();
+  
+  // Split by numbered entries (e.g., "6. ", "7. ", etc.)
+  // Regex: Look for line starting with number followed by dot and uppercase letter
+  const chunks = trimmedText.split(/\n(?=\d+\.\s+[A-Z])/);
+  
+  // Parse each chunk as a separate persona
+  const personas = chunks
+    .map(chunk => chunk.trim())
+    .filter(chunk => chunk.length > 0)
+    .map(chunk => parsePersonaDescription(chunk));
+  
+  return personas;
 };

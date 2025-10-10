@@ -15,7 +15,8 @@ import {
   getQueueItems, 
   updateQueueStatus, 
   updateQueueStatusSafe, 
-  parsePersonaDescription, 
+  parsePersonaDescription,
+  parseBulkPersonaDescriptions,
   popNextQueueItem,
   forceFailQueueItem,
   deleteQueueItem
@@ -222,19 +223,41 @@ const PersonaQueue = () => {
     if (!user || !textareaContent.trim()) return;
 
     try {
-      // Parse the text to extract name and collections
-      const parsed = parsePersonaDescription(textareaContent.trim());
+      // Check if this is bulk input (contains numbered entries with names)
+      const hasBulkFormat = /\n\d+\.\s+[A-Z]/.test(textareaContent);
       
-      await addToQueue(
-        user.id,
-        parsed.name,        // Use extracted name instead of 'Queued Persona'
-        parsed.description,
-        parsed.collections  // Pass extracted collections
-      );
-      toast({
-        title: "Success",
-        description: `Added "${parsed.name}" to queue`,
-      });
+      if (hasBulkFormat) {
+        // Parse multiple personas
+        const personas = parseBulkPersonaDescriptions(textareaContent.trim());
+        
+        // Add all to queue in parallel
+        const addPromises = personas.map(p => 
+          addToQueue(user.id, p.name, p.description, p.collections)
+        );
+        
+        await Promise.all(addPromises);
+        
+        toast({
+          title: "Success",
+          description: `Added ${personas.length} persona${personas.length > 1 ? 's' : ''} to queue`,
+        });
+      } else {
+        // Single persona (existing logic)
+        const parsed = parsePersonaDescription(textareaContent.trim());
+        
+        await addToQueue(
+          user.id,
+          parsed.name,
+          parsed.description,
+          parsed.collections
+        );
+        
+        toast({
+          title: "Success",
+          description: `Added "${parsed.name}" to queue`,
+        });
+      }
+      
       setTextareaContent(''); // Clear textarea
       loadQueueItems(); // Refresh the list
     } catch (error) {
