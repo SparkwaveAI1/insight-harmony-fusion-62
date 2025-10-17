@@ -66,6 +66,10 @@ const PersonaQueue = () => {
   const [textareaContent, setTextareaContent] = useState('');
   const [processing, setProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+  
+  const CONSECUTIVE_FAILURE_LIMIT = 3;
+  const PERSONA_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
 
   // Check if user is admin
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
@@ -306,12 +310,13 @@ const PersonaQueue = () => {
     console.log('🚀 Starting to process queue with atomic pop...');
     
     let currentItemId: string | null = null;
+    let currentItemName: string | null = null;
 
     // Timeout wrapper to prevent hanging stages
-    const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+    const withTimeout = <T,>(p: Promise<T>, ms: number, label: string = 'operation'): Promise<T> =>
       Promise.race([
         p,
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error('queue-stage-timeout')), ms)),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`${label} timeout after ${ms/1000}s`)), ms)),
       ]);
 
     // Helper to fail with proper error capture
@@ -334,6 +339,7 @@ const PersonaQueue = () => {
       }
 
       currentItemId = item.id;
+      currentItemName = item.name;
       console.log('📋 Claimed queue item:', item.name, 'Status:', item.status);
 
       let personaId = item.persona_id ?? null;
@@ -375,7 +381,7 @@ const PersonaQueue = () => {
         const unifiedResponse = await withTimeout(createV4PersonaUnified({
           user_description: item.description,
           user_id: user.id
-        }), 120000); // 120 second timeout
+        }), PERSONA_TIMEOUT_MS, 'Persona creation'); // 4 minute timeout
 
         if (!unifiedResponse.success) {
           await fail(`V4 Unified creation failed: ${unifiedResponse.error}`);
@@ -447,12 +453,14 @@ const PersonaQueue = () => {
           }
         }
         
-        // Mark as completed
+        // Mark as completed and reset consecutive failures on success
+        setConsecutiveFailures(0);
         await updateQueueStatusSafe(item.id, 'completed', personaId);
         console.log('🎉 Queue item marked as completed');
         
       } else if (personaId) {
         console.log('📋 Persona already exists, marking as completed:', personaId);
+        setConsecutiveFailures(0);
         await updateQueueStatusSafe(item.id, 'completed', personaId);
       } else if (currentStatus === 'completed') {
         console.log('✅ Item already completed, skipping');
@@ -466,19 +474,6 @@ const PersonaQueue = () => {
         description: `${item.name} has been processed and is ready for use.`,
       });
 
-      // Check if there are more pending items and process automatically
-      setTimeout(async () => {
-        console.log('🔍 Checking for next pending item...');
-        const updatedItems = await getQueueItems(user.id);
-        const nextPending = updatedItems?.find(item => item.status === 'pending');
-        if (nextPending) {
-          console.log('🚀 Found next pending item, processing automatically...');
-          onProcessClick(); // Process the next item automatically
-        } else {
-          console.log('✅ No more pending items found');
-        }
-      }, 1000);
-
     } catch (error: any) {
       console.error('❌ Error processing queue item:', error);
       
@@ -487,16 +482,51 @@ const PersonaQueue = () => {
         await updateQueueStatusSafe(currentItemId, 'failed', undefined, `Processor error: ${error?.message ?? 'unknown'}`);
       }
       
+      // Track consecutive failures
+      const newFailureCount = consecutiveFailures + 1;
+      setConsecutiveFailures(newFailureCount);
+      
       toast({
-        title: 'Processing failed',
-        description: error.message || 'Unknown error occurred',
+        title: 'Persona creation failed',
+        description: `${currentItemName || 'Item'} failed. ${newFailureCount}/${CONSECUTIVE_FAILURE_LIMIT} consecutive failures.`,
         variant: 'destructive',
       });
+      
+      // Stop if too many consecutive failures
+      if (newFailureCount >= CONSECUTIVE_FAILURE_LIMIT) {
+        toast({
+          title: 'Queue processing stopped',
+          description: `Stopped after ${CONSECUTIVE_FAILURE_LIMIT} consecutive failures. Please check for issues.`,
+          variant: 'destructive',
+        });
+        setProcessing(false);
+        setBusy(false);
+        loadQueueItems();
+        return; // EXIT - don't continue to finally block's auto-continue
+      }
+      
+      // Otherwise, continue to next item (fall through to finally)
     } finally {
       setProcessing(false);
       setBusy(false);
       console.log('🏁 Processing complete, refreshing queue...');
       loadQueueItems();
+      
+      // Always check for next item (unless we hit consecutive failure limit)
+      if (consecutiveFailures < CONSECUTIVE_FAILURE_LIMIT) {
+        setTimeout(async () => {
+          console.log('🔍 Checking for next pending item...');
+          const updatedItems = await getQueueItems(user.id);
+          const nextPending = updatedItems?.find(item => item.status === 'pending');
+          if (nextPending) {
+            console.log('🚀 Found next pending item, processing automatically...');
+            onProcessClick(); // Recursive call to process next
+          } else {
+            console.log('✅ No more pending items found');
+            setConsecutiveFailures(0); // Reset when queue is empty
+          }
+        }, 2000); // 2 second delay between items
+      }
     }
   };
 
