@@ -11,6 +11,7 @@ import { PersonaTraitFiller } from "./PersonaTraitFiller";
 import { PersonaJsonUpload } from "./PersonaJsonUpload";
 import { PersonaJsonUploadHelp } from "./PersonaJsonUploadHelp";
 import { PersonaSelectionInterface } from "./PersonaSelectionInterface";
+import { PersonaStatsCards } from "../dashboard/PersonaStatsCards";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -55,6 +56,9 @@ export function AdminDashboard() {
         </CardHeader>
       </Card>
 
+
+      {/* Persona Stats Cards */}
+      <PersonaStatsCards />
 
       {/* Admin Alerts */}
       <AdminAlerts />
