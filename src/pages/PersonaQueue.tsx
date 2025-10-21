@@ -492,17 +492,22 @@ const PersonaQueue = () => {
         variant: 'destructive',
       });
       
-      // Stop if too many consecutive failures
+      // Pause and auto-resume after backoff if too many consecutive failures
       if (newFailureCount >= CONSECUTIVE_FAILURE_LIMIT) {
+        const backoffMs = 30000; // 30s cooldown to avoid transient rate limits
         toast({
-          title: 'Queue processing stopped',
-          description: `Stopped after ${CONSECUTIVE_FAILURE_LIMIT} consecutive failures. Please check for issues.`,
+          title: 'Cooling down',
+          description: `Reached ${CONSECUTIVE_FAILURE_LIMIT} failures. Pausing ${Math.round(backoffMs/1000)}s then auto-resuming.`,
           variant: 'destructive',
         });
         setProcessing(false);
         setBusy(false);
         loadQueueItems();
-        return; // EXIT - don't continue to finally block's auto-continue
+        setTimeout(() => {
+          setConsecutiveFailures(0);
+          onProcessClick();
+        }, backoffMs);
+        return; // EXIT - skip finally block's auto-continue (we scheduled resume)
       }
       
       // Otherwise, continue to next item (fall through to finally)
