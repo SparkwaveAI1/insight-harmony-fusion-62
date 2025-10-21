@@ -328,6 +328,14 @@ const PersonaQueue = () => {
     };
 
     try {
+      // Reset stale processing items (stuck >5 min) back to pending
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      await supabase
+        .from('persona_creation_queue')
+        .update({ status: 'pending', error_message: 'Reset: Stale processing state' })
+        .eq('status', 'processing')
+        .lt('updated_at', fiveMinutesAgo);
+
       // 1) Atomically claim a job
       const item = await popNextQueueItem();
       if (!item) {
@@ -469,6 +477,9 @@ const PersonaQueue = () => {
 
       console.log('🎉 Unified persona creation and collection assignment completed');
       
+      // Reset consecutive failures on success
+      setConsecutiveFailures(0);
+      
       toast({
         title: 'Persona created successfully!',
         description: `${item.name} has been processed and is ready for use.`,
@@ -492,22 +503,17 @@ const PersonaQueue = () => {
         variant: 'destructive',
       });
       
-      // Pause and auto-resume after backoff if too many consecutive failures
+      // Stop if too many consecutive failures
       if (newFailureCount >= CONSECUTIVE_FAILURE_LIMIT) {
-        const backoffMs = 30000; // 30s cooldown to avoid transient rate limits
         toast({
-          title: 'Cooling down',
-          description: `Reached ${CONSECUTIVE_FAILURE_LIMIT} failures. Pausing ${Math.round(backoffMs/1000)}s then auto-resuming.`,
+          title: 'Queue processing stopped',
+          description: `Stopped after ${CONSECUTIVE_FAILURE_LIMIT} consecutive failures. Please check for issues.`,
           variant: 'destructive',
         });
         setProcessing(false);
         setBusy(false);
         loadQueueItems();
-        setTimeout(() => {
-          setConsecutiveFailures(0);
-          onProcessClick();
-        }, backoffMs);
-        return; // EXIT - skip finally block's auto-continue (we scheduled resume)
+        return; // EXIT - don't continue to finally block's auto-continue
       }
       
       // Otherwise, continue to next item (fall through to finally)
@@ -530,7 +536,7 @@ const PersonaQueue = () => {
             console.log('✅ No more pending items found');
             setConsecutiveFailures(0); // Reset when queue is empty
           }
-        }, 2000); // 2 second delay between items
+        }, 5000); // 5 second delay between items
       }
     }
   };
