@@ -1,5 +1,8 @@
 project_id = "wgerdrdsuusnrdnwwelt"
 
+[functions.openai-health-check]
+verify_jwt = false
+
 [functions.v4-persona-unified]
 verify_jwt = false
 
