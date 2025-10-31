@@ -41,7 +41,6 @@ const WhitePaper = () => {
     persona: useRef(null),
     ownership: useRef(null),
     tokenomics: useRef(null),
-    staking: useRef(null),
     earning: useRef(null),
     marketplace: useRef(null),
     research: useRef(null),
@@ -221,10 +220,6 @@ const WhitePaper = () => {
                           <TableCell className="font-medium">Treasury</TableCell>
                           <TableCell>Accumulates revenue to fund platform growth and economic sustainability.</TableCell>
                         </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Staking Module</TableCell>
-                          <TableCell>Rewards $PRSNA holders with fixed yield and dynamic revenue share.</TableCell>
-                        </TableRow>
                       </TableBody>
                     </Table>
                   </Card>
@@ -312,7 +307,7 @@ const WhitePaper = () => {
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Primary Utility</TableCell>
-                          <TableCell>Minting ERC-6551 personas, marketplace transactions, research pool access, staking, platform discounts.</TableCell>
+                          <TableCell>Minting ERC-6551 personas, marketplace transactions, research pool access, platform discounts.</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Mint Fee</TableCell>
@@ -327,51 +322,6 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
-                <div id="section-staking" ref={sectionRefs.staking} className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      <BarChart className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="m-0 p-0 border-0">Staking Model</h2>
-                  </div>
-                  
-                  <p className="mb-6">
-                    Staking available on Virtuals platform
-                  </p>
-                  
-                  <Card className="overflow-hidden bg-gray-800/50 border-gray-700/50 mb-8">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-gray-700">
-                          <TableHead className="text-white font-semibold">Feature</TableHead>
-                          <TableHead className="text-white font-semibold">Details</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Virtuals Points</TableCell>
-                          <TableCell>Earn Virtuals ecosystem points to participate in project launches</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Revenue Sharing</TableCell>
-                          <TableCell>20% of platform-wide on-chain revenue distributed to stakers.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Cooldown Period</TableCell>
-                          <TableCell>14 days</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Benefits</TableCell>
-                          <TableCell>Platform discounts, early access opportunities, future partner project eligibility.</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </Card>
-                  
-                  <p className="mb-6">
-                    Staking $PRSNA supports the platform while earning meaningful participation rewards.
-                  </p>
-                </div>
                 
                 <div id="section-earning" ref={sectionRefs.earning} className="scroll-mt-24 mb-16">
                   <div className="flex items-center gap-3 mb-6">
@@ -442,7 +392,7 @@ const WhitePaper = () => {
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Fee Collection</TableCell>
-                          <TableCell>20% of platform revenue flows to stakers; 80% grows the Treasury.</TableCell>
+                          <TableCell>Platform revenue grows the Treasury and funds development.</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -467,7 +417,7 @@ const WhitePaper = () => {
                   <ul className="mb-6">
                     <li>Researchers pay a usage fee (in $PRSNA).</li>
                     <li>Persona creators receive royalty rewards based on usage.</li>
-                    <li>Treasury and stakers continue to receive their revenue share allocation.</li>
+                    <li>Revenue flows to the Treasury to fund platform development.</li>
                   </ul>
                   
                   <div className="my-8 p-4 border-l-4 border-primary bg-primary/5 rounded-r-lg">

@@ -41,7 +41,7 @@ const EcosystemHero = ({
             <Reveal delay={200}>
               <p className="text-gray-300 text-pretty mb-10">
                 The $PRSNA token powers AI-driven market research and qualitative intelligence. 
-                Stake $PRSNA to unlock premium insights, research tools, and AI-powered predictions.
+                Use $PRSNA to access premium insights, research tools, and AI-powered predictions.
               </p>
             </Reveal>
             
@@ -70,16 +70,6 @@ const EcosystemHero = ({
                     <Wallet className="w-4 h-4 mr-2" />
                     Disconnect Wallet
                   </Button>
-                  <Button 
-                    variant="primary" 
-                    size="lg" 
-                    className="group bg-gradient-to-r from-primary to-primary/80 border-none"
-                    onClick={() => setActiveTab("staking")}
-                  >
-                    <Wallet className="w-4 h-4 mr-2" />
-                    Stake $PRSNA
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
-                  </Button>
                 </div>
               )}
             </Reveal>
@@ -101,7 +91,7 @@ const EcosystemHero = ({
                 </div>
                 
                 <p className="text-gray-300 text-pretty mb-6">
-                  Participate in our ecosystem and earn rewards. Create your own AI personas for research or join AI-powered focus groups to earn $PRSNA tokens.
+                  Participate in our ecosystem and earn tokens. Create your own AI personas for research or join AI-powered focus groups to earn $PRSNA tokens.
                 </p>
                 
                 <div className="flex flex-wrap gap-4">

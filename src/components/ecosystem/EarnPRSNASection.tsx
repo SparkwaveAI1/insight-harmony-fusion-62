@@ -17,7 +17,7 @@ const EarnPRSNASection = () => {
                   Earn $PRSNA Tokens
                 </h2>
                 <p className="text-gray-300 text-pretty mb-6">
-                  Participate in our ecosystem and earn rewards. Create your own AI personas for research or join AI-powered focus groups to earn $PRSNA tokens.
+                  Participate in our ecosystem and earn tokens. Create your own AI personas for research or join AI-powered focus groups to earn $PRSNA tokens.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link to="/prsna">

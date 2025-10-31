@@ -1,5 +1,5 @@
 
-import { ArrowRight, TrendingUp, LockIcon, Globe, Rocket } from "lucide-react";
+import { ArrowRight, TrendingUp, Globe, Rocket } from "lucide-react";
 import Card from "@/components/ui-custom/Card";
 import Reveal from "@/components/ui-custom/Reveal";
 
@@ -15,14 +15,8 @@ const TokenFeaturesOverview = () => {
     {
       id: "token-utility",
       title: "Token Utility & Research Access",
-      description: "$PRSNA fuels AI-driven market intelligence. Token holders gain access to exclusive research insights, AI-generated intelligence, and staking rewards.",
+      description: "$PRSNA fuels AI-driven market intelligence. Token holders gain access to exclusive research insights and AI-generated intelligence.",
       icon: <TrendingUp className="h-6 w-6 text-primary" />,
-    },
-    {
-      id: "staking",
-      title: "Staking & Research Rewards",
-      description: "Stake $PRSNA to unlock premium AI-generated insights, participate in focus groups, and earn staking rewards.",
-      icon: <LockIcon className="h-6 w-6 text-primary" />,
     },
     {
       id: "research",

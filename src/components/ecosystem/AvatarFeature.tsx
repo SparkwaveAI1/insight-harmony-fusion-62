@@ -69,7 +69,7 @@ const AvatarFeature = () => {
           <div className="bg-amber-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-amber-100">
             <h3 className="font-bold text-lg mb-2 text-amber-900">Token Utility</h3>
             <p className="text-amber-950 text-sm">
-              Learn about $PRSNA token use cases, staking benefits, and ecosystem opportunities.
+              Learn about $PRSNA token use cases and ecosystem opportunities.
             </p>
           </div>
           

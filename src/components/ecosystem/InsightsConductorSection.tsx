@@ -98,7 +98,7 @@ const InsightsConductorSection = () => {
                 <div className="md:w-7/12">
                   <h3 className="text-2xl font-bold mb-4">Power Your Research with $PRSNA</h3>
                   <p className="text-gray-300 mb-6">
-                    Stake $PRSNA tokens to access premium research features and generate deeper insights from your qualitative data.
+                    Use $PRSNA tokens to access premium research features and generate deeper insights from your qualitative data.
                   </p>
                   <div className="flex gap-4">
                     <Button 
@@ -112,7 +112,7 @@ const InsightsConductorSection = () => {
                       variant="secondary" 
                       className="group bg-blue-500 hover:bg-blue-600 text-white border-none"
                     >
-                      Staking Benefits
+                      Learn More
                       <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 ml-2" />
                     </Button>
                   </div>

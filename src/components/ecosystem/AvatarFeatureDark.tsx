@@ -69,7 +69,7 @@ const AvatarFeatureDark = () => {
           <div className="bg-gray-50 backdrop-blur-sm rounded-xl p-6 shadow-md border border-gray-100">
             <h3 className="font-bold text-lg mb-2 !text-black" style={{color: '#000000 !important'}}>Token Utility</h3>
             <p className="!text-black text-sm" style={{color: '#000000 !important'}}>
-              Learn about $PRSNA token use cases, staking benefits, and ecosystem opportunities.
+              Learn about $PRSNA token use cases and ecosystem opportunities.
             </p>
           </div>
           
