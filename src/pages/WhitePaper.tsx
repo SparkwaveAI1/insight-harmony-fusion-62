@@ -341,10 +341,6 @@ const WhitePaper = () => {
                       </TableHeader>
                       <TableBody>
                         <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Staking Rewards</TableCell>
-                          <TableCell>Earn 7% APR + 20% of on-chain platform revenue.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Platform Discounts</TableCell>
                           <TableCell>Reduced fees when using $PRSNA for transactions.</TableCell>
                         </TableRow>
@@ -468,7 +464,7 @@ const WhitePaper = () => {
                       <TableBody>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Phase 1</TableCell>
-                          <TableCell>Launch marketplace, staking, and ERC-6551 minting. (Q2 2025)</TableCell>
+                          <TableCell>Launch marketplace and ERC-6551 minting. (Q2 2025)</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Phase 2</TableCell>
