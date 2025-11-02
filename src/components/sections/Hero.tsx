@@ -100,16 +100,16 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="container mx-auto px-4 flex flex-col items-center">
+      <div className="container mx-auto px-6 md:px-4 flex flex-col items-center">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal delay={100} animation="blur-in">
-            <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md">
+            <h1 className="mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md px-2">
               Market Research, Reimagined: Insight from Digital Minds
             </h1>
           </Reveal>
           
           <Reveal delay={200}>
-            <p className="mb-10 text-lg md:text-xl text-gray-300 text-pretty max-w-2xl mx-auto">
+            <p className="mb-10 text-base sm:text-lg md:text-xl text-gray-300 text-pretty max-w-2xl mx-auto px-4">
               Behaviorally rich AI personas for research, testing, and decision forecasting. 
               From real interviews to strategic simulations, PersonaAI lets you model human thinking for research and insight.
             </p>
