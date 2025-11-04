@@ -36,18 +36,7 @@ const Hero = () => {
     requiresCredits: boolean = true
   ) => {
     if (!user) {
-      return (
-      <Button 
-        size="lg" 
-        className="group py-4 px-6 md:py-6 md:px-8 text-base md:text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full md:w-auto"
-        as={Link}
-        to="/sign-in"
-        variant="primary"
-      >
-        <LogIn className="mr-2 h-5 w-5" />
-        Sign In to {text}
-      </Button>
-      );
+      return null;
     }
 
     if (requiresCredits && balance !== null && balance <= 0) {
