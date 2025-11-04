@@ -7,6 +7,7 @@ import Footer from "@/components/sections/Footer";
 import Section from "@/components/ui-custom/Section";
 import ProfileForm from "@/components/profile/ProfileForm";
 import ProfileSummary from "@/components/profile/ProfileSummary";
+import { RecentActivity } from "@/components/billing/RecentActivity";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -79,6 +80,11 @@ const UserProfile = () => {
                   />
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Purchase History & Usage */}
+            <div className="mt-6">
+              <RecentActivity />
             </div>
           </div>
         </Section>
