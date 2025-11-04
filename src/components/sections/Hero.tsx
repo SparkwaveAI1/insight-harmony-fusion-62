@@ -37,40 +37,40 @@ const Hero = () => {
   ) => {
     if (!user) {
       return (
-        <Button 
-          size="lg" 
-          className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
-          as={Link}
-          to="/sign-in"
-          variant="primary"
-        >
-          <LogIn className="mr-2 h-5 w-5" />
-          Sign In to {text}
-        </Button>
+      <Button 
+        size="lg" 
+        className="group py-4 px-6 md:py-6 md:px-8 text-base md:text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full md:w-auto"
+        as={Link}
+        to="/sign-in"
+        variant="primary"
+      >
+        <LogIn className="mr-2 h-5 w-5" />
+        Sign In to {text}
+      </Button>
       );
     }
 
     if (requiresCredits && balance !== null && balance <= 0) {
       return (
-        <Button 
-          size="lg" 
-          className="group py-6 px-8 text-lg bg-orange-600 hover:bg-orange-700 transition-all shadow-lg w-full sm:w-auto"
-          onClick={() => {
-            setGateFeature(feature);
-            setShowCreditGate(true);
-          }}
-          variant="primary"
-        >
-          <CreditCard className="mr-2 h-5 w-5" />
-          Get Credits to {text}
-        </Button>
+      <Button 
+        size="lg" 
+        className="group py-4 px-6 md:py-6 md:px-8 text-base md:text-lg bg-orange-600 hover:bg-orange-700 transition-all shadow-lg w-full md:w-auto"
+        onClick={() => {
+          setGateFeature(feature);
+          setShowCreditGate(true);
+        }}
+        variant="primary"
+      >
+        <CreditCard className="mr-2 h-5 w-5" />
+        Get Credits to {text}
+      </Button>
       );
     }
 
     return (
       <Button 
         size="lg" 
-        className="group py-6 px-8 text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full sm:w-auto"
+        className="group py-4 px-6 md:py-6 md:px-8 text-base md:text-lg bg-blue-600 hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-600/30 w-full md:w-auto"
         as={Link}
         to={href}
         variant="primary"
@@ -100,7 +100,7 @@ const Hero = () => {
         </div>
       </div>
       
-      <div className="container mx-auto px-6 md:px-4 flex flex-col items-center">
+      <div className="container mx-auto px-6 md:px-8 flex flex-col items-center">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal delay={100} animation="blur-in">
             <h1 className="mb-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal leading-tight tracking-tight font-plasmik text-balance text-white drop-shadow-md px-2">
@@ -117,13 +117,13 @@ const Hero = () => {
           
           <Reveal delay={250}>
             <div className="mb-8">
-              <Link 
-                to="/pricing"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 px-8 py-4 rounded-full text-white text-lg font-bold shadow-2xl shadow-yellow-500/50 animate-pulse hover:scale-105 transition-transform cursor-pointer"
-              >
-                <Zap className="h-6 w-6 text-white fill-white" />
-                New users get 200 free credits to get started!
-              </Link>
+            <Link 
+              to="/pricing"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 px-6 md:px-8 py-3 md:py-4 rounded-full text-white text-base md:text-lg font-bold shadow-2xl shadow-yellow-500/50 animate-pulse hover:scale-105 transition-transform cursor-pointer text-center"
+            >
+              <Zap className="h-5 w-5 md:h-6 md:w-6 text-white fill-white flex-shrink-0" />
+              <span>New users get 200 free credits to get started!</span>
+            </Link>
             </div>
           </Reveal>
           

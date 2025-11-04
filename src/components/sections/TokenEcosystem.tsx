@@ -34,11 +34,11 @@ const TokenEcosystem = () => {
           
           {/* Action buttons */}
           <Reveal delay={250}>
-            <div className="flex flex-wrap justify-center gap-4 mb-10">
-              <a href="https://app.virtuals.io/virtuals/18846" target="_blank" rel="noopener noreferrer">
+            <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 mb-10">
+              <a href="https://app.virtuals.io/virtuals/18846" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                 <Button 
                   variant="primary" 
-                  className="group flex items-center gap-2"
+                  className="group flex items-center gap-2 w-full"
                 >
                   <Coins className="h-4 w-4" />
                   Buy $PRSNA
@@ -46,20 +46,20 @@ const TokenEcosystem = () => {
                 </Button>
               </a>
               
-              <a href="https://x.com/PersonaAI_agent" target="_blank" rel="noopener noreferrer">
+              <a href="https://x.com/PersonaAI_agent" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                 <Button 
                   variant="outline" 
-                  className="group flex items-center gap-2 border-gray-500"
+                  className="group flex items-center gap-2 border-gray-500 w-full"
                 >
                   <Twitter className="h-4 w-4" />
                   PersonaAI Agent on X
                 </Button>
               </a>
               
-              <a href="https://t.me/personaAIportal" target="_blank" rel="noopener noreferrer">
+              <a href="https://t.me/personaAIportal" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
                 <Button 
                   variant="outline" 
-                  className="group flex items-center gap-2 border-gray-500"
+                  className="group flex items-center gap-2 border-gray-500 w-full"
                 >
                   <MessageCircle className="h-4 w-4" />
                   Telegram Community
