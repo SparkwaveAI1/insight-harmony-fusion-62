@@ -40,23 +40,39 @@ export function CreditPackPicker({ open, onOpenChange, onPurchaseComplete }: Cre
 
     try {
       setLoading(true);
-      console.log("🛒 [BILLING] Starting credit pack checkout:", { userId: user.id, packType: selectedPack });
+      
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to purchase credits");
+      }
+
+      console.log("🛒 [BILLING] Starting credit pack checkout:", { 
+        userId: user.id, 
+        packType: selectedPack,
+        hasSession: !!session
+      });
 
       const { data, error } = await supabase.functions.invoke('billing-checkout-credit-pack', {
         body: {
           userId: user.id,
           packType: selectedPack
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      console.log("📋 [BILLING] Checkout response:", data);
+      console.log("📋 [BILLING] Checkout response:", { data, error });
 
       if (error) {
-        throw new Error(error.message || "Checkout failed");
+        console.error("❌ [BILLING] Edge function error:", error);
+        throw new Error(error.message || "Failed to create checkout session");
       }
 
       if (!data?.ok || !data?.url) {
-        throw new Error(data?.error || "Invalid checkout response");
+        console.error("❌ [BILLING] Invalid response:", data);
+        throw new Error(data?.error || "Checkout failed - no URL returned");
       }
 
       console.log("🚀 [BILLING] Redirecting to Stripe checkout:", data.url);
@@ -66,7 +82,10 @@ export function CreditPackPicker({ open, onOpenChange, onPurchaseComplete }: Cre
       if (!stripeWindow) {
         // Fallback if popup blocked
         toast.info("Popup blocked - redirecting...");
-        window.location.href = data.url;
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 2000);
+        return;
       }
       
       // Close the picker dialog

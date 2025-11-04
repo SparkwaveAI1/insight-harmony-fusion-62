@@ -84,30 +84,53 @@ export function SubscriptionPlanPicker({
 
     try {
       setLoading(true);
+      
+      // Check authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("You must be logged in to subscribe");
+      }
+
       console.log("🚀 [SUBSCRIPTION] Starting subscription checkout", {
         userId: user.id,
-        planId: selectedPlanId
+        planId: selectedPlanId,
+        hasSession: !!session
       });
 
       const { data, error } = await supabase.functions.invoke('billing-checkout-subscription', {
-        body: { userId: user.id, planId: selectedPlanId }
+        body: { userId: user.id, planId: selectedPlanId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
+
+      console.log("📝 [SUBSCRIPTION] Edge function response:", { data, error });
 
       if (error) {
         console.error("❌ [SUBSCRIPTION] Edge function error:", error);
-        throw new Error(error.message);
+        throw new Error(error.message || "Failed to create checkout session");
       }
 
-      console.log("📝 [SUBSCRIPTION] Edge function response:", data);
-
       if (!data?.ok || !data?.url) {
-        throw new Error(data?.error || "Checkout failed");
+        console.error("❌ [SUBSCRIPTION] Invalid response:", data);
+        throw new Error(data?.error || "Checkout failed - no URL returned");
       }
 
       console.log("🔗 [SUBSCRIPTION] Redirecting to Stripe:", data.url);
       
-      // Open in new tab to match credit pack behavior
-      window.open(data.url, '_blank');
+      // Open in new tab
+      const stripeWindow = window.open(data.url, '_blank');
+      if (!stripeWindow) {
+        // Fallback if popup blocked
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups for this site, or we'll redirect you now.",
+        });
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 2000);
+        return;
+      }
       
       // Close dialog and refresh data
       onOpenChange(false);
