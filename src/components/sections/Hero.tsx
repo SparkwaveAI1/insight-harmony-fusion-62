@@ -136,7 +136,7 @@ const Hero = () => {
             {/* Secondary CTA for non-logged in users */}
             {!user && (
               <div className="flex justify-center">
-                <Link to="/pricing" className="text-blue-300 hover:text-blue-200 transition-colors text-sm underline">
+                <Link to="/pricing" className="text-white hover:text-gray-200 transition-colors text-lg underline">
                   View Pricing & Features →
                 </Link>
               </div>
