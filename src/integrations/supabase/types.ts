@@ -733,7 +733,7 @@ export type Database = {
         Row: {
           access_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           participant_id: string
           timestamp: string | null
           user_email: string | null
@@ -742,7 +742,7 @@ export type Database = {
         Insert: {
           access_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           participant_id: string
           timestamp?: string | null
           user_email?: string | null
@@ -751,7 +751,7 @@ export type Database = {
         Update: {
           access_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           participant_id?: string
           timestamp?: string | null
           user_email?: string | null
@@ -1474,6 +1474,7 @@ export type Database = {
           name: string
           persona_id: string
           profile_image_url: string | null
+          profile_thumbnail_url: string | null
           schema_version: string
           statistical_enhancement_status: string | null
           thought_coherence: number | null
@@ -1497,6 +1498,7 @@ export type Database = {
           name: string
           persona_id: string
           profile_image_url?: string | null
+          profile_thumbnail_url?: string | null
           schema_version?: string
           statistical_enhancement_status?: string | null
           thought_coherence?: number | null
@@ -1520,6 +1522,7 @@ export type Database = {
           name?: string
           persona_id?: string
           profile_image_url?: string | null
+          profile_thumbnail_url?: string | null
           schema_version?: string
           statistical_enhancement_status?: string | null
           thought_coherence?: number | null
@@ -1622,7 +1625,7 @@ export type Database = {
         Returns: undefined
       }
       cleanup_orphaned_persona_references: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cleaned_count: number
         }[]
@@ -1631,32 +1634,20 @@ export type Database = {
         Args: { full_profile_data: Json }
         Returns: Json
       }
-      fail_stale_persona_jobs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      fail_stale_persona_jobs: { Args: never; Returns: undefined }
       find_orphaned_persona_references: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           collection_id: string
           collection_name: string
           persona_id: string
         }[]
       }
-      fix_orphaned_persona_queue_items: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generate_participant_identifier: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      fix_orphaned_persona_queue_items: { Args: never; Returns: undefined }
+      generate_participant_identifier: { Args: never; Returns: string }
+      get_current_user_id: { Args: never; Returns: string }
       get_queue_health_status: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           oldest_stuck_item: string
           processing_time_minutes: number
@@ -1666,7 +1657,7 @@ export type Database = {
         }[]
       }
       get_user_projects_with_counts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           conversation_count: number
           created_at: string
@@ -1690,26 +1681,6 @@ export type Database = {
           renewal_date: string
         }[]
       }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1717,10 +1688,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_researcher_or_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_researcher_or_admin: { Args: { _user_id: string }; Returns: boolean }
       manual_clear_queue_item: {
         Args: { clear_reason?: string; item_id: string }
         Returns: {
@@ -1741,13 +1709,16 @@ export type Database = {
           updated_at: string | null
           user_id: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "persona_creation_queue"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      normalize_question: {
-        Args: { q: Json }
-        Returns: Json
-      }
+      normalize_question: { Args: { q: Json }; Returns: Json }
       pop_next_persona_queue: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           attempt_count: number | null
           collections: string[] | null
@@ -1766,19 +1737,15 @@ export type Database = {
           updated_at: string | null
           user_id: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "persona_creation_queue"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "researcher" | "user"
