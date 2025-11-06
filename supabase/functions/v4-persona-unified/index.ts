@@ -226,11 +226,15 @@ Original description: ${user_description}`
         body: { personaData }
       })
 
+      let profileThumbnailUrl = null
+
       if (imageError) {
         console.error('❌ Nano Banana image generation failed:', imageError)
       } else {
         profileImageUrl = imageData.image_url
+        profileThumbnailUrl = imageData.thumbnail_url
         console.log('✅ Image generated with Nano Banana:', profileImageUrl)
+        console.log('✅ Thumbnail generated:', profileThumbnailUrl)
       }
     } catch (imageError) {
       console.error('❌ Image generation error:', imageError)
@@ -613,6 +617,7 @@ Ensure all traits are coherent with the background story and character essence. 
         conversation_summary: conversationSummary,
         background: background,
         profile_image_url: profileImageUrl,
+        profile_thumbnail_url: profileThumbnailUrl,
         creation_stage: 'completed',
         creation_completed: true,
         created_at: new Date().toISOString(),

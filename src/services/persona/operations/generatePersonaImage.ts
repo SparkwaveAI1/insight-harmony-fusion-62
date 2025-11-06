@@ -6,6 +6,7 @@ import { toast } from "sonner";
 export interface GenerateImageResponse {
   success: boolean;
   image_url?: string;
+  thumbnail_url?: string;
   prompt?: string;
   error?: string;
 }
@@ -32,6 +33,21 @@ export const generatePersonaImage = async (persona: Persona): Promise<string | n
     if (!response.success || !response.image_url) {
       console.error("Image generation failed:", response.error || "No image URL returned");
       toast.error("Failed to generate persona image");
+      return null;
+    }
+
+    // Update persona with new image URLs
+    const { error: updateError } = await supabase
+      .from('v4_personas')
+      .update({
+        profile_image_url: response.image_url,
+        profile_thumbnail_url: response.thumbnail_url
+      })
+      .eq('persona_id', persona.persona_id);
+
+    if (updateError) {
+      console.error("Failed to update persona with new image:", updateError);
+      toast.error("Image generated but failed to save");
       return null;
     }
     

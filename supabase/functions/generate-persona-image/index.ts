@@ -44,15 +44,6 @@ serve(async (req) => {
       SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Update the persona record with both image URLs
-    await updatePersonaWithImageUrl(
-      personaData.persona_id, 
-      fullUrl, 
-      SUPABASE_URL, 
-      SUPABASE_SERVICE_ROLE_KEY,
-      thumbnailUrl
-    );
-    
     return new Response(
       JSON.stringify({
         success: true,
