@@ -8,6 +8,8 @@ import { getMyV4PersonasShowAll } from "@/services/persona";
 import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona/operations/updatePersona";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MyPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
@@ -33,6 +35,7 @@ const MyPersonasList = ({
   const { user, isLoading: authLoading } = useAuth();
   const [personas, setPersonas] = useState<V4Persona[]>([]);
   const queryClient = useQueryClient();
+  
   // Show ALL user's personas without any filtering
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['my-personas-show-all', user?.id],
@@ -56,6 +59,9 @@ const MyPersonasList = ({
     staleTime: 5 * 60 * 1000,
     retry: 1
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Update the parent component with loaded personas
   useEffect(() => {
@@ -122,10 +128,21 @@ const MyPersonasList = ({
     maxResults: 50 
   });
 
-  // Update local state only when searchedPersonas actually changes
+  // Pagination
+  const totalPages = Math.ceil(searchedPersonas.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPersonas = searchedPersonas.slice(startIndex, endIndex);
+
+  // Update local state only when paginatedPersonas actually changes
   useEffect(() => {
-    setPersonas(searchedPersonas);
-  }, [searchedPersonas]);
+    setPersonas(paginatedPersonas);
+  }, [paginatedPersonas]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedTags, selectedAge, selectedRegion, selectedIncome, selectedSourceType]);
 
   // Handle visibility changes
   const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
@@ -203,15 +220,45 @@ const MyPersonasList = ({
   }
 
   return (
-    <div className={className}>
-      {personas.map((persona) => (
-        <PersonaCard 
-          key={persona.persona_id} 
-          persona={persona}
-          onVisibilityChange={handleVisibilityChange}
-          onDelete={handleDelete}
-        />
-      ))}
+    <div>
+      <div className={className}>
+        {personas.map((persona) => (
+          <PersonaCard 
+            key={persona.persona_id} 
+            persona={persona}
+            onVisibilityChange={handleVisibilityChange}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+      
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8 pb-8">
+          <Button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            variant="outline"
+            size="sm"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages} ({searchedPersonas.length} personas)
+          </span>
+          
+          <Button
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            variant="outline"
+            size="sm"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
