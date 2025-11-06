@@ -12,9 +12,9 @@ export async function generateImageWithOpenAI(prompt: string, apiKey: string): P
       model: "dall-e-3",
       prompt: prompt,
       n: 1,
-      size: "1024x1024",
+      size: "512x512",
       response_format: "b64_json", // Request base64 instead of URL to avoid CORS
-      quality: "hd",
+      quality: "standard",
       style: "natural"
     })
   });
