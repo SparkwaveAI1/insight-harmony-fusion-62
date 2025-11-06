@@ -12,6 +12,7 @@ import { PersonaJsonUpload } from "./PersonaJsonUpload";
 import { PersonaJsonUploadHelp } from "./PersonaJsonUploadHelp";
 import { PersonaSelectionInterface } from "./PersonaSelectionInterface";
 import { PersonaStatsCards } from "../dashboard/PersonaStatsCards";
+import { BatchThumbnailGenerator } from "./BatchThumbnailGenerator";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
@@ -62,6 +63,9 @@ export function AdminDashboard() {
 
       {/* Admin Alerts */}
       <AdminAlerts />
+
+      {/* Batch Thumbnail Generator */}
+      <BatchThumbnailGenerator />
 
       {/* Grok Prompt Monitor */}
       <GrokPromptMonitor />
