@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 import { buildImagePrompt } from "./promptBuilder.ts";
 import { generateImageWithGemini } from "./geminiService.ts";
-import { uploadImageToStorage, updatePersonaWithImageUrl } from "./imageUploadService.ts";
+import { uploadImageWithThumbnail, updatePersonaWithImageUrl } from "./imageUploadService.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -36,26 +36,28 @@ serve(async (req) => {
     // Generate image with Gemini
     const base64Image = await generateImageWithGemini(imagePrompt, GEMINI_API_KEY);
     
-    // Upload image to Supabase storage
-    const publicUrl = await uploadImageToStorage(
-      base64Image, 
-      personaData.persona_id, 
-      SUPABASE_URL, 
+    // Upload image to Supabase storage (both full and thumbnail)
+    const { fullUrl, thumbnailUrl } = await uploadImageWithThumbnail(
+      base64Image,
+      personaData.persona_id,
+      SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY
     );
     
-    // Update the persona record with the new image URL
+    // Update the persona record with both image URLs
     await updatePersonaWithImageUrl(
       personaData.persona_id, 
-      publicUrl, 
+      fullUrl, 
       SUPABASE_URL, 
-      SUPABASE_SERVICE_ROLE_KEY
+      SUPABASE_SERVICE_ROLE_KEY,
+      thumbnailUrl
     );
     
     return new Response(
       JSON.stringify({
         success: true,
-        image_url: publicUrl,
+        image_url: fullUrl,
+        thumbnail_url: thumbnailUrl,
         prompt: imagePrompt
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
