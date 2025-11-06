@@ -5,16 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/layout/Header";
 import {
-  getUserCollectionsWithCount,
-  getPublicCollectionsWithCount,
   createCollection,
   deleteCollection,
   Collection,
   CollectionWithPersonaCount,
   updateCollection
 } from "@/services/collections/collectionsService";
+import { useCursorFeed } from "@/hooks/useCursorFeed";
+import { supabase } from "@/integrations/supabase/client";
 import Button from "@/components/ui-custom/Button";
-import { Plus, Trash2, Edit, FolderOpen, Search, Grid, List, Globe, Lock } from "lucide-react";
+import { Plus, Trash2, Edit, FolderOpen, Search, Grid, List, Globe, Lock, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,9 +27,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const Collections = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [myCollections, setMyCollections] = useState<CollectionWithPersonaCount[]>([]);
-  const [publicCollections, setPublicCollections] = useState<CollectionWithPersonaCount[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('my-collections');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -47,38 +44,63 @@ const Collections = () => {
   // Use deferred value for search to prevent excessive re-renders
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  // Filter collections based on search query and active tab
+  // Fetch function for cursor-based pagination
+  const fetchCollectionsPage = useCallback(async (cursor?: string) => {
+    const { data, error } = await supabase.functions.invoke('collections-list', {
+      body: { 
+        type: activeTab === 'my-collections' ? 'user' : 'public',
+        cursor 
+      }
+    });
+
+    if (error) throw error;
+    return { 
+      data: data.data || [], 
+      next_cursor: data.next_cursor 
+    };
+  }, [activeTab]);
+
+  // Separate pagination feeds for each tab
+  const myCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
+    useCallback(async (cursor?: string) => {
+      const { data, error } = await supabase.functions.invoke('collections-list', {
+        body: { type: 'user', cursor }
+      });
+      if (error) throw error;
+      return { data: data.data || [], next_cursor: data.next_cursor };
+    }, [])
+  );
+
+  const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
+    useCallback(async (cursor?: string) => {
+      const { data, error } = await supabase.functions.invoke('collections-list', {
+        body: { type: 'public', cursor }
+      });
+      if (error) throw error;
+      return { data: data.data || [], next_cursor: data.next_cursor };
+    }, [])
+  );
+
+  const currentFeed = activeTab === 'my-collections' ? myCollectionsFeed : publicCollectionsFeed;
+
+  // Filter collections based on search query
   const filteredCollections = useMemo(() => {
-    const collections = activeTab === 'my-collections' ? myCollections : publicCollections;
-    
     if (!deferredSearchQuery.trim()) {
-      return collections;
+      return currentFeed.items;
     }
-    return collections.filter(collection =>
+    return currentFeed.items.filter(collection =>
       collection.name.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
       (collection.description && collection.description.toLowerCase().includes(deferredSearchQuery.toLowerCase()))
     );
-  }, [myCollections, publicCollections, activeTab, deferredSearchQuery]);
+  }, [currentFeed.items, deferredSearchQuery]);
 
+  // Initial load
   useEffect(() => {
     if (user) {
-      fetchCollections();
+      myCollectionsFeed.reset();
+      publicCollectionsFeed.reset();
     }
   }, [user]);
-
-  const fetchCollections = async () => {
-    setLoading(true);
-    try {
-      const [myData, publicData] = await Promise.all([
-        getUserCollectionsWithCount(),
-        getPublicCollectionsWithCount()
-      ]);
-      setMyCollections(myData);
-      setPublicCollections(publicData);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -102,7 +124,11 @@ const Collections = () => {
         setName("");
         setDescription("");
         setIsPublic(false);
-        fetchCollections();
+        // Refresh the appropriate feed
+        if (isPublic) {
+          publicCollectionsFeed.reset();
+        }
+        myCollectionsFeed.reset();
         toast.success(`Collection "${name}" created successfully`);
       }
     } finally {
@@ -126,7 +152,9 @@ const Collections = () => {
 
       if (result) {
         setEditDialogOpen(false);
-        fetchCollections();
+        // Refresh both feeds since visibility might have changed
+        myCollectionsFeed.reset();
+        publicCollectionsFeed.reset();
         toast.success(`Collection "${name}" updated successfully`);
       }
     } finally {
@@ -143,7 +171,9 @@ const Collections = () => {
       if (result) {
         toast.success(`Collection "${selectedCollection.name}" deleted`);
         setDeleteDialogOpen(false);
-        fetchCollections();
+        // Refresh both feeds
+        myCollectionsFeed.reset();
+        publicCollectionsFeed.reset();
       }
     } catch (error) {
       console.error("Error deleting collection:", error);
@@ -213,7 +243,7 @@ const Collections = () => {
           </div>
         </div>
 
-        {loading ? (
+        {currentFeed.items.length === 0 && !currentFeed.hasMore ? (
           <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-48 rounded-lg bg-muted/30 animate-pulse"></div>
@@ -363,6 +393,20 @@ const Collections = () => {
             })}
           </div>
         )}
+
+        {/* Load More Button */}
+        {filteredCollections.length > 0 && currentFeed.hasMore && (
+          <div className="flex justify-center mt-8">
+            <Button
+              onClick={() => currentFeed.loadMore()}
+              variant="outline"
+              disabled={!currentFeed.hasMore}
+            >
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Load More
+            </Button>
+          </div>
+        )}
       </>
     );
   }
@@ -394,14 +438,14 @@ const Collections = () => {
                   <Lock className="h-4 w-4" />
                   My Collections
                   <Badge variant="secondary" className="ml-1">
-                    {myCollections.length}
+                    {myCollectionsFeed.items.length}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="public-collections" className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
                   Public Collections
                   <Badge variant="secondary" className="ml-1">
-                    {publicCollections.length}
+                    {publicCollectionsFeed.items.length}
                   </Badge>
                 </TabsTrigger>
               </TabsList>
