@@ -6,6 +6,8 @@ import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
 import { getPublicV4PersonasShowAll } from "@/services/persona";
 import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PublicPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
@@ -39,6 +41,9 @@ const PublicPersonasList = ({
     refetchOnWindowFocus: true,
     retry: 1
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Update the parent component with loaded personas
   useEffect(() => {
@@ -105,10 +110,21 @@ const PublicPersonasList = ({
     maxResults: 50 
   });
 
+  // Pagination
+  const totalPages = Math.ceil(searchedPersonas.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPersonas = searchedPersonas.slice(startIndex, endIndex);
+
   // Update local state
   useEffect(() => {
-    setPersonas(searchedPersonas);
-  }, [searchedPersonas]);
+    setPersonas(paginatedPersonas);
+  }, [paginatedPersonas]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedTags, selectedAge, selectedRegion, selectedIncome, selectedSourceType]);
 
   if (error) {
     console.error("Error loading public personas:", error);
@@ -146,7 +162,8 @@ const PublicPersonasList = ({
   };
 
   return (
-    <div className={className}>
+    <div>
+      <div className={className}>
         {personas.map((persona) => (
           <PersonaCard
             key={persona.persona_id}
@@ -154,6 +171,35 @@ const PublicPersonasList = ({
             onVisibilityChange={handleVisibilityChange}
           />
         ))}
+      </div>
+      
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8 pb-8">
+          <Button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            variant="outline"
+            size="sm"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages} ({searchedPersonas.length} personas)
+          </span>
+          
+          <Button
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            variant="outline"
+            size="sm"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
