@@ -13,6 +13,7 @@ export interface Persona {
   user_id: string;
   is_public: boolean;
   profile_image_url?: string;
+  profile_thumbnail_url?: string;
   prompt?: string;
   version?: string;
   

@@ -590,6 +590,7 @@ export interface V4Persona {
   user_id: string;
   schema_version: string;
   profile_image_url?: string;
+  profile_thumbnail_url?: string;
   is_public: boolean;
   background?: string; // Life story/background from three-phase generation
   

@@ -19,7 +19,7 @@ export const ActivePersonasDisplay: React.FC<ActivePersonasDisplayProps> = ({
         {loadedPersonas.map((persona) => (
           <div key={persona.persona_id} className="flex items-center gap-2 bg-background rounded-lg p-2 border">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={persona.profile_image_url} />
+              <AvatarImage src={persona.profile_thumbnail_url || persona.profile_image_url} />
               <AvatarFallback className="text-xs">
                 {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>

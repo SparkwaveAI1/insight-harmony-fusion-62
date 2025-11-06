@@ -135,7 +135,7 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
             {/* Profile Photo */}
             <Avatar className="h-20 w-20 border-2 border-border rounded-lg flex-shrink-0">
               <AvatarImage 
-                src={persona.profile_image_url} 
+                src={persona.profile_thumbnail_url || persona.profile_image_url} 
                 alt={persona.name}
                 className="object-cover rounded-lg"
                 loading="lazy"
