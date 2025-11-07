@@ -198,7 +198,7 @@ Original description: ${user_description}`
     // PHASE 4: Image Generation using Nano Banana
     console.log('🎨 Phase 4: Generating persona image with Nano Banana...')
     let profileImageUrl = null
-    
+    let profileThumbnailUrl = null
     try {
       // Use existing generate-persona-image function with Nano Banana, structuring data for V4 prompt builder
       const personaData = {
@@ -225,8 +225,6 @@ Original description: ${user_description}`
       const { data: imageData, error: imageError } = await supabase.functions.invoke('generate-persona-image', {
         body: { personaData }
       })
-
-      let profileThumbnailUrl = null
 
       if (imageError) {
         console.error('❌ Nano Banana image generation failed:', imageError)
