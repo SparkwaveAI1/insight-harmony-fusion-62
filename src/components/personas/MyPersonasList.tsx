@@ -56,7 +56,9 @@ const MyPersonasList = ({
       return data;
     },
     enabled: !!user?.id && !authLoading,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,  // Cache for 5 minutes
+    refetchOnMount: false,      // Don't refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch when window gets focus
     retry: 1
   });
 
