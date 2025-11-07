@@ -18,7 +18,7 @@ export function BatchThumbnailGenerator() {
         .select('persona_id, profile_image_url')
         .not('profile_image_url', 'is', null)
         .is('profile_thumbnail_url', null)
-        .limit(100); // Process in batches
+        .limit(500); // Process all remaining thumbnails
 
       if (error) throw error;
 
@@ -40,11 +40,8 @@ export function BatchThumbnailGenerator() {
         if (updateError) {
           console.error(`Failed to update persona ${persona.persona_id}:`, updateError);
         }
-        
-        setProgress({ current: i + 1, total: personas.length });
-        
-        // Add delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+      
+      setProgress({ current: i + 1, total: personas.length });
       }
       
       toast({
