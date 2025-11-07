@@ -322,7 +322,7 @@ const PersonaQueue = () => {
     // Helper to fail with proper error capture
     const fail = async (msg: string): Promise<never> => {
       if (currentItemId) {
-        await updateQueueStatusSafe(currentItemId, 'failed', undefined, msg);
+        await deleteQueueItem(currentItemId);
       }
       throw new Error(msg);
     };
@@ -488,9 +488,9 @@ const PersonaQueue = () => {
     } catch (error: any) {
       console.error('❌ Error processing queue item:', error);
       
-      // Update status to failed with error message if we have an item ID
+      // Delete failed item from queue
       if (currentItemId) {
-        await updateQueueStatusSafe(currentItemId, 'failed', undefined, `Processor error: ${error?.message ?? 'unknown'}`);
+        await deleteQueueItem(currentItemId);
       }
       
       // Track consecutive failures
@@ -688,12 +688,12 @@ const PersonaQueue = () => {
                                       <Trash2 className="h-3 w-3" />
                                     </Button>
                                   )}
-                                  {(item.status === 'failed' || item.status.startsWith('processing')) && (
+                                  {item.status.startsWith('processing') && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleManualClear(item.id, item.name)}
-                                      title="Mark as failed"
+                                      title="Force clear stuck item"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>

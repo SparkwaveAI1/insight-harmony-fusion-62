@@ -58,7 +58,6 @@ export const getStatusColor = (status: string): string => {
     case 'processing_stage2': return 'text-blue-600';
     case 'processing_stage3': return 'text-blue-600';
     case 'completed': return 'text-green-600';
-    case 'failed': return 'text-red-600';
     default: return 'text-muted-foreground';
   }
 };
@@ -71,7 +70,6 @@ export const getStatusDisplay = (status: string): string => {
     case 'processing_stage2': return 'Stage 2: Enriching';
     case 'processing_stage3': return 'Stage 3: Image Gen';
     case 'completed': return 'Completed';
-    case 'failed': return 'Failed';
     default: return status;
   }
 };
