@@ -47,21 +47,24 @@ export function getPersonaOccupation(persona: V4Persona): string | undefined {
  * Safely extract location from V4 persona
  */
 export function getPersonaLocation(persona: V4Persona): string | undefined {
-  // First check conversation_summary demographics (legacy data)
+  // First check full_profile identity (new structure with state info)
+  if (persona.full_profile?.identity?.location) {
+    const loc = persona.full_profile.identity.location;
+    
+    // Handle location object with city and region (state)
+    if (typeof loc === 'object' && loc.city && loc.region) {
+      return `${loc.city}, ${loc.region}`;
+    }
+    
+    // Handle if it's somehow a string
+    if (typeof loc === 'string') return loc;
+  }
+  
+  // Fall back to conversation_summary demographics (legacy data without state)
   if (persona.conversation_summary?.demographics?.location) {
     return persona.conversation_summary.demographics.location;
   }
   
-  // Then check full_profile identity (new structure)
-  if (persona.full_profile?.identity?.location) {
-    const loc = persona.full_profile.identity.location;
-    if (typeof loc === 'string') return loc;
-    
-    // Handle location object
-    if (typeof loc === 'object' && loc.city && loc.region) {
-      return `${loc.city}, ${loc.region}`;
-    }
-  }
   return undefined;
 }
 
