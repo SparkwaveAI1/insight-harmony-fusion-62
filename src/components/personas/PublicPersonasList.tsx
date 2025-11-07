@@ -36,9 +36,9 @@ const PublicPersonasList = ({
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['public-personas-show-all'],
     queryFn: getPublicV4PersonasShowAll,
-    staleTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000,  // Cache for 5 minutes
+    refetchOnMount: false,      // Don't refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch when window gets focus
     retry: 1
   });
 
