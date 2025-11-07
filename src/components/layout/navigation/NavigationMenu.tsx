@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { navigationMenuItems, adminNavItems } from "../config/navigationConfig";
-import { useAuth } from "@/context/AuthContext";
+import { useHasRole } from "@/hooks/useHasRole";
 import { cn } from "@/lib/utils";
 import {
   SidebarGroup,
@@ -11,14 +11,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const ADMIN_EMAILS = ["cumbucotrader@gmail.com", "scott@sparkwave-ai.com"]; // Replace with actual admin emails
-
 export function NavigationMenu() {
   const location = useLocation();
-  const { user } = useAuth();
-  
-  // Check if user is admin
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
+  const { hasRole: isAdmin } = useHasRole("admin");
   
   // Combine regular navigation with admin items if user is admin
   const allNavItems = isAdmin ? [...navigationMenuItems, ...adminNavItems] : navigationMenuItems;

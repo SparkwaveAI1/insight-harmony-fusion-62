@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useHasRole } from "@/hooks/useHasRole";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PersonaEnhancementTools } from "./PersonaEnhancementTools";
 import { PersonaCompletenessAnalysis } from "./PersonaCompletenessAnalysis";
@@ -17,17 +17,16 @@ import { BatchThumbnailGenerator } from "./BatchThumbnailGenerator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Shield } from "lucide-react";
 
-// Admin emails - add yours here
-const ADMIN_EMAILS = [
-  "cumbucotrader@gmail.com",
-  "scott@sparkwave-ai.com",
-];
-
 export function AdminDashboard() {
-  const { user } = useAuth();
+  const { hasRole: isAdmin, loading } = useHasRole("admin");
 
-  // Check if user is admin
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (

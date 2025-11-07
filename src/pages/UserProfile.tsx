@@ -9,22 +9,13 @@ import ProfileForm from "@/components/profile/ProfileForm";
 import ProfileSummary from "@/components/profile/ProfileSummary";
 import { RecentActivity } from "@/components/billing/RecentActivity";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useAuth } from "@/context/AuthContext";
+import { useHasRole } from "@/hooks/useHasRole";
 import { useNavigate } from "react-router-dom";
-
-// Admin emails - keep in sync with AdminDashboard
-const ADMIN_EMAILS = [
-  "cumbucotrader@gmail.com", 
-  "scott@sparkwave-ai.com",
-];
 
 const UserProfile = () => {
   const { profile, loading, updateProfile } = useUserProfile();
-  const { user } = useAuth();
+  const { hasRole: isAdmin } = useHasRole("admin");
   const navigate = useNavigate();
-  
-  // Check if user is admin
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
 
   if (loading) {
     return (
