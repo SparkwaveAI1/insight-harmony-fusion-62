@@ -25,6 +25,18 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getBearerAndBase, retryFetch } from "@/utils/supabase-helpers";
 
+// Debug helper to diagnose collection loading issues
+const debugCollections = {
+  log: (message: string, data?: any) => {
+    const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
+    console.log(`[${timestamp}] Collections Debug:`, message, data || '');
+  },
+  error: (message: string, error: any) => {
+    const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
+    console.error(`[${timestamp}] Collections Error:`, message, error);
+  }
+};
+
 const Collections = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -66,10 +78,50 @@ const Collections = () => {
     return { data: payload.data || [], next_cursor: payload.next_cursor };
   }, [activeTab]);
 
+  // Add automatic status report on component mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      debugCollections.log('=== COLLECTIONS STATUS CHECK ===');
+      
+      // Check auth status
+      const session = await supabase.auth.getSession();
+      debugCollections.log('Session exists:', !!session.data.session);
+      debugCollections.log('Token expires at:', session.data.session?.expires_at);
+      
+      // Try a test call to collections-list
+      try {
+        const { token, base } = await getBearerAndBase(supabase);
+        debugCollections.log('Token obtained:', token ? 'Yes' : 'No');
+        
+        const testUrl = `${base}/functions/v1/collections-list?type=public`;
+        const testRes = await fetch(testUrl, {
+          headers: { authorization: `Bearer ${token}` }
+        });
+        
+        debugCollections.log('Test call to collections-list:', {
+          status: testRes.status,
+          statusText: testRes.statusText,
+          ok: testRes.ok
+        });
+        
+        if (!testRes.ok) {
+          const errorText = await testRes.text();
+          debugCollections.error('Collections endpoint error:', errorText);
+        }
+      } catch (error) {
+        debugCollections.error('Failed to reach collections endpoint:', error);
+      }
+      
+      debugCollections.log('=== END STATUS CHECK ===');
+    };
+    
+    checkStatus();
+  }, []);
+
   // Separate pagination feeds for each tab
   const myCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      console.log('[DEBUG] Fetching my collections, cursor:', cursor);
+      debugCollections.log('Fetching my collections', { cursor, user: user?.id });
       const { token, base } = await getBearerAndBase(supabase);
       const params = new URLSearchParams();
       params.set('type', 'user');
@@ -94,7 +146,12 @@ const Collections = () => {
           
           if (retryRes.ok) {
             const payload = await retryRes.json();
-            console.log('[DEBUG] My collections response (after retry):', { status: retryRes.status, data: payload });
+            debugCollections.log('My collections response (after retry)', { 
+              status: retryRes.status, 
+              ok: retryRes.ok,
+              hasData: !!payload?.data,
+              count: payload?.data?.length 
+            });
             return { data: payload.data || [], next_cursor: payload.next_cursor };
           }
         }
@@ -111,14 +168,19 @@ const Collections = () => {
       }
       
       const payload = await res.json();
-      console.log('[DEBUG] My collections response:', { status: res.status, data: payload });
+      debugCollections.log('My collections response', { 
+        status: res.status, 
+        ok: res.ok,
+        hasData: !!payload?.data,
+        count: payload?.data?.length 
+      });
       return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
   );
 
   const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      console.log('[DEBUG] Fetching public collections, cursor:', cursor);
+      debugCollections.log('Fetching public collections', { cursor, user: user?.id });
       const { token, base } = await getBearerAndBase(supabase);
       const params = new URLSearchParams();
       params.set('type', 'public');
@@ -136,7 +198,12 @@ const Collections = () => {
       }
       
       const payload = await res.json();
-      console.log('[DEBUG] Public collections response:', { status: res.status, data: payload });
+      debugCollections.log('Public collections response', { 
+        status: res.status, 
+        ok: res.ok,
+        hasData: !!payload?.data,
+        count: payload?.data?.length 
+      });
       return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
   );
@@ -157,7 +224,7 @@ const Collections = () => {
   // Initial load
   useEffect(() => {
     if (!user?.id) return;
-    console.log('[DEBUG] Resetting feeds for user:', user?.id);
+    debugCollections.log('Resetting feeds for user:', user?.id);
     myCollectionsFeed.reset();
     publicCollectionsFeed.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
