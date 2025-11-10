@@ -8,18 +8,11 @@ export function useCursorFeed<T>(fetchPage: FetchPage<T>) {
   const [hasMore, setHasMore] = useState(true);
   const inflight = useRef(false);
 
-  const reset = useCallback(async () => {
-    setItems([]);
-    setCursor(null);
-    setHasMore(true);
-    await loadMore(true);
-  }, []);
-
   const loadMore = useCallback(async (resetting = false) => {
     if (inflight.current || (!hasMore && !resetting)) return;
     inflight.current = true;
     try {
-      const res = await fetchPage(resetting ? null : cursor || undefined);
+      const res = await fetchPage(resetting ? undefined : cursor || undefined);
       setItems(prev => (resetting ? res.data : [...prev, ...res.data]));
       setCursor(res.next_cursor);
       setHasMore(Boolean(res.next_cursor));
@@ -27,6 +20,13 @@ export function useCursorFeed<T>(fetchPage: FetchPage<T>) {
       inflight.current = false;
     }
   }, [cursor, hasMore, fetchPage]);
+
+  const reset = useCallback(async () => {
+    setItems([]);
+    setCursor(null);
+    setHasMore(true);
+    await loadMore(true);
+  }, [loadMore]);
 
   return { items, hasMore, loadMore, reset, setItems };
 }

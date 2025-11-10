@@ -100,7 +100,7 @@ const Collections = () => {
       myCollectionsFeed.reset();
       publicCollectionsFeed.reset();
     }
-  }, [user]);
+  }, [user, myCollectionsFeed.reset, publicCollectionsFeed.reset]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
