@@ -114,11 +114,11 @@ const Collections = () => {
 
   // Initial load
   useEffect(() => {
-    if (user) {
-      myCollectionsFeed.reset();
-      publicCollectionsFeed.reset();
-    }
-  }, [user, myCollectionsFeed.reset, publicCollectionsFeed.reset]);
+    if (!user?.id) return;
+    myCollectionsFeed.reset();
+    publicCollectionsFeed.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]); // Only reset when user ID changes, not on every render
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
