@@ -77,7 +77,37 @@ const Collections = () => {
         method: 'GET',
         headers: { authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`collections-list failed: ${res.status}`);
+      
+      // Handle 401 by refreshing session and retrying once
+      if (res.status === 401) {
+        console.log('[Collections] Got 401, attempting session refresh...');
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (!refreshError) {
+          // Get new token after refresh
+          const { token: newToken } = await getBearerAndBase(supabase);
+          const retryRes = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}`, {
+            method: 'GET',
+            headers: { authorization: `Bearer ${newToken}` },
+          });
+          
+          if (retryRes.ok) {
+            const payload = await retryRes.json();
+            return { data: payload.data || [], next_cursor: payload.next_cursor };
+          }
+        }
+        
+        // If refresh failed or retry still got 401
+        toast.error("Your session has expired. Please sign in again.");
+        return { data: [], next_cursor: null };
+      }
+      
+      if (!res.ok) {
+        console.error('[Collections] Error response:', res.status);
+        toast.error("Failed to load collections");
+        return { data: [], next_cursor: null };
+      }
+      
       const payload = await res.json();
       return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
@@ -93,7 +123,14 @@ const Collections = () => {
         method: 'GET',
         headers: { authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error(`collections-list failed: ${res.status}`);
+      
+      // Public collections don't require auth, just return empty on any error
+      if (!res.ok) {
+        console.error('[Collections] Error fetching public collections:', res.status);
+        toast.error("Failed to load public collections");
+        return { data: [], next_cursor: null };
+      }
+      
       const payload = await res.json();
       return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
