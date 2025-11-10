@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { getBearerAndBase, retryFetch } from "@/utils/supabase-helpers";
 
 const Collections = () => {
   const { user } = useAuth();
@@ -46,38 +47,55 @@ const Collections = () => {
 
   // Fetch function for cursor-based pagination
   const fetchCollectionsPage = useCallback(async (cursor?: string) => {
-    const { data, error } = await supabase.functions.invoke('collections-list', {
-      body: { 
-        type: activeTab === 'my-collections' ? 'user' : 'public',
-        cursor 
-      }
+    const { token, base } = await getBearerAndBase(supabase);
+    const params = new URLSearchParams();
+    params.set('type', activeTab === 'my-collections' ? 'user' : 'public');
+    if (cursor) params.set('cursor', cursor);
+
+    const res = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}`, {
+      method: 'GET',
+      headers: { authorization: `Bearer ${token}` },
     });
 
-    if (error) throw error;
-    return { 
-      data: data.data || [], 
-      next_cursor: data.next_cursor 
-    };
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`collections-list failed: ${res.status} ${errText}`);
+    }
+
+    const payload = await res.json();
+    return { data: payload.data || [], next_cursor: payload.next_cursor };
   }, [activeTab]);
 
   // Separate pagination feeds for each tab
   const myCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      const { data, error } = await supabase.functions.invoke('collections-list', {
-        body: { type: 'user', cursor }
+      const { token, base } = await getBearerAndBase(supabase);
+      const params = new URLSearchParams();
+      params.set('type', 'user');
+      if (cursor) params.set('cursor', cursor);
+      const res = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}` , {
+        method: 'GET',
+        headers: { authorization: `Bearer ${token}` },
       });
-      if (error) throw error;
-      return { data: data.data || [], next_cursor: data.next_cursor };
+      if (!res.ok) throw new Error(`collections-list failed: ${res.status}`);
+      const payload = await res.json();
+      return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
   );
 
   const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      const { data, error } = await supabase.functions.invoke('collections-list', {
-        body: { type: 'public', cursor }
+      const { token, base } = await getBearerAndBase(supabase);
+      const params = new URLSearchParams();
+      params.set('type', 'public');
+      if (cursor) params.set('cursor', cursor);
+      const res = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}` , {
+        method: 'GET',
+        headers: { authorization: `Bearer ${token}` },
       });
-      if (error) throw error;
-      return { data: data.data || [], next_cursor: data.next_cursor };
+      if (!res.ok) throw new Error(`collections-list failed: ${res.status}`);
+      const payload = await res.json();
+      return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
   );
 
