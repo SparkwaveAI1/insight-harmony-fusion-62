@@ -37,14 +37,40 @@ serve(async (req) => {
     // Get user ID for user collections
     let userId: string | null = null;
     if (type === "user") {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        return new Response(JSON.stringify({ error: "unauthorized" }), { 
+      // Extract token properly - handle both "Bearer " prefix and raw token
+      const token = authHeader.startsWith("Bearer ") 
+        ? authHeader.slice(7).trim() 
+        : authHeader.trim();
+        
+      if (!token) {
+        console.warn("[COLLECTIONS] No auth token provided for user request");
+        return new Response(JSON.stringify({ error: "unauthorized", message: "No auth token" }), { 
           status: 401, 
           headers: { ...cors, "Content-Type": "application/json" } 
         });
       }
+      
+      // Pass token explicitly to getUser
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      
+      if (userError) {
+        console.error("[COLLECTIONS] getUser error:", userError);
+        return new Response(JSON.stringify({ error: "unauthorized", message: userError.message }), { 
+          status: 401, 
+          headers: { ...cors, "Content-Type": "application/json" } 
+        });
+      }
+      
+      if (!user) {
+        console.error("[COLLECTIONS] No user found for token");
+        return new Response(JSON.stringify({ error: "unauthorized", message: "Invalid token" }), { 
+          status: 401, 
+          headers: { ...cors, "Content-Type": "application/json" } 
+        });
+      }
+      
       userId = user.id;
+      console.log(`[COLLECTIONS] Authenticated user: ${userId}`);
     }
 
     // Build query
