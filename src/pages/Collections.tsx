@@ -69,6 +69,7 @@ const Collections = () => {
   // Separate pagination feeds for each tab
   const myCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
+      console.log('[DEBUG] Fetching my collections, cursor:', cursor);
       const { token, base } = await getBearerAndBase(supabase);
       const params = new URLSearchParams();
       params.set('type', 'user');
@@ -93,6 +94,7 @@ const Collections = () => {
           
           if (retryRes.ok) {
             const payload = await retryRes.json();
+            console.log('[DEBUG] My collections response (after retry):', { status: retryRes.status, data: payload });
             return { data: payload.data || [], next_cursor: payload.next_cursor };
           }
         }
@@ -109,12 +111,14 @@ const Collections = () => {
       }
       
       const payload = await res.json();
+      console.log('[DEBUG] My collections response:', { status: res.status, data: payload });
       return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
   );
 
   const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
+      console.log('[DEBUG] Fetching public collections, cursor:', cursor);
       const { token, base } = await getBearerAndBase(supabase);
       const params = new URLSearchParams();
       params.set('type', 'public');
@@ -132,6 +136,7 @@ const Collections = () => {
       }
       
       const payload = await res.json();
+      console.log('[DEBUG] Public collections response:', { status: res.status, data: payload });
       return { data: payload.data || [], next_cursor: payload.next_cursor };
     }, [])
   );
@@ -152,6 +157,7 @@ const Collections = () => {
   // Initial load
   useEffect(() => {
     if (!user?.id) return;
+    console.log('[DEBUG] Resetting feeds for user:', user?.id);
     myCollectionsFeed.reset();
     publicCollectionsFeed.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
