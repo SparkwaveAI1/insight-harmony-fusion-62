@@ -64,8 +64,8 @@ serve(async (req) => {
         });
       }
       
-      // Get user from the authenticated client
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // Verify user using the provided JWT explicitly (no session in edge runtime)
+      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
       
       if (userError) {
         console.error("[COLLECTIONS] getUser error:", userError);
