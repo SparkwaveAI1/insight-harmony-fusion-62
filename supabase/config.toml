@@ -60,5 +60,8 @@ verify_jwt = false
 [functions.research-session-orchestrator]
 verify_jwt = false
 
+[functions.collections-list]
+verify_jwt = false
+
 [functions.billing-stripe-webhook]
 verify_jwt = false
