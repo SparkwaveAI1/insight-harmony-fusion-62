@@ -4,8 +4,8 @@ import { applyCursor, parseCursor } from "../_shared/pagination.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET,OPTIONS",
-  "Access-Control-Allow-Headers": "authorization,content-type",
+  "Access-Control-Allow-Methods": "POST,GET,OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Vary": "Origin",
   "Cache-Control": "no-store",
 };
@@ -15,9 +15,23 @@ const PAGE_SIZE = 20;
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
-  const url = new URL(req.url);
-  const cursorParam = url.searchParams.get("cursor");
-  const type = url.searchParams.get("type") || "user"; // "user" or "public"
+  // Support both POST body and GET params
+  let type = "user";
+  let cursorParam: string | null = null;
+
+  if (req.method === "POST") {
+    try {
+      const body = await req.json();
+      type = body.type || "user";
+      cursorParam = body.cursor || null;
+    } catch {
+      // Invalid JSON, continue with defaults
+    }
+  } else {
+    const url = new URL(req.url);
+    type = url.searchParams.get("type") || "user";
+    cursorParam = url.searchParams.get("cursor");
+  }
   
   console.log(`[COLLECTIONS] Fetching ${type} collections, cursor:`, cursorParam || "none");
 

@@ -27,7 +27,8 @@ export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
   const { data, error } = await supabase
     .from('v4_personas_public_safe')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(10000);
 
   if (error) throw error;
   return (data ?? []) as unknown as V4Persona[];

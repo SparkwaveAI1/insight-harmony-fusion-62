@@ -122,89 +122,81 @@ const Collections = () => {
   const myCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
       debugCollections.log('Fetching my collections', { cursor, user: user?.id });
-      const { token, base } = await getBearerAndBase(supabase);
-      const params = new URLSearchParams();
-      params.set('type', 'user');
-      if (cursor) params.set('cursor', cursor);
-      const res = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}` , {
-        method: 'GET',
-        headers: { authorization: `Bearer ${token}` },
-      });
       
-      // Handle 401 by refreshing session and retrying once
-      if (res.status === 401) {
-        console.log('[Collections] Got 401, attempting session refresh...');
-        const { error: refreshError } = await supabase.auth.refreshSession();
+      try {
+        const { token, base } = await getBearerAndBase(supabase);
+        const url = new URL(`${base}/functions/v1/collections-list`);
+        url.searchParams.set('type', 'user');
+        if (cursor) url.searchParams.set('cursor', cursor);
         
-        if (!refreshError) {
-          // Get new token after refresh
-          const { token: newToken } = await getBearerAndBase(supabase);
-          const retryRes = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}`, {
-            method: 'GET',
-            headers: { authorization: `Bearer ${newToken}` },
+        debugCollections.log('Fetching from URL', { url: url.toString() });
+        
+        const res = await retryFetch(url.toString(), {
+          method: 'GET',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        debugCollections.log('Response received', { 
+          ok: res.ok, 
+          status: res.status,
+          statusText: res.statusText 
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          debugCollections.error('Failed to fetch my collections', { 
+            status: res.status, 
+            error: errorText 
           });
           
-          if (retryRes.ok) {
-            const payload = await retryRes.json();
-            debugCollections.log('My collections response (after retry)', { 
-              status: retryRes.status, 
-              ok: retryRes.ok,
-              hasData: !!payload?.data,
-              count: payload?.data?.length 
-            });
-            return { data: payload.data || [], next_cursor: payload.next_cursor };
+          if (res.status === 401) {
+            toast.error("Session expired. Please sign in again.");
           }
+          
+          return { data: [], next_cursor: null };
         }
         
-        // If refresh failed or retry still got 401
-        toast.error("Your session has expired. Please sign in again.");
+        const json = await res.json();
+        debugCollections.log('Collections fetched successfully', { 
+          count: json?.data?.length || 0,
+          hasMore: !!json?.next_cursor
+        });
+        
+        return { data: json?.data || [], next_cursor: json?.next_cursor };
+      } catch (error: any) {
+        if (error?.message === 'NO_SESSION') {
+          debugCollections.log('No session for my collections');
+          toast.error("Please sign in to view your collections");
+          return { data: [], next_cursor: null };
+        }
+        debugCollections.error('My collections error:', error);
         return { data: [], next_cursor: null };
       }
-      
-      if (!res.ok) {
-        console.error('[Collections] Error response:', res.status);
-        toast.error("Failed to load collections");
-        return { data: [], next_cursor: null };
-      }
-      
-      const payload = await res.json();
-      debugCollections.log('My collections response', { 
-        status: res.status, 
-        ok: res.ok,
-        hasData: !!payload?.data,
-        count: payload?.data?.length 
-      });
-      return { data: payload.data || [], next_cursor: payload.next_cursor };
-    }, [])
+    }, [user?.id])
   );
 
   const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      debugCollections.log('Fetching public collections', { cursor, user: user?.id });
-      const { token, base } = await getBearerAndBase(supabase);
-      const params = new URLSearchParams();
-      params.set('type', 'public');
-      if (cursor) params.set('cursor', cursor);
-      const res = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}` , {
-        method: 'GET',
-        headers: { authorization: `Bearer ${token}` },
+      debugCollections.log('Fetching public collections', { cursor });
+      
+      // Public collections don't need auth - call edge function directly
+      const { data, error } = await supabase.functions.invoke('collections-list', {
+        body: { type: 'public', cursor }
       });
       
-      // Public collections don't require auth, just return empty on any error
-      if (!res.ok) {
-        console.error('[Collections] Error fetching public collections:', res.status);
-        toast.error("Failed to load public collections");
+      if (error) {
+        debugCollections.error('Public collections error:', error);
         return { data: [], next_cursor: null };
       }
       
-      const payload = await res.json();
       debugCollections.log('Public collections response', { 
-        status: res.status, 
-        ok: res.ok,
-        hasData: !!payload?.data,
-        count: payload?.data?.length 
+        count: data?.data?.length || 0 
       });
-      return { data: payload.data || [], next_cursor: payload.next_cursor };
+      
+      return { data: data?.data || [], next_cursor: data?.next_cursor };
     }, [])
   );
 
