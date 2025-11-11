@@ -64,8 +64,8 @@ serve(async (req) => {
         });
       }
       
-      // Pass token explicitly to getUser
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+      // Get user from the authenticated client
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
         console.error("[COLLECTIONS] getUser error:", userError);
