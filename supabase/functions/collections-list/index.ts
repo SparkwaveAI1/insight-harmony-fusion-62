@@ -51,40 +51,41 @@ serve(async (req) => {
     // Get user ID for user collections
     let userId: string | null = null;
     if (type === "user") {
-      // Extract token properly - handle both "Bearer " prefix and raw token
-      const token = authHeader.startsWith("Bearer ") 
-        ? authHeader.slice(7).trim() 
-        : authHeader.trim();
-        
+      const token = authHeader.replace("Bearer ", "").trim();
+
       if (!token) {
         console.warn("[COLLECTIONS] No auth token provided for user request");
-        return new Response(JSON.stringify({ error: "unauthorized", message: "No auth token" }), { 
+        return new Response(JSON.stringify({ error: "unauthorized", message: "No token provided" }), { 
           status: 401, 
           headers: { ...cors, "Content-Type": "application/json" } 
         });
       }
-      
-      // Verify user using the provided JWT explicitly (no session in edge runtime)
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      
-      if (userError) {
-        console.error("[COLLECTIONS] getUser error:", userError);
-        return new Response(JSON.stringify({ error: "unauthorized", message: userError.message }), { 
-          status: 401, 
-          headers: { ...cors, "Content-Type": "application/json" } 
-        });
-      }
-      
-      if (!user) {
-        console.error("[COLLECTIONS] No user found for token");
+
+      try {
+        const parts = token.split(".");
+        if (parts.length !== 3) {
+          throw new Error("Invalid token format");
+        }
+        const payloadJson = atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"));
+        const payload = JSON.parse(payloadJson);
+
+        if (payload.exp && Date.now() / 1000 > payload.exp) {
+          console.warn("[COLLECTIONS] Token expired");
+          return new Response(JSON.stringify({ error: "unauthorized", message: "Token expired" }), { 
+            status: 401, 
+            headers: { ...cors, "Content-Type": "application/json" } 
+          });
+        }
+
+        userId = payload.sub; // 'sub' is the user ID in JWT
+        console.log(`[COLLECTIONS] Authenticated user via JWT: ${userId}`);
+      } catch (error) {
+        console.error("[COLLECTIONS] Failed to decode token:", error);
         return new Response(JSON.stringify({ error: "unauthorized", message: "Invalid token" }), { 
           status: 401, 
           headers: { ...cors, "Content-Type": "application/json" } 
         });
       }
-      
-      userId = user.id;
-      console.log(`[COLLECTIONS] Authenticated user: ${userId}`);
     }
 
     // Build query
