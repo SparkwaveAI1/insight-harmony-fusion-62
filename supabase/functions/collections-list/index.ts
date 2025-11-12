@@ -18,12 +18,14 @@ serve(async (req) => {
   // Support both POST body and GET params
   let type = "user";
   let cursorParam: string | null = null;
+  let searchQuery = "";
 
   if (req.method === "POST") {
     try {
       const body = await req.json();
       type = body.type || "user";
       cursorParam = body.cursor || null;
+      searchQuery = body.search || "";
     } catch {
       // Invalid JSON, continue with defaults
     }
@@ -31,6 +33,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     type = url.searchParams.get("type") || "user";
     cursorParam = url.searchParams.get("cursor");
+    searchQuery = url.searchParams.get("search") || "";
   }
   
   console.log(`[COLLECTIONS] Fetching ${type} collections, cursor:`, cursorParam || "none");
@@ -101,6 +104,13 @@ serve(async (req) => {
       query = query.eq("user_id", userId);
     } else if (type === "public") {
       query = query.eq("is_public", true);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const searchPattern = `%${searchQuery.trim()}%`;
+      query = query.or(`name.ilike.${searchPattern},description.ilike.${searchPattern}`);
+      console.log(`[COLLECTIONS] Applying search filter: ${searchQuery}`);
     }
 
     // Apply cursor pagination
