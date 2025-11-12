@@ -14,7 +14,7 @@ import {
 import { useCursorFeed } from "@/hooks/useCursorFeed";
 import { supabase } from "@/integrations/supabase/client";
 import Button from "@/components/ui-custom/Button";
-import { Plus, Trash2, Edit, FolderOpen, Search, Grid, List, Globe, Lock, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit, FolderOpen, Search, Globe, Lock, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +42,6 @@ const Collections = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('my-collections');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -212,31 +211,23 @@ const Collections = () => {
   // No client-side filtering - search is handled server-side
   const filteredCollections = currentFeed.items;
 
-  // Initial load
+  // Single effect to handle all reset scenarios
   useEffect(() => {
     if (!user?.id) return;
-    debugCollections.log('Resetting feeds for user:', user?.id);
-    myCollectionsFeed.reset();
-    publicCollectionsFeed.reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]); // Only reset when user ID changes, not on every render
-
-  // Reset feed when search query or active tab changes
-  useEffect(() => {
-    debugCollections.log('Search or tab changed, resetting feed', { 
+    
+    debugCollections.log('Resetting current feed', { 
+      user: user?.id,
       search: deferredSearchQuery, 
       tab: activeTab 
     });
+    
+    // Only reset the current feed (not both feeds every time)
     currentFeed.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deferredSearchQuery, activeTab]);
+  }, [user?.id, deferredSearchQuery, activeTab]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-  }, []);
-
-  const handleViewModeChange = useCallback((mode: 'grid' | 'list') => {
-    setViewMode(mode);
   }, []);
 
   const handleCreateCollection = async () => {
@@ -337,9 +328,9 @@ const Collections = () => {
   function renderCollectionsContent() {
     return (
       <>
-        {/* Search and View Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
-          <div className="relative flex-1 sm:w-80">
+        {/* Search Control */}
+        <div className="flex flex-col gap-2 mb-6">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               placeholder="Search collections..."
@@ -353,29 +344,25 @@ const Collections = () => {
               </div>
             )}
           </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleViewModeChange('grid')}
-            >
-              <Grid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleViewModeChange('list')}
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
+          
+          {/* Search Feedback */}
+          {deferredSearchQuery && (
+            <div className="text-sm text-muted-foreground">
+              Searching for "<span className="font-medium">{deferredSearchQuery}</span>"
+              {currentFeed.items.length === 0 && !currentFeed.hasMore && (
+                <span className="ml-2 text-destructive">- No collections found</span>
+              )}
+              {currentFeed.items.length > 0 && (
+                <span className="ml-2">- Found {currentFeed.items.length} collection{currentFeed.items.length !== 1 ? 's' : ''}</span>
+              )}
+            </div>
+          )}
         </div>
 
         {currentFeed.items.length === 0 && !currentFeed.hasMore ? (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className="grid gap-6 grid-cols-1">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 rounded-lg bg-muted/30 animate-pulse"></div>
+              <div key={i} className="h-32 rounded-lg bg-muted/30 animate-pulse"></div>
             ))}
           </div>
         ) : filteredCollections.length === 0 ? (
@@ -414,108 +401,55 @@ const Collections = () => {
             )}
           </div>
         ) : (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
+          <div className="grid gap-6 grid-cols-1">
             {filteredCollections.map((collection) => {
               const isOwner = activeTab === 'my-collections';
               
               return (
                 <div 
                   key={collection.id}
-                  className={`relative border rounded-lg p-6 hover:shadow-md transition-shadow group cursor-pointer ${
-                    viewMode === 'list' ? 'flex items-center space-x-4' : ''
-                  }`}
+                  className="relative border rounded-lg p-6 hover:shadow-md transition-shadow group cursor-pointer flex items-center space-x-4"
                   onClick={() => viewCollection(collection.id)}
                 >
-                  {viewMode === 'grid' ? (
-                    <div className="flex flex-col h-full min-h-[200px]">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-3">
-                          <h2 className="text-xl font-semibold line-clamp-3 leading-normal mb-2">{collection.name}</h2>
-                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                            {collection.is_public ? (
-                              <Badge variant="outline" className="text-xs">
-                                <Globe className="h-3 w-3 mr-1" />
-                                Public
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs">
-                                <Lock className="h-3 w-3 mr-1" />
-                                Private
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {collection.description || "No description"}
-                        </p>
-                      </div>
-                      <div className="flex justify-between items-end pt-4 mt-auto">
-                        <p className="text-sm text-muted-foreground">
-                          {collection.persona_count} personas
-                        </p>
-                        {isOwner && (
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => openEditDialog(collection, e)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => openDeleteDialog(collection, e)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <h2 className="text-xl font-semibold">{collection.name}</h2>
-                          {collection.is_public ? (
-                            <Badge variant="outline" className="text-xs">
-                              <Globe className="h-3 w-3 mr-1" />
-                              Public
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary" className="text-xs">
-                              <Lock className="h-3 w-3 mr-1" />
-                              Private
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {collection.description || "No description"}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {collection.persona_count} personas
-                        </p>
-                      </div>
-                      {isOwner && (
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => openEditDialog(collection, e)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => openDeleteDialog(collection, e)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <h2 className="text-xl font-semibold">{collection.name}</h2>
+                      {collection.is_public ? (
+                        <Badge variant="outline" className="text-xs">
+                          <Globe className="h-3 w-3 mr-1" />
+                          Public
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          <Lock className="h-3 w-3 mr-1" />
+                          Private
+                        </Badge>
                       )}
-                    </>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {collection.description || "No description"}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {collection.persona_count} personas
+                    </p>
+                  </div>
+                  {isOwner && (
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => openEditDialog(collection, e)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => openDeleteDialog(collection, e)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </div>
               );

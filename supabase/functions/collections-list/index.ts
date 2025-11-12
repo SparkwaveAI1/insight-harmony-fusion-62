@@ -10,7 +10,7 @@ const cors = {
   "Cache-Control": "no-store",
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
@@ -133,20 +133,26 @@ serve(async (req) => {
     const hasMore = data.length > PAGE_SIZE;
     const collections = hasMore ? data.slice(0, PAGE_SIZE) : data;
 
-    // Get persona counts for each collection
-    const collectionsWithCounts = await Promise.all(
-      collections.map(async (collection) => {
-        const { count } = await supabase
-          .from("collection_personas")
-          .select("*", { count: "exact", head: true })
-          .eq("collection_id", collection.id);
+    // Get persona counts for all collections in a single query (fixes N+1 problem)
+    const collectionIds = collections.map(c => c.id);
+    
+    const { data: personaCounts } = await supabase
+      .from("collection_personas")
+      .select("collection_id")
+      .in("collection_id", collectionIds);
 
-        return {
-          ...collection,
-          persona_count: count || 0,
-        };
-      })
-    );
+    // Count personas per collection
+    const countMap = new Map<string, number>();
+    personaCounts?.forEach(row => {
+      const currentCount = countMap.get(row.collection_id) || 0;
+      countMap.set(row.collection_id, currentCount + 1);
+    });
+
+    // Attach counts to collections
+    const collectionsWithCounts = collections.map(collection => ({
+      ...collection,
+      persona_count: countMap.get(collection.id) || 0,
+    }));
 
     let nextCursor: string | null = null;
     if (hasMore) {
