@@ -127,6 +127,9 @@ const Collections = () => {
         const { token, base } = await getBearerAndBase(supabase);
         const url = new URL(`${base}/functions/v1/collections-list`);
         url.searchParams.set('type', 'user');
+        if (deferredSearchQuery.trim()) {
+          url.searchParams.set('search', deferredSearchQuery);
+        }
         if (cursor) url.searchParams.set('cursor', cursor);
         
         debugCollections.log('Fetching from URL', { url: url.toString() });
@@ -184,7 +187,11 @@ const Collections = () => {
       
       // Public collections don't need auth - call edge function directly
       const { data, error } = await supabase.functions.invoke('collections-list', {
-        body: { type: 'public', cursor }
+        body: { 
+          type: 'public', 
+          cursor,
+          ...(deferredSearchQuery.trim() && { search: deferredSearchQuery })
+        }
       });
       
       if (error) {
@@ -202,16 +209,8 @@ const Collections = () => {
 
   const currentFeed = activeTab === 'my-collections' ? myCollectionsFeed : publicCollectionsFeed;
 
-  // Filter collections based on search query
-  const filteredCollections = useMemo(() => {
-    if (!deferredSearchQuery.trim()) {
-      return currentFeed.items;
-    }
-    return currentFeed.items.filter(collection =>
-      collection.name.toLowerCase().includes(deferredSearchQuery.toLowerCase()) ||
-      (collection.description && collection.description.toLowerCase().includes(deferredSearchQuery.toLowerCase()))
-    );
-  }, [currentFeed.items, deferredSearchQuery]);
+  // No client-side filtering - search is handled server-side
+  const filteredCollections = currentFeed.items;
 
   // Initial load
   useEffect(() => {
@@ -221,6 +220,16 @@ const Collections = () => {
     publicCollectionsFeed.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]); // Only reset when user ID changes, not on every render
+
+  // Reset feed when search query or active tab changes
+  useEffect(() => {
+    debugCollections.log('Search or tab changed, resetting feed', { 
+      search: deferredSearchQuery, 
+      tab: activeTab 
+    });
+    currentFeed.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deferredSearchQuery, activeTab]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
