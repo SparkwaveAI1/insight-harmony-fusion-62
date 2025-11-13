@@ -56,8 +56,8 @@ const Header = () => {
           : "bg-slate-900/95 backdrop-blur-md border-b border-slate-800"
       )}
     >
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+      <div className="container mx-auto px-4 w-full max-w-full">
+        <div className="flex items-center justify-between h-16 w-full max-w-full">
           <div className="flex items-center gap-2">
             <Link to="/" className="flex items-center">
               <Logo 
