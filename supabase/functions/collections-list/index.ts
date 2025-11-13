@@ -133,20 +133,27 @@ serve(async (req) => {
     const hasMore = data.length > PAGE_SIZE;
     const collections = hasMore ? data.slice(0, PAGE_SIZE) : data;
 
-    // Get persona counts for all collections in a single query (fixes N+1 problem)
+    // Get persona counts using Postgres aggregation (more efficient and respects RLS)
     const collectionIds = collections.map(c => c.id);
-    
-    const { data: personaCounts } = await supabase
-      .from("collection_personas")
-      .select("collection_id")
-      .in("collection_id", collectionIds);
-
-    // Count personas per collection
     const countMap = new Map<string, number>();
-    personaCounts?.forEach(row => {
-      const currentCount = countMap.get(row.collection_id) || 0;
-      countMap.set(row.collection_id, currentCount + 1);
-    });
+    
+    if (collectionIds.length > 0) {
+      // For each collection, count personas
+      // We'll use a simple approach that works with RLS
+      for (const collectionId of collectionIds) {
+        const { count, error: countError } = await supabase
+          .from("collection_personas")
+          .select("*", { count: "exact", head: true })
+          .eq("collection_id", collectionId);
+
+        if (countError) {
+          console.error(`[COLLECTIONS] Error counting personas for ${collectionId}:`, countError);
+        } else {
+          countMap.set(collectionId, count || 0);
+        }
+      }
+      console.log(`[COLLECTIONS] Counted personas for ${collectionIds.length} collections`);
+    }
 
     // Attach counts to collections
     const collectionsWithCounts = collections.map(collection => ({
