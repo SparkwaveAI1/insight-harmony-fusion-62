@@ -177,7 +177,7 @@ const Collections = () => {
         debugCollections.error('My collections error:', error);
         return { data: [], next_cursor: null };
       }
-    }, [user?.id])
+    }, [user?.id, deferredSearchQuery])
   );
 
   const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
@@ -203,7 +203,7 @@ const Collections = () => {
       });
       
       return { data: data?.data || [], next_cursor: data?.next_cursor };
-    }, [])
+    }, [deferredSearchQuery])
   );
 
   const currentFeed = activeTab === 'my-collections' ? myCollectionsFeed : publicCollectionsFeed;
