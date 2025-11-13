@@ -133,26 +133,24 @@ serve(async (req) => {
     const hasMore = data.length > PAGE_SIZE;
     const collections = hasMore ? data.slice(0, PAGE_SIZE) : data;
 
-    // Get persona counts using Postgres aggregation (more efficient and respects RLS)
+    // Get persona counts using database function (efficient single query)
     const collectionIds = collections.map(c => c.id);
     const countMap = new Map<string, number>();
-    
-    if (collectionIds.length > 0) {
-      // For each collection, count personas
-      // We'll use a simple approach that works with RLS
-      for (const collectionId of collectionIds) {
-        const { count, error: countError } = await supabase
-          .from("collection_personas")
-          .select("*", { count: "exact", head: true })
-          .eq("collection_id", collectionId);
 
-        if (countError) {
-          console.error(`[COLLECTIONS] Error counting personas for ${collectionId}:`, countError);
-        } else {
-          countMap.set(collectionId, count || 0);
-        }
+    if (collectionIds.length > 0) {
+      const { data: counts, error: countError } = await supabase
+        .rpc('count_personas_in_collections', {
+          collection_ids: collectionIds
+        });
+
+      if (countError) {
+        console.error('[COLLECTIONS] Error counting personas:', countError);
+      } else if (counts) {
+        counts.forEach((row: { collection_id: string; persona_count: number }) => {
+          countMap.set(row.collection_id, row.persona_count);
+        });
+        console.log(`[COLLECTIONS] Counted personas for ${collectionIds.length} collections`);
       }
-      console.log(`[COLLECTIONS] Counted personas for ${collectionIds.length} collections`);
     }
 
     // Attach counts to collections
