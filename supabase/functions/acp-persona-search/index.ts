@@ -17,7 +17,7 @@ interface SearchParams {
   education?: string;
   interests?: string;
   behaviors?: string;
-  collection_ids?: string;
+  search_query?: string;  // Natural language semantic search
   limit?: number;
 }
 
@@ -43,7 +43,7 @@ serve(async (req) => {
       education: url.searchParams.get('education') || undefined,
       interests: url.searchParams.get('interests') || undefined,
       behaviors: url.searchParams.get('behaviors') || undefined,
-      collection_ids: url.searchParams.get('collection_ids') || undefined,
+      search_query: url.searchParams.get('search_query') || undefined,
       limit: parseInt(url.searchParams.get('limit') || '10'),
     };
 
@@ -60,57 +60,31 @@ serve(async (req) => {
       throw personasError;
     }
 
-    // Get collection associations for these personas
-    const personaIds = allPersonas?.map(p => p.persona_id) || [];
-    
-    // Fetch collection data separately to avoid join issues
-    const { data: collectionPersonas, error: collectionError } = await supabase
-      .from('collection_personas')
-      .select('persona_id, collection_id')
-      .in('persona_id', personaIds);
-
-    if (collectionError) {
-      console.error('Collection fetch error:', collectionError);
-      console.error('Collection fetch full error:', JSON.stringify(collectionError));
-      console.error('Persona IDs count:', personaIds.length);
-    }
-
-    // Get unique collection IDs and fetch their names
-    const collectionIds = [...new Set(collectionPersonas?.map(cp => cp.collection_id) || [])];
-    const { data: collections, error: collectionsError } = await supabase
-      .from('collections')
-      .select('id, name')
-      .in('id', collectionIds);
-
-    if (collectionsError) {
-      console.error('Collections name fetch error:', collectionsError);
-    }
-
-    // Build collection ID to name map
-    const collectionNameMap = new Map<string, string>();
-    collections?.forEach(c => {
-      collectionNameMap.set(c.id, c.name);
-    });
-
-    // Build persona-to-collections map
-    const personaCollectionsMap = new Map<string, any[]>();
-    collectionPersonas?.forEach(cp => {
-      const existing = personaCollectionsMap.get(cp.persona_id) || [];
-      existing.push({
-        id: cp.collection_id,
-        name: collectionNameMap.get(cp.collection_id) || 'Unknown'
-      });
-      personaCollectionsMap.set(cp.persona_id, existing);
-    });
-
     console.log('Debug: Total personas fetched:', allPersonas?.length);
-    console.log('Debug: Collection personas found:', collectionPersonas?.length);
-    console.log('Debug: Persona collections map size:', personaCollectionsMap.size);
 
     // Filter personas based on search criteria
     const filtered = allPersonas?.filter(persona => {
       const summary = persona.conversation_summary;
       const demographics = summary?.demographics || {};
+
+      // SEMANTIC SEARCH - if search_query provided, check text fields
+      if (params.search_query) {
+        const searchTerms = params.search_query.toLowerCase();
+        
+        // Concatenate searchable text fields
+        const searchableText = [
+          demographics.background_description || '',
+          summary.personality_summary || '',
+          summary.motivational_summary || '',
+          summary.character_description || '',
+          demographics.occupation || ''
+        ].join(' ').toLowerCase();
+        
+        // Check if search terms appear in text
+        if (!searchableText.includes(searchTerms)) {
+          return false;
+        }
+      }
 
       // Age filter
       if (params.age_range) {
@@ -136,17 +110,6 @@ serve(async (req) => {
         if (!education.includes(params.education.toLowerCase())) return false;
       }
 
-      // Collection filter
-      if (params.collection_ids) {
-        const collectionIds = params.collection_ids.split(',').map(id => id.trim());
-        const personaCollections = personaCollectionsMap.get(persona.persona_id) || [];
-        const personaCollectionIds = personaCollections.map(c => c.id);
-        const hasMatchingCollection = collectionIds.some(id => personaCollectionIds.includes(id));
-        
-        console.log('Debug: Checking persona', persona.name, 'with collections:', personaCollectionIds, 'against', collectionIds, 'match:', hasMatchingCollection);
-        
-        if (!hasMatchingCollection) return false;
-      }
 
       // Interests filter (check in background_description or expertise_domains)
       if (params.interests) {
@@ -168,7 +131,6 @@ serve(async (req) => {
     const results = filtered.slice(0, params.limit).map(persona => {
       const summary = persona.conversation_summary;
       const demographics = summary?.demographics || {};
-      const collections = personaCollectionsMap.get(persona.persona_id) || [];
       
       return {
         persona_id: persona.persona_id,
@@ -181,7 +143,7 @@ serve(async (req) => {
           education: summary?.knowledge_profile?.education_level,
         },
         key_traits: extractKeyTraits(summary),
-        collections: collections.map(c => c.name),
+        collections: [],
         availability: true,
       };
     });
