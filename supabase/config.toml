@@ -1,5 +1,8 @@
 project_id = "wgerdrdsuusnrdnwwelt"
 
+[functions.acp-persona-search]
+verify_jwt = false
+
 [functions.openai-health-check]
 verify_jwt = false
 
