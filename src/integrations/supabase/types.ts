@@ -1630,6 +1630,13 @@ export type Database = {
           cleaned_count: number
         }[]
       }
+      count_personas_in_collections: {
+        Args: { collection_ids: string[] }
+        Returns: {
+          collection_id: string
+          persona_count: number
+        }[]
+      }
       extract_conversation_summary: {
         Args: { full_profile_data: Json }
         Returns: Json
