@@ -62,29 +62,50 @@ serve(async (req) => {
 
     // Get collection associations for these personas
     const personaIds = allPersonas?.map(p => p.persona_id) || [];
+    
+    // Fetch collection data separately to avoid join issues
     const { data: collectionPersonas, error: collectionError } = await supabase
       .from('collection_personas')
-      .select(`
-        persona_id,
-        collection_id,
-        collections:collection_id (
-          id,
-          name
-        )
-      `)
+      .select('persona_id, collection_id')
       .in('persona_id', personaIds);
 
     if (collectionError) {
       console.error('Collection fetch error:', collectionError);
+      console.error('Collection fetch full error:', JSON.stringify(collectionError));
+      console.error('Persona IDs count:', personaIds.length);
     }
+
+    // Get unique collection IDs and fetch their names
+    const collectionIds = [...new Set(collectionPersonas?.map(cp => cp.collection_id) || [])];
+    const { data: collections, error: collectionsError } = await supabase
+      .from('collections')
+      .select('id, name')
+      .in('id', collectionIds);
+
+    if (collectionsError) {
+      console.error('Collections name fetch error:', collectionsError);
+    }
+
+    // Build collection ID to name map
+    const collectionNameMap = new Map<string, string>();
+    collections?.forEach(c => {
+      collectionNameMap.set(c.id, c.name);
+    });
 
     // Build persona-to-collections map
     const personaCollectionsMap = new Map<string, any[]>();
     collectionPersonas?.forEach(cp => {
       const existing = personaCollectionsMap.get(cp.persona_id) || [];
-      existing.push(cp.collections);
+      existing.push({
+        id: cp.collection_id,
+        name: collectionNameMap.get(cp.collection_id) || 'Unknown'
+      });
       personaCollectionsMap.set(cp.persona_id, existing);
     });
+
+    console.log('Debug: Total personas fetched:', allPersonas?.length);
+    console.log('Debug: Collection personas found:', collectionPersonas?.length);
+    console.log('Debug: Persona collections map size:', personaCollectionsMap.size);
 
     // Filter personas based on search criteria
     const filtered = allPersonas?.filter(persona => {
@@ -121,6 +142,9 @@ serve(async (req) => {
         const personaCollections = personaCollectionsMap.get(persona.persona_id) || [];
         const personaCollectionIds = personaCollections.map(c => c.id);
         const hasMatchingCollection = collectionIds.some(id => personaCollectionIds.includes(id));
+        
+        console.log('Debug: Checking persona', persona.name, 'with collections:', personaCollectionIds, 'against', collectionIds, 'match:', hasMatchingCollection);
+        
         if (!hasMatchingCollection) return false;
       }
 
