@@ -49,32 +49,42 @@ serve(async (req) => {
 
     console.log('ACP Search Request:', params);
 
-    // Build query for v4_personas
-    let query = supabase
+    // Get completed v4 personas
+    const { data: allPersonas, error: personasError } = await supabase
       .from('v4_personas')
-      .select(`
-        persona_id,
-        name,
-        conversation_summary,
-        persona_collections!inner(
-          collection:collections!inner(
-            id,
-            name
-          )
-        )
-      `)
+      .select('persona_id, name, conversation_summary')
       .eq('creation_completed', true)
       .eq('schema_version', 'v4.0');
 
-    // Apply filters based on parameters
-    const personas: any[] = [];
-
-    // Get all matching personas (we'll filter in-memory for complex queries)
-    const { data: allPersonas, error } = await query;
-
-    if (error) {
-      throw error;
+    if (personasError) {
+      throw personasError;
     }
+
+    // Get collection associations for these personas
+    const personaIds = allPersonas?.map(p => p.persona_id) || [];
+    const { data: collectionPersonas, error: collectionError } = await supabase
+      .from('collection_personas')
+      .select(`
+        persona_id,
+        collection_id,
+        collections:collection_id (
+          id,
+          name
+        )
+      `)
+      .in('persona_id', personaIds);
+
+    if (collectionError) {
+      console.error('Collection fetch error:', collectionError);
+    }
+
+    // Build persona-to-collections map
+    const personaCollectionsMap = new Map<string, any[]>();
+    collectionPersonas?.forEach(cp => {
+      const existing = personaCollectionsMap.get(cp.persona_id) || [];
+      existing.push(cp.collections);
+      personaCollectionsMap.set(cp.persona_id, existing);
+    });
 
     // Filter personas based on search criteria
     const filtered = allPersonas?.filter(persona => {
@@ -108,7 +118,8 @@ serve(async (req) => {
       // Collection filter
       if (params.collection_ids) {
         const collectionIds = params.collection_ids.split(',').map(id => id.trim());
-        const personaCollectionIds = persona.persona_collections?.map((pc: any) => pc.collection.id) || [];
+        const personaCollections = personaCollectionsMap.get(persona.persona_id) || [];
+        const personaCollectionIds = personaCollections.map(c => c.id);
         const hasMatchingCollection = collectionIds.some(id => personaCollectionIds.includes(id));
         if (!hasMatchingCollection) return false;
       }
@@ -133,6 +144,7 @@ serve(async (req) => {
     const results = filtered.slice(0, params.limit).map(persona => {
       const summary = persona.conversation_summary;
       const demographics = summary?.demographics || {};
+      const collections = personaCollectionsMap.get(persona.persona_id) || [];
       
       return {
         persona_id: persona.persona_id,
@@ -145,7 +157,7 @@ serve(async (req) => {
           education: summary?.knowledge_profile?.education_level,
         },
         key_traits: extractKeyTraits(summary),
-        collections: persona.persona_collections?.map((pc: any) => pc.collection.name) || [],
+        collections: collections.map(c => c.name),
         availability: true,
       };
     });
