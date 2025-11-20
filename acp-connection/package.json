@@ -1,0 +1,9 @@
+{
+  "name": "personaai-acp-connector",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@virtuals-protocol/acp-sdk": "latest",
+    "dotenv": "latest"
+  }
+}
