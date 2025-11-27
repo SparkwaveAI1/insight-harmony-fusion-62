@@ -24,13 +24,6 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const grokApiKey = Deno.env.get('GROK_API_KEY');
-    
-    // Validate GROK_API_KEY is set
-    if (!grokApiKey) {
-      console.error('GROK_API_KEY is not configured');
-      throw new Error('GROK_API_KEY is not configured in edge function secrets');
-    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -67,8 +60,14 @@ serve(async (req) => {
 
     // Step 2: Run study - ask each question to each persona
     const personaIds = selectedPersonas.map((p: any) => p.persona_id);
-    const conversationHistories: Record<string, Array<any>> = {};
+    const conversationHistories: Record<string, Array<{role: string, content: string}>> = {};
     const allResults: Record<string, any[]> = {};
+
+    // Initialize conversation histories
+    for (const personaId of personaIds) {
+      conversationHistories[personaId] = [];
+      allResults[personaId] = [];
+    }
 
     // Process each question sequentially across all personas
     for (const question of questions) {
@@ -76,110 +75,61 @@ serve(async (req) => {
       
       // Call each persona with the question
       for (const personaId of personaIds) {
+        const persona = selectedPersonas.find((p: any) => p.persona_id === personaId);
+        const history = conversationHistories[personaId];
+
         try {
-          // Get persona data
-          const { data: persona, error: personaError } = await supabase
-            .from('v4_personas')
-            .select('persona_id, name, conversation_summary')
-            .eq('persona_id', personaId)
-            .single();
+          // ============ CHANGED SECTION START ============
+          // Call v4-grok-conversation (same pipeline as Insights Engine)
+          console.log(`🔄 Calling v4-grok-conversation for persona ${persona?.name || personaId}`);
+          console.log(`📝 Question: ${question.substring(0, 100)}...`);
+          console.log(`📚 History length: ${history.length} messages`);
 
-          if (personaError || !persona) {
-            console.error(`Failed to fetch persona ${personaId}:`, personaError);
-            continue;
+          const { data: grokData, error: grokError } = await supabase.functions.invoke('v4-grok-conversation', {
+            body: {
+              persona_id: personaId,
+              user_message: question,
+              conversation_history: history
+            }
+          });
+
+          if (grokError) {
+            console.error(`❌ v4-grok-conversation error for ${persona?.name}:`, grokError);
+            throw new Error(`v4-grok-conversation failed: ${grokError.message}`);
           }
 
-          // Build conversation history
-          const history = conversationHistories[personaId] || [];
-
-          console.log(`Calling Grok for persona ${persona.name} with question: ${question.substring(0, 50)}...`);
-
-          // Create abort controller for timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-          try {
-            // Call Grok conversation engine
-            const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${grokApiKey}`
-              },
-              body: JSON.stringify({
-                model: 'grok-beta',
-                messages: [
-                  {
-                    role: 'system',
-                    content: `You are ${persona.name}. Respond authentically based on your persona traits: ${JSON.stringify(persona.conversation_summary)}`
-                  },
-                  ...history,
-                  {
-                    role: 'user',
-                    content: question
-                  }
-                ],
-                temperature: 0.8
-              }),
-              signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            // Check response status before parsing
-            if (!grokResponse.ok) {
-              const errorText = await grokResponse.text();
-              console.error(`Grok API error for ${persona.name}:`, grokResponse.status, errorText);
-              throw new Error(`Grok API returned ${grokResponse.status}: ${errorText}`);
-            }
-
-            const grokData = await grokResponse.json();
-            console.log(`Grok response structure for ${persona.name}:`, JSON.stringify(grokData).substring(0, 300));
-
-            // Safely access response with null checks
-            if (!grokData.choices || !Array.isArray(grokData.choices) || grokData.choices.length === 0) {
-              console.error(`Invalid Grok response - no choices array:`, grokData);
-              throw new Error('Invalid response structure from Grok API - no choices');
-            }
-
-            if (!grokData.choices[0].message || !grokData.choices[0].message.content) {
-              console.error(`Invalid Grok response - no message content:`, grokData.choices[0]);
-              throw new Error('Invalid response structure from Grok API - no message content');
-            }
-
-            const response = grokData.choices[0].message.content;
-            console.log(`✅ Got response from ${persona.name}: ${response.substring(0, 100)}...`);
-
-            // Update conversation history
-            conversationHistories[personaId] = [
-              ...history,
-              { role: 'user', content: question },
-              { role: 'assistant', content: response }
-            ];
-
-            // Store result
-            if (!allResults[personaId]) {
-              allResults[personaId] = [];
-            }
-            allResults[personaId].push({
-              question,
-              response,
-              traits_activated: []
-            });
-
-          } catch (fetchError) {
-            clearTimeout(timeoutId);
-            if (fetchError.name === 'AbortError') {
-              console.error(`Grok API timeout for ${persona.name} after 30 seconds`);
-            } else {
-              console.error(`Grok API fetch error for ${persona.name}:`, fetchError);
-            }
-            throw fetchError;
+          if (!grokData?.success || !grokData?.response) {
+            console.error(`❌ Invalid response from v4-grok-conversation:`, JSON.stringify(grokData));
+            throw new Error(grokData?.error || 'No response from v4-grok-conversation');
           }
+
+          const response = grokData.response;
+          const traitsActivated = grokData.traits_selected || [];
+          console.log(`✅ Got response from ${persona?.name} (${grokData.model_used || 'unknown'}): ${response.substring(0, 100)}...`);
+
+          // Update conversation history for this persona
+          conversationHistories[personaId].push(
+            { role: 'user', content: question },
+            { role: 'assistant', content: response }
+          );
+
+          // Store the result
+          allResults[personaId].push({
+            question,
+            response,
+            traits_activated: traitsActivated
+          });
+          // ============ CHANGED SECTION END ============
 
         } catch (error) {
           console.error(`Error processing persona ${personaId}:`, error);
           // Continue with other personas even if one fails
+          allResults[personaId].push({
+            question,
+            response: `Error: ${error.message}`,
+            traits_activated: [],
+            error: true
+          });
         }
       }
     }
