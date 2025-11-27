@@ -107,7 +107,7 @@ serve(async (req) => {
                 'Authorization': `Bearer ${grokApiKey}`
               },
               body: JSON.stringify({
-                model: 'grok-3-mini-fast',
+                model: 'grok-beta',
                 messages: [
                   {
                     role: 'system',
