@@ -3,6 +3,9 @@ project_id = "wgerdrdsuusnrdnwwelt"
 [functions.acp-persona-search]
 verify_jwt = false
 
+[functions.acp-persona-search-v2]
+verify_jwt = false
+
 [functions.acp-job-execute]
 verify_jwt = false
 
