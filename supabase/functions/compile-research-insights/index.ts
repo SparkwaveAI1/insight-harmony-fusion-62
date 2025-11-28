@@ -11,170 +11,156 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+// Shared type for responses (works for both DB-fetched and direct-passed)
+interface ResponseData {
+  persona_id: string;
+  question_index: number;
+  question_text: string;
+  response_text: string;
+}
+
+interface PersonaData {
+  persona_id: string;
+  name: string;
+  full_profile?: any;
+  summary?: string;
+}
+
+interface DirectInputData {
+  responses: ResponseData[];
+  personas: PersonaData[];
+  questions: string[];
+  study_name?: string;
+  study_description?: string;
+  research_context?: any;
+}
+
+// Core analysis function that can be called with either DB data or direct data
+export async function generateQualitativeInsights(
+  responses: ResponseData[],
+  personas: PersonaData[],
+  studyName: string,
+  studyDescription: string,
+  questions: string[],
+  researchContext?: any
+): Promise<any> {
+  if (!openAIApiKey) {
+    throw new Error('OpenAI API key not found');
   }
 
-  try {
-    const { survey_session_id, user_id } = await req.json();
+  if (!responses || responses.length === 0) {
+    console.log('No responses provided for analysis');
+    return {
+      executive_summary: {
+        key_findings: 'No responses were recorded for this study.',
+        research_objective_fulfillment: 'Unable to assess - no data collected',
+        actionable_insights: 'Collect responses before generating insights'
+      },
+      thematic_analysis: { primary_themes: [], emergent_themes: [] },
+      behavioral_insights: { personality_driven_patterns: [], demographic_influences: [] },
+      consensus_and_divergence: { strong_consensus: [], polarizing_topics: [] },
+      emotional_landscape: { dominant_emotions: [], emotional_journey: 'No data to analyze' },
+      research_quality_assessment: {
+        response_authenticity: 'N/A',
+        engagement_levels: 'N/A',
+        data_saturation: 'N/A',
+        limitations: 'No responses collected',
+        recommendations: 'Ensure survey completion before generating insights'
+      },
+      actionable_recommendations: []
+    };
+  }
 
-    console.log(`Compiling insights for survey session: ${survey_session_id}`);
-
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not found');
+  // Group responses by persona and question
+  const responsesByPersona = new Map<string, ResponseData[]>();
+  const responsesByQuestion = new Map<number, ResponseData[]>();
+  
+  responses.forEach(response => {
+    // Group by persona
+    if (!responsesByPersona.has(response.persona_id)) {
+      responsesByPersona.set(response.persona_id, []);
     }
-
-    // Create Supabase client
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Fetch all survey responses for this session
-    const { data: responses, error: responsesError } = await supabase
-      .from('research_survey_responses')
-      .select('*')
-      .eq('session_id', survey_session_id)
-      .order('question_index', { ascending: true });
-
-    if (responsesError) {
-      throw new Error(`Failed to fetch responses: ${responsesError.message}`);
-    }
-
-    if (!responses || responses.length === 0) {
-      console.log('No responses found for session');
-      return new Response(JSON.stringify({
-        insights: {
-          summary: 'No responses were recorded for this survey.',
-          themes: [],
-          contradictions: [],
-          persona_highlights: [],
-          methodology_notes: 'Survey completed but no responses collected.'
-        }
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Fetch survey details and research context
-    const { data: sessionData, error: sessionError } = await supabase
-      .from('research_survey_sessions')
-      .select(`
-        research_surveys(name, description, questions, project_id),
-        research_context,
-        selected_personas
-      `)
-      .eq('id', survey_session_id)
-      .single();
-
-    if (sessionError) {
-      throw new Error(`Failed to fetch session data: ${sessionError.message}`);
-    }
-
-    // Fetch persona details for context
-    const { data: personaData, error: personaError } = await supabase
-      .from('v4_personas')
-      .select('persona_id, name, full_profile')
-      .in('persona_id', sessionData?.selected_personas || []);
-
-    if (personaError) {
-      console.warn('Could not fetch persona details:', personaError.message);
-    }
-
-    // Group responses by persona and question
-    const responsesByPersona = new Map();
-    const responsesByQuestion = new Map();
+    responsesByPersona.get(response.persona_id)!.push(response);
     
-    responses.forEach(response => {
-      // Group by persona
-      if (!responsesByPersona.has(response.persona_id)) {
-        responsesByPersona.set(response.persona_id, []);
-      }
-      responsesByPersona.get(response.persona_id).push(response);
-      
-      // Group by question
-      if (!responsesByQuestion.has(response.question_index)) {
-        responsesByQuestion.set(response.question_index, []);
-      }
-      responsesByQuestion.get(response.question_index).push(response);
-    });
+    // Group by question
+    if (!responsesByQuestion.has(response.question_index)) {
+      responsesByQuestion.set(response.question_index, []);
+    }
+    responsesByQuestion.get(response.question_index)!.push(response);
+  });
 
-    // Prepare enhanced qualitative analysis prompt
-    let analysisPrompt = `You are an expert qualitative research analyst conducting a comprehensive analysis of survey responses from multiple research personas. Your task is to provide deep insights that connect responses back to the original research objectives and context.
+  // Build the analysis prompt
+  let analysisPrompt = `You are an expert qualitative research analyst conducting a comprehensive analysis of survey responses from multiple research personas. Your task is to provide deep insights that connect responses back to the original research objectives and context.
 
 ## SURVEY OVERVIEW
-**Study Name:** ${sessionData?.research_surveys?.[0]?.name || 'Research Study'}
-**Study Description:** ${sessionData?.research_surveys?.[0]?.description || 'No description provided'}
+**Study Name:** ${studyName}
+**Study Description:** ${studyDescription || 'No description provided'}
 **Research Scope:** ${responsesByPersona.size} unique personas, ${responsesByQuestion.size} questions, ${responses.length} total responses
 
 ## RESEARCH OBJECTIVES & CONTEXT`;
 
-    if (sessionData?.research_context) {
-      const context = sessionData.research_context;
-      analysisPrompt += `
-**Research Summary:** ${context.summary || 'No summary available'}
+  if (researchContext) {
+    analysisPrompt += `
+**Research Summary:** ${researchContext.summary || 'No summary available'}
 
 **Key Research Guidelines:**
-${context.guidelines ? context.guidelines.map((g: string) => `- ${g}`).join('\n') : '- No specific guidelines provided'}
+${researchContext.guidelines ? researchContext.guidelines.map((g: string) => `- ${g}`).join('\n') : '- No specific guidelines provided'}
 
 **Key Insights from Source Documents:**
-${context.key_insights ? context.key_insights.map((insight: string) => `- ${insight}`).join('\n') : '- No document insights available'}
-
-**Document Summaries:**
-${context.document_summaries ? context.document_summaries.map((doc: any) => `- ${doc.title}: ${doc.summary}`).join('\n') : '- No document summaries available'}
+${researchContext.key_insights ? researchContext.key_insights.map((insight: string) => `- ${insight}`).join('\n') : '- No document insights available'}
 `;
-    } else {
-      analysisPrompt += `
+  } else {
+    analysisPrompt += `
 **No research context provided - conducting analysis based solely on survey responses**
 `;
-    }
+  }
 
-    // Add persona context if available
-    if (personaData && personaData.length > 0) {
-      analysisPrompt += `
+  // Add persona context
+  if (personas && personas.length > 0) {
+    analysisPrompt += `
 
 ## PERSONA PROFILES
 `;
-      personaData.forEach((persona: any) => {
-        const basicInfo = persona.full_profile?.metadata || {};
-        const traits = persona.full_profile?.trait_profile || {};
-        analysisPrompt += `**${persona.name}** (ID: ${persona.persona_id})
-- Demographics: Age ${basicInfo.age || 'Unknown'}, ${basicInfo.location || 'Unknown location'}
+    personas.forEach((persona) => {
+      const basicInfo = persona.full_profile?.identity || persona.full_profile?.metadata || {};
+      const traits = persona.full_profile?.trait_profile || {};
+      analysisPrompt += `**${persona.name}** (ID: ${persona.persona_id})
+- Demographics: Age ${basicInfo.age || 'Unknown'}, ${basicInfo.location?.city || basicInfo.location?.region || basicInfo.location || 'Unknown location'}
 - Background: ${basicInfo.occupation || 'Unknown occupation'}
-- Key Traits: ${traits.big_five ? Object.entries(traits.big_five).map(([trait, score]: [string, any]) => `${trait}=${score}`).join(', ') : 'No trait data'}
+- Summary: ${persona.summary || 'No summary available'}
 
 `;
-      });
-    }
+    });
+  }
 
-    analysisPrompt += `
+  analysisPrompt += `
 
 ## SURVEY QUESTIONS & RESPONSES
 `;
 
-    // Add responses organized by question with enhanced context
-    responsesByQuestion.forEach((questionResponses, questionIndex) => {
-      const firstResponse = questionResponses[0];
-      const question = sessionData?.research_surveys?.[0]?.questions?.[questionIndex] || {};
-      
-      analysisPrompt += `
-**Question ${questionIndex + 1}:** ${firstResponse.question_text}
-${question.context ? `*Question Context:* ${question.context}` : ''}
+  // Add responses organized by question
+  responsesByQuestion.forEach((questionResponses, questionIndex) => {
+    const firstResponse = questionResponses[0];
+    const questionText = questions[questionIndex] || firstResponse.question_text;
+    
+    analysisPrompt += `
+**Question ${questionIndex + 1}:** ${questionText}
 
 **Responses:**
 `;
-      questionResponses.forEach((response: any) => {
-        const persona = personaData?.find((p: any) => p.persona_id === response.persona_id);
-        const personaName = persona?.name || `Persona-${response.persona_id.slice(-4)}`;
-        analysisPrompt += `
+    questionResponses.forEach((response) => {
+      const persona = personas?.find((p) => p.persona_id === response.persona_id);
+      const personaName = persona?.name || `Persona-${response.persona_id.slice(-4)}`;
+      analysisPrompt += `
 • **${personaName}:** "${response.response_text}"
 `;
-      });
-      analysisPrompt += `
+    });
+    analysisPrompt += `
 ---
 `;
-    });
+  });
 
-    analysisPrompt += `
+  analysisPrompt += `
 
 ## ANALYSIS INSTRUCTIONS
 
@@ -290,142 +276,266 @@ Please provide a comprehensive qualitative research report in JSON format:
 
 Focus on providing deep, contextual insights that would be valuable for research, product development, policy making, or strategic decision-making. Ensure all findings are grounded in the actual response data while connecting to broader research objectives.`;
 
-    console.log('Sending analysis request to OpenAI...');
+  console.log('Sending analysis request to OpenAI...');
 
-    // Call OpenAI API for analysis
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
+  // Call OpenAI API for analysis
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAIApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4.1-2025-04-14',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are an expert research analyst who specializes in qualitative data analysis and identifying patterns in survey responses. Always respond with valid JSON and focus on actionable insights.' 
+        },
+        { role: 'user', content: analysisPrompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 4000,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+  }
+
+  const data = await response.json();
+  const analysisResult = data.choices[0]?.message?.content || '';
+
+  console.log('Received analysis from OpenAI, parsing JSON...');
+  console.log('Raw OpenAI response length:', analysisResult.length);
+
+  // Extract JSON from markdown code blocks if present
+  function extractJSONFromMarkdown(text: string): string {
+    const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
+    const match = text.match(codeBlockRegex);
+    
+    if (match) {
+      console.log('Found JSON in markdown code blocks');
+      return match[1].trim();
+    }
+    
+    const jsonRegex = /(\{[\s\S]*\})/;
+    const jsonMatch = text.match(jsonRegex);
+    
+    if (jsonMatch) {
+      console.log('Found JSON-like content without code blocks');
+      return jsonMatch[1].trim();
+    }
+    
+    return text.trim();
+  }
+
+  // Parse the analysis result
+  let insights;
+  try {
+    const cleanedResult = extractJSONFromMarkdown(analysisResult);
+    insights = JSON.parse(cleanedResult);
+    console.log('Successfully parsed OpenAI response');
+  } catch (parseError) {
+    console.error('Failed to parse OpenAI response as JSON:', parseError);
+    // Fallback structure
+    insights = {
+      executive_summary: {
+        key_findings: `Analysis of ${responses.length} responses from ${responsesByPersona.size} personas`,
+        research_objective_fulfillment: 'Unable to assess due to analysis parsing error',
+        actionable_insights: 'Analysis completed but response parsing failed'
       },
-      body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
-        messages: [
-          { 
-            role: 'system', 
-            content: 'You are an expert research analyst who specializes in qualitative data analysis and identifying patterns in survey responses. Always respond with valid JSON and focus on actionable insights.' 
-          },
-          { role: 'user', content: analysisPrompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 4000,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
-    }
-
-    const data = await response.json();
-    const analysisResult = data.choices[0]?.message?.content || '';
-
-    console.log('Received analysis from OpenAI, parsing JSON...');
-    console.log('Raw OpenAI response length:', analysisResult.length);
-    console.log('First 200 chars:', analysisResult.substring(0, 200));
-
-    // Extract JSON from markdown code blocks if present
-    function extractJSONFromMarkdown(text: string): string {
-      // Remove markdown code blocks if present
-      const codeBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/i;
-      const match = text.match(codeBlockRegex);
-      
-      if (match) {
-        console.log('Found JSON in markdown code blocks');
-        return match[1].trim();
-      }
-      
-      // Try to find JSON-like content between { and }
-      const jsonRegex = /(\{[\s\S]*\})/;
-      const jsonMatch = text.match(jsonRegex);
-      
-      if (jsonMatch) {
-        console.log('Found JSON-like content without code blocks');
-        return jsonMatch[1].trim();
-      }
-      
-      console.log('No JSON structure found, returning original text');
-      return text.trim();
-    }
-
-    // Parse the analysis result
-    let insights;
-    try {
-      const cleanedResult = extractJSONFromMarkdown(analysisResult);
-      console.log('Attempting to parse cleaned JSON, length:', cleanedResult.length);
-      insights = JSON.parse(cleanedResult);
-      console.log('Successfully parsed OpenAI response');
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response as JSON:', parseError);
-      console.error('Failed content preview:', analysisResult.substring(0, 500));
-      // Fallback structure matching new format
-      insights = {
-        executive_summary: {
-          key_findings: `Analysis of ${responses.length} responses from ${responsesByPersona.size} personas`,
-          research_objective_fulfillment: 'Unable to assess due to analysis parsing error',
-          actionable_insights: 'Analysis completed but response parsing failed'
-        },
-        thematic_analysis: {
-          primary_themes: [],
-          emergent_themes: []
-        },
-        behavioral_insights: {
-          personality_driven_patterns: [],
-          demographic_influences: []
-        },
-        consensus_and_divergence: {
-          strong_consensus: [],
-          polarizing_topics: []
-        },
-        emotional_landscape: {
-          dominant_emotions: [],
-          emotional_journey: 'Unable to analyze due to parsing error'
-        },
-        research_quality_assessment: {
-          response_authenticity: 'Unable to assess',
-          engagement_levels: 'Unable to assess',
-          data_saturation: 'Unable to assess',
-          limitations: 'Analysis parsing failed',
-          recommendations: 'Retry analysis with adjusted parameters'
-        },
-        actionable_recommendations: []
-      };
-    }
-
-    // Add metadata
-    insights.metadata = {
-      analyzed_at: new Date().toISOString(),
-      total_responses: responses.length,
-      unique_personas: responsesByPersona.size,
-      total_questions: responsesByQuestion.size,
-      model_used: 'gpt-4.1-2025-04-14'
+      thematic_analysis: { primary_themes: [], emergent_themes: [] },
+      behavioral_insights: { personality_driven_patterns: [], demographic_influences: [] },
+      consensus_and_divergence: { strong_consensus: [], polarizing_topics: [] },
+      emotional_landscape: { dominant_emotions: [], emotional_journey: 'Unable to analyze due to parsing error' },
+      research_quality_assessment: {
+        response_authenticity: 'Unable to assess',
+        engagement_levels: 'Unable to assess',
+        data_saturation: 'Unable to assess',
+        limitations: 'Analysis parsing failed',
+        recommendations: 'Retry analysis with adjusted parameters'
+      },
+      actionable_recommendations: []
     };
+  }
 
-    // Store the compiled insights
-    const { data: reportData, error: insertError } = await supabase
-      .from('research_reports')
-      .insert({
-        survey_session_id,
-        user_id,
-        insights
-      })
-      .select('id')
-      .single();
+  // Add metadata
+  insights.metadata = {
+    analyzed_at: new Date().toISOString(),
+    total_responses: responses.length,
+    unique_personas: responsesByPersona.size,
+    total_questions: responsesByQuestion.size,
+    model_used: 'gpt-4.1-2025-04-14'
+  };
 
-    if (insertError) {
-      console.error('Error storing research report:', insertError);
-      throw new Error(`Failed to store insights: ${insertError.message}`);
+  return insights;
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const requestBody = await req.json();
+    
+    // Support two modes:
+    // 1. DB mode: { survey_session_id, user_id } - fetches from DB
+    // 2. Direct mode: { direct_data: { responses, personas, questions, ... } } - uses passed data
+    
+    const { survey_session_id, user_id, direct_data } = requestBody;
+
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let insights;
+    let responses: ResponseData[];
+    let personas: PersonaData[];
+    let studyName: string;
+    let studyDescription: string;
+    let questions: string[];
+    let researchContext: any;
+
+    if (direct_data) {
+      // DIRECT MODE: Use passed data (for ACP)
+      console.log('Compiling insights from direct data (ACP mode)');
+      
+      responses = direct_data.responses || [];
+      personas = direct_data.personas || [];
+      questions = direct_data.questions || [];
+      studyName = direct_data.study_name || 'ACP Research Study';
+      studyDescription = direct_data.study_description || '';
+      researchContext = direct_data.research_context;
+
+      insights = await generateQualitativeInsights(
+        responses,
+        personas,
+        studyName,
+        studyDescription,
+        questions,
+        researchContext
+      );
+
+      // Don't store in DB for direct mode - just return insights
+      return new Response(JSON.stringify({ 
+        insights,
+        report_id: null // No DB storage for ACP mode
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+
+    } else {
+      // DB MODE: Fetch from database (existing behavior)
+      console.log(`Compiling insights for survey session: ${survey_session_id}`);
+
+      // Fetch all survey responses for this session
+      const { data: dbResponses, error: responsesError } = await supabase
+        .from('research_survey_responses')
+        .select('*')
+        .eq('session_id', survey_session_id)
+        .order('question_index', { ascending: true });
+
+      if (responsesError) {
+        throw new Error(`Failed to fetch responses: ${responsesError.message}`);
+      }
+
+      responses = (dbResponses || []).map(r => ({
+        persona_id: r.persona_id,
+        question_index: r.question_index,
+        question_text: r.question_text,
+        response_text: r.response_text
+      }));
+
+      if (responses.length === 0) {
+        console.log('No responses found for session');
+        return new Response(JSON.stringify({
+          insights: {
+            summary: 'No responses were recorded for this survey.',
+            themes: [],
+            contradictions: [],
+            persona_highlights: [],
+            methodology_notes: 'Survey completed but no responses collected.'
+          }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Fetch survey details and research context
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('research_survey_sessions')
+        .select(`
+          research_surveys(name, description, questions, project_id),
+          research_context,
+          selected_personas
+        `)
+        .eq('id', survey_session_id)
+        .single();
+
+      if (sessionError) {
+        throw new Error(`Failed to fetch session data: ${sessionError.message}`);
+      }
+
+      // Fetch persona details
+      const { data: personaData, error: personaError } = await supabase
+        .from('v4_personas')
+        .select('persona_id, name, full_profile')
+        .in('persona_id', sessionData?.selected_personas || []);
+
+      if (personaError) {
+        console.warn('Could not fetch persona details:', personaError.message);
+      }
+
+      personas = (personaData || []).map(p => ({
+        persona_id: p.persona_id,
+        name: p.name,
+        full_profile: p.full_profile
+      }));
+
+      studyName = sessionData?.research_surveys?.[0]?.name || 'Research Study';
+      studyDescription = sessionData?.research_surveys?.[0]?.description || '';
+      questions = (sessionData?.research_surveys?.[0]?.questions || []).map((q: any) => 
+        typeof q === 'string' ? q : q.text || q.question || ''
+      );
+      researchContext = sessionData?.research_context;
+
+      insights = await generateQualitativeInsights(
+        responses,
+        personas,
+        studyName,
+        studyDescription,
+        questions,
+        researchContext
+      );
+
+      // Store the compiled insights in DB
+      const { data: reportData, error: insertError } = await supabase
+        .from('research_reports')
+        .insert({
+          survey_session_id,
+          user_id,
+          insights
+        })
+        .select('id')
+        .single();
+
+      if (insertError) {
+        console.error('Error storing research report:', insertError);
+        throw new Error(`Failed to store insights: ${insertError.message}`);
+      }
+
+      console.log('Research insights compiled and stored successfully');
+
+      return new Response(JSON.stringify({ 
+        insights,
+        report_id: reportData.id
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
-
-    console.log('Research insights compiled and stored successfully');
-
-    return new Response(JSON.stringify({ 
-      insights,
-      report_id: reportData.id
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
 
   } catch (error) {
     console.error('Error in compile-research-insights function:', error);
