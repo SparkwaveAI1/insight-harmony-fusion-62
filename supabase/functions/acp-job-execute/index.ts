@@ -239,18 +239,55 @@ serve(async (req) => {
       responses: allResults[persona.persona_id] || []
     }));
 
-    // ============= STEP 4: GENERATE SUMMARY =============
+    // ============= STEP 4: GENERATE SUMMARY REPORT =============
     let summary_report = null;
     if (include_summary) {
-      console.log('📊 [ACP-JOB] STEP 4: Generating summary report');
-      const allResponses = Object.values(allResults).flat();
+      console.log('📊 [ACP-JOB] STEP 4: Generating structured summary report');
+      
+      // Build responsesByQuestion
+      const responsesByQuestion = questions.map((questionText, questionIndex) => ({
+        questionIndex,
+        questionText,
+        responses: selectedPersonas.map((persona: any) => {
+          const personaResults = allResults[persona.persona_id] || [];
+          const matchingResponse = personaResults.find((r: any) => r.question === questionText);
+          return {
+            personaId: persona.persona_id,
+            personaName: persona.name,
+            responseText: matchingResponse?.response || 'No response',
+            error: matchingResponse?.error || false
+          };
+        }).filter((r: any) => !r.error)
+      }));
+
+      // Build responsesByPersona
+      const responsesByPersona = selectedPersonas.map((persona: any) => ({
+        personaId: persona.persona_id,
+        personaName: persona.name,
+        personaSummary: persona.summary,
+        responses: (allResults[persona.persona_id] || []).map((r: any, idx: number) => ({
+          questionIndex: idx,
+          questionText: r.question,
+          responseText: r.response,
+          traitsActivated: r.traits_activated || []
+        }))
+      }));
+
       summary_report = {
-        key_themes: extractThemes(allResponses),
-        sentiment_breakdown: analyzeSentiment(allResponses),
-        total_interactions: formattedResponses.reduce((sum, p) => sum + p.responses.length, 0),
-        recommendations: "Summary analysis of persona feedback",
-        selection_method: selectionMethod,
-        search_metadata: searchMetadata
+        surveyName: persona_criteria || research_query || 'ACP Research Study',
+        timestamp: new Date().toISOString(),
+        questions: questions,
+        totalResponses: formattedResponses.reduce((sum, p) => sum + p.responses.filter((r: any) => !r.error).length, 0),
+        personasInterviewed: selectedPersonas.length,
+        responsesByQuestion,
+        responsesByPersona,
+        selectionMetadata: {
+          method: selectionMethod,
+          parsedCriteria: searchMetadata.parsed_criteria,
+          matchedCollections: searchMetadata.matched_collections,
+          relaxedCriteria: searchMetadata.relaxed_criteria || false,
+          relaxationSteps: searchMetadata.relaxation_steps || []
+        }
       };
     }
 
@@ -301,18 +338,3 @@ serve(async (req) => {
     );
   }
 });
-
-// ============= HELPER FUNCTIONS =============
-function extractThemes(responses: any[]): string[] {
-  // Simple keyword extraction - can be enhanced
-  return ["Transparency", "Security", "Community"];
-}
-
-function analyzeSentiment(responses: any[]): Record<string, number> {
-  // Simple sentiment analysis - can be enhanced
-  return {
-    positive: Math.floor(responses.length * 0.3),
-    neutral: Math.floor(responses.length * 0.5),
-    negative: Math.floor(responses.length * 0.2)
-  };
-}
