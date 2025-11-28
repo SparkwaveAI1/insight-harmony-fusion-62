@@ -66,7 +66,6 @@ interface ParsedCriteria {
 interface SearchRequest {
   research_query: string;
   persona_count?: number;
-  min_results?: number;
 }
 
 async function parseQueryWithLLM(query: string, openaiKey: string): Promise<ParsedCriteria> {
@@ -259,95 +258,6 @@ async function searchPersonas(
   return data || [];
 }
 
-async function searchWithRelaxation(
-  supabase: any,
-  criteria: ParsedCriteria,
-  collectionIds: string[],
-  targetCount: number,
-  minResults: number
-): Promise<{ personas: any[]; relaxedCriteria: boolean; relaxationSteps: string[] }> {
-  const relaxationSteps: string[] = [];
-  let currentCriteria = { ...criteria };
-  
-  // Try original criteria
-  let results = await searchPersonas(supabase, currentCriteria, collectionIds, targetCount);
-  
-  if (results.length >= minResults) {
-    return { personas: results, relaxedCriteria: false, relaxationSteps };
-  }
-
-  console.log('[acp-persona-search-v2] Not enough results, starting relaxation. Found:', results.length, 'Need:', minResults);
-
-  // Relaxation steps - REORDERED: BMI is dropped LAST (most important for health queries)
-  const relaxations = [
-    // Drop LEAST important criteria first
-    {
-      name: 'lifestyle',
-      check: () => currentCriteria.lifestyle_keywords.length > 0,
-      apply: () => { currentCriteria.lifestyle_keywords = []; },
-      label: 'Removed lifestyle requirements'
-    },
-    {
-      name: 'diet',
-      check: () => currentCriteria.diet_keywords.length > 0,
-      apply: () => { currentCriteria.diet_keywords = []; },
-      label: 'Removed diet requirements'
-    },
-    {
-      name: 'income',
-      check: () => currentCriteria.income_bracket !== null,
-      apply: () => { currentCriteria.income_bracket = null; },
-      label: 'Removed income filter'
-    },
-    {
-      name: 'education',
-      check: () => currentCriteria.education_level !== null,
-      apply: () => { currentCriteria.education_level = null; },
-      label: 'Removed education filter'
-    },
-    {
-      name: 'location',
-      check: () => currentCriteria.location_region !== null || currentCriteria.location_country !== null,
-      apply: () => { currentCriteria.location_region = null; currentCriteria.location_country = null; },
-      label: 'Removed location filter'
-    },
-    {
-      name: 'age_expand',
-      check: () => currentCriteria.age_min !== null || currentCriteria.age_max !== null,
-      apply: () => {
-        if (currentCriteria.age_min) currentCriteria.age_min = Math.max(18, currentCriteria.age_min - 5);
-        if (currentCriteria.age_max) currentCriteria.age_max = Math.min(85, currentCriteria.age_max + 5);
-      },
-      label: 'Expanded age range by ±5 years'
-    },
-    // Drop BMI LAST - most important for health-related queries
-    {
-      name: 'bmi',
-      check: () => currentCriteria.bmi_min !== null || currentCriteria.bmi_max !== null,
-      apply: () => { currentCriteria.bmi_min = null; currentCriteria.bmi_max = null; },
-      label: 'Removed BMI filter'
-    },
-  ];
-
-  for (const step of relaxations) {
-    if (results.length >= minResults) break;
-    if (!step.check()) continue;
-
-    step.apply();
-    relaxationSteps.push(step.label);
-    console.log('[acp-persona-search-v2] Applied relaxation:', step.label);
-    
-    results = await searchPersonas(supabase, currentCriteria, collectionIds, targetCount);
-    console.log('[acp-persona-search-v2] After relaxation, found:', results.length);
-  }
-
-  return { 
-    personas: results, 
-    relaxedCriteria: relaxationSteps.length > 0,
-    relaxationSteps 
-  };
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -363,7 +273,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { research_query, persona_count = 10, min_results = 3 }: SearchRequest = await req.json();
+    const { research_query, persona_count = 10 }: SearchRequest = await req.json();
 
     if (!research_query) {
       return new Response(
@@ -380,14 +290,14 @@ serve(async (req) => {
     // Step 2: Find matching collections using KEYWORD-BASED lookup (not LLM guessing)
     const { ids: collectionIds, matchedCollections } = await findMatchingCollectionsByKeywords(supabase, criteria);
 
-    // Step 3: Search with relaxation fallback
-    const { personas, relaxedCriteria, relaxationSteps } = await searchWithRelaxation(
-      supabase,
-      criteria,
-      collectionIds,
-      persona_count,
-      min_results
-    );
+    // Step 3: Search personas (NO RELAXATION - return exact matches only)
+    const personas = await searchPersonas(supabase, criteria, collectionIds, persona_count);
+
+    // Build note if fewer results than requested
+    let result_note: string | null = null;
+    if (personas.length < persona_count) {
+      result_note = `Found ${personas.length} personas matching criteria (requested ${persona_count})`;
+    }
 
     // Format response
     const response = {
@@ -395,10 +305,10 @@ serve(async (req) => {
       query: research_query,
       parsed_criteria: criteria,
       matched_collections: matchedCollections.length,
-      matched_collection_details: matchedCollections.slice(0, 10), // Include details for debugging
+      matched_collection_details: matchedCollections.slice(0, 10),
       total_found: personas.length,
-      relaxed_criteria: relaxedCriteria,
-      relaxation_steps: relaxationSteps,
+      requested_count: persona_count,
+      result_note,
       personas: personas.map((p: any) => ({
         persona_id: p.persona_id,
         name: p.name,
@@ -417,7 +327,7 @@ serve(async (req) => {
       })),
     };
 
-    console.log('[acp-persona-search-v2] Search complete. Found:', personas.length, 'Relaxed:', relaxedCriteria, 'Collections matched:', matchedCollections.length);
+    console.log('[acp-persona-search-v2] Search complete. Found:', personas.length, 'of', persona_count, 'requested. Collections matched:', matchedCollections.length);
 
     return new Response(
       JSON.stringify(response),
