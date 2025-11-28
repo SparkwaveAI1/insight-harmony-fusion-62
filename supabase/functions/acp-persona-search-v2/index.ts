@@ -20,14 +20,14 @@ SEARCHABLE FIELDS:
 - income_bracket: text patterns like "under 25", "25k-50k", "50k-75k", "75k-100k", "100k-150k", "150k", "200k"
 - interests_keywords: array for full-text search (e.g., ["gaming", "crypto", "fitness"])
 - lifestyle_keywords: array for full-text search (e.g., ["sedentary", "active", "remote work"])
-- collection_hints: array of likely collection names (e.g., ["Gamers", "Crypto Investors"])
+- search_keywords: array of ALL relevant keywords from the query for collection matching (e.g., ["overweight", "gamer", "gaming", "30s"])
 
 RULES:
 - Only include fields explicitly mentioned or strongly implied
 - For age ranges, use age_min and age_max
 - For BMI: "overweight" means bmi_min: 25, "obese" means bmi_min: 30
 - Return null for fields not mentioned, empty arrays for keyword fields not mentioned
-- collection_hints are suggestions to boost matching, not hard requirements
+- search_keywords should include ALL meaningful keywords extracted from the query, including synonyms
 - Expand keywords with synonyms (e.g., "gaming" -> ["gaming", "gamer", "video game", "games"])
 
 OUTPUT FORMAT (JSON only, no explanation):
@@ -44,7 +44,7 @@ OUTPUT FORMAT (JSON only, no explanation):
   "income_bracket": string | null,
   "interests_keywords": string[],
   "lifestyle_keywords": string[],
-  "collection_hints": string[]
+  "search_keywords": string[]
 }`;
 
 interface ParsedCriteria {
@@ -60,7 +60,7 @@ interface ParsedCriteria {
   income_bracket: string | null;
   interests_keywords: string[];
   lifestyle_keywords: string[];
-  collection_hints: string[];
+  search_keywords: string[];
 }
 
 interface SearchRequest {
@@ -123,39 +123,106 @@ async function parseQueryWithLLM(query: string, openaiKey: string): Promise<Pars
   parsed.occupation_keywords = parsed.occupation_keywords || [];
   parsed.interests_keywords = parsed.interests_keywords || [];
   parsed.lifestyle_keywords = parsed.lifestyle_keywords || [];
-  parsed.collection_hints = parsed.collection_hints || [];
+  parsed.search_keywords = parsed.search_keywords || [];
 
   console.log('[acp-persona-search-v2] Parsed criteria:', JSON.stringify(parsed, null, 2));
   return parsed;
 }
 
-async function findMatchingCollectionIds(
+/**
+ * KEYWORD-BASED collection matching
+ * Instead of relying on LLM to guess collection names, we:
+ * 1. Extract ALL keywords from the parsed criteria
+ * 2. Find ALL collections whose name or description contains any of those keywords
+ */
+async function findMatchingCollectionsByKeywords(
   supabase: any,
-  collectionHints: string[]
-): Promise<string[]> {
-  if (!collectionHints || collectionHints.length === 0) {
-    return [];
+  criteria: ParsedCriteria
+): Promise<{ ids: string[]; matchedCollections: Array<{ id: string; name: string; matchedKeywords: string[] }> }> {
+  // Gather ALL keywords from the criteria
+  const allKeywords = new Set<string>();
+  
+  // Add search_keywords from LLM
+  criteria.search_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
+  
+  // Add interest keywords
+  criteria.interests_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
+  
+  // Add occupation keywords
+  criteria.occupation_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
+  
+  // Add lifestyle keywords  
+  criteria.lifestyle_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
+  
+  // Add diet keywords
+  criteria.diet_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
+  
+  // Add BMI-related keywords if BMI filter is set
+  if (criteria.bmi_min !== null && criteria.bmi_min >= 25) {
+    allKeywords.add('overweight');
+    if (criteria.bmi_min >= 30) {
+      allKeywords.add('obese');
+      allKeywords.add('obesity');
+    }
+  }
+  if (criteria.bmi_max !== null && criteria.bmi_max <= 18.5) {
+    allKeywords.add('underweight');
   }
 
-  console.log('[acp-persona-search-v2] Finding collections for hints:', collectionHints);
-
-  // Build OR conditions for collection name matching
-  const orConditions = collectionHints.map(hint => `name.ilike.%${hint}%`).join(',');
+  const keywordArray = Array.from(allKeywords).filter(k => k.length >= 3); // Skip very short keywords
   
-  const { data, error } = await supabase
+  if (keywordArray.length === 0) {
+    console.log('[acp-persona-search-v2] No keywords to match collections');
+    return { ids: [], matchedCollections: [] };
+  }
+
+  console.log('[acp-persona-search-v2] Finding collections with keywords:', keywordArray);
+
+  // Fetch ALL public collections
+  const { data: collections, error } = await supabase
     .from('collections')
-    .select('id, name')
-    .eq('is_public', true)
-    .or(orConditions);
+    .select('id, name, description')
+    .eq('is_public', true);
 
   if (error) {
-    console.error('[acp-persona-search-v2] Error finding collections:', error);
-    return [];
+    console.error('[acp-persona-search-v2] Error fetching collections:', error);
+    return { ids: [], matchedCollections: [] };
   }
 
-  const ids = data?.map((c: any) => c.id) || [];
-  console.log('[acp-persona-search-v2] Found collection IDs:', ids, 'from:', data?.map((c: any) => c.name));
-  return ids;
+  // Match collections by checking if any keyword appears in name or description
+  const matchedCollections: Array<{ id: string; name: string; matchedKeywords: string[] }> = [];
+  
+  for (const collection of collections || []) {
+    const nameLower = (collection.name || '').toLowerCase();
+    const descLower = (collection.description || '').toLowerCase();
+    const matchedKeywords: string[] = [];
+    
+    for (const keyword of keywordArray) {
+      if (nameLower.includes(keyword) || descLower.includes(keyword)) {
+        matchedKeywords.push(keyword);
+      }
+    }
+    
+    if (matchedKeywords.length > 0) {
+      matchedCollections.push({
+        id: collection.id,
+        name: collection.name,
+        matchedKeywords
+      });
+    }
+  }
+
+  // Sort by number of matched keywords (more matches = more relevant)
+  matchedCollections.sort((a, b) => b.matchedKeywords.length - a.matchedKeywords.length);
+  
+  const ids = matchedCollections.map(c => c.id);
+  
+  console.log('[acp-persona-search-v2] Matched', matchedCollections.length, 'collections:');
+  matchedCollections.forEach(c => {
+    console.log(`  - ${c.name}: matched [${c.matchedKeywords.join(', ')}]`);
+  });
+  
+  return { ids, matchedCollections };
 }
 
 async function searchPersonas(
@@ -164,7 +231,7 @@ async function searchPersonas(
   collectionIds: string[],
   limit: number
 ): Promise<any[]> {
-  console.log('[acp-persona-search-v2] Searching with criteria, limit:', limit);
+  console.log('[acp-persona-search-v2] Searching with criteria, limit:', limit, 'collections:', collectionIds.length);
 
   const { data, error } = await supabase.rpc('search_personas_advanced', {
     p_age_min: criteria.age_min,
@@ -211,13 +278,14 @@ async function searchWithRelaxation(
 
   console.log('[acp-persona-search-v2] Not enough results, starting relaxation. Found:', results.length, 'Need:', minResults);
 
-  // Relaxation steps in order of importance (least important first)
+  // Relaxation steps - REORDERED: BMI is dropped LAST (most important for health queries)
   const relaxations = [
+    // Drop LEAST important criteria first
     {
-      name: 'bmi',
-      check: () => currentCriteria.bmi_min !== null || currentCriteria.bmi_max !== null,
-      apply: () => { currentCriteria.bmi_min = null; currentCriteria.bmi_max = null; },
-      label: 'Removed BMI filter'
+      name: 'lifestyle',
+      check: () => currentCriteria.lifestyle_keywords.length > 0,
+      apply: () => { currentCriteria.lifestyle_keywords = []; },
+      label: 'Removed lifestyle requirements'
     },
     {
       name: 'diet',
@@ -226,10 +294,10 @@ async function searchWithRelaxation(
       label: 'Removed diet requirements'
     },
     {
-      name: 'lifestyle',
-      check: () => currentCriteria.lifestyle_keywords.length > 0,
-      apply: () => { currentCriteria.lifestyle_keywords = []; },
-      label: 'Removed lifestyle requirements'
+      name: 'income',
+      check: () => currentCriteria.income_bracket !== null,
+      apply: () => { currentCriteria.income_bracket = null; },
+      label: 'Removed income filter'
     },
     {
       name: 'education',
@@ -238,10 +306,10 @@ async function searchWithRelaxation(
       label: 'Removed education filter'
     },
     {
-      name: 'income',
-      check: () => currentCriteria.income_bracket !== null,
-      apply: () => { currentCriteria.income_bracket = null; },
-      label: 'Removed income filter'
+      name: 'location',
+      check: () => currentCriteria.location_region !== null || currentCriteria.location_country !== null,
+      apply: () => { currentCriteria.location_region = null; currentCriteria.location_country = null; },
+      label: 'Removed location filter'
     },
     {
       name: 'age_expand',
@@ -252,11 +320,12 @@ async function searchWithRelaxation(
       },
       label: 'Expanded age range by ±5 years'
     },
+    // Drop BMI LAST - most important for health-related queries
     {
-      name: 'location',
-      check: () => currentCriteria.location_region !== null || currentCriteria.location_country !== null,
-      apply: () => { currentCriteria.location_region = null; currentCriteria.location_country = null; },
-      label: 'Removed location filter'
+      name: 'bmi',
+      check: () => currentCriteria.bmi_min !== null || currentCriteria.bmi_max !== null,
+      apply: () => { currentCriteria.bmi_min = null; currentCriteria.bmi_max = null; },
+      label: 'Removed BMI filter'
     },
   ];
 
@@ -308,8 +377,8 @@ serve(async (req) => {
     // Step 1: Parse query with LLM
     const criteria = await parseQueryWithLLM(research_query, openaiKey);
 
-    // Step 2: Find matching collection IDs
-    const collectionIds = await findMatchingCollectionIds(supabase, criteria.collection_hints);
+    // Step 2: Find matching collections using KEYWORD-BASED lookup (not LLM guessing)
+    const { ids: collectionIds, matchedCollections } = await findMatchingCollectionsByKeywords(supabase, criteria);
 
     // Step 3: Search with relaxation fallback
     const { personas, relaxedCriteria, relaxationSteps } = await searchWithRelaxation(
@@ -325,7 +394,8 @@ serve(async (req) => {
       success: true,
       query: research_query,
       parsed_criteria: criteria,
-      matched_collections: collectionIds.length,
+      matched_collections: matchedCollections.length,
+      matched_collection_details: matchedCollections.slice(0, 10), // Include details for debugging
       total_found: personas.length,
       relaxed_criteria: relaxedCriteria,
       relaxation_steps: relaxationSteps,
@@ -347,7 +417,7 @@ serve(async (req) => {
       })),
     };
 
-    console.log('[acp-persona-search-v2] Search complete. Found:', personas.length, 'Relaxed:', relaxedCriteria);
+    console.log('[acp-persona-search-v2] Search complete. Found:', personas.length, 'Relaxed:', relaxedCriteria, 'Collections matched:', matchedCollections.length);
 
     return new Response(
       JSON.stringify(response),
