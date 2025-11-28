@@ -1751,59 +1751,32 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      search_personas_advanced:
-        | {
-            Args: {
-              p_age_max?: number
-              p_age_min?: number
-              p_bmi_max?: number
-              p_bmi_min?: number
-              p_collection_ids?: string[]
-              p_diet_keywords?: string[]
-              p_education?: string
-              p_income_bracket?: string
-              p_interest_keywords?: string[]
-              p_lifestyle_keywords?: string[]
-              p_limit?: number
-              p_location_country?: string
-              p_location_region?: string
-              p_occupation_keywords?: string[]
-            }
-            Returns: {
-              conversation_summary: Json
-              full_profile: Json
-              name: string
-              persona_id: string
-              profile_image_url: string
-              relevance_score: number
-            }[]
-          }
-        | {
-            Args: {
-              p_age_max?: number
-              p_age_min?: number
-              p_bmi_max?: number
-              p_bmi_min?: number
-              p_collection_ids?: string[]
-              p_diet_keywords?: string[]
-              p_education?: string
-              p_income_bracket?: string
-              p_interest_keywords?: string[]
-              p_lifestyle_keywords?: string[]
-              p_limit?: number
-              p_location_country?: string
-              p_location_region?: string
-              p_occupation_keywords?: string[]
-            }
-            Returns: {
-              conversation_summary: Json
-              full_profile: Json
-              name: string
-              persona_id: string
-              profile_image_url: string
-              relevance_score: number
-            }[]
-          }
+      search_personas_advanced: {
+        Args: {
+          p_age_max?: number
+          p_age_min?: number
+          p_bmi_max?: number
+          p_bmi_min?: number
+          p_collection_ids?: string[]
+          p_diet_keywords?: string[]
+          p_education?: string
+          p_income_bracket?: string
+          p_interest_keywords?: string[]
+          p_lifestyle_keywords?: string[]
+          p_limit?: number
+          p_location_country?: string
+          p_location_region?: string
+          p_occupation_keywords?: string[]
+        }
+        Returns: {
+          conversation_summary: Json
+          full_profile: Json
+          name: string
+          persona_id: string
+          profile_image_url: string
+          relevance_score: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
