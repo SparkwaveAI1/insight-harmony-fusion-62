@@ -10,6 +10,7 @@ interface JobRequest {
   job_id: string;
   client_address: string;
   research_query: string;
+  persona_criteria?: string;  // NEW: Target audience description from Butler
   questions: string[];
   num_personas?: number;
   output_format?: string;
@@ -29,17 +30,38 @@ serve(async (req) => {
 
     // Parse job request
     const jobRequest: JobRequest = await req.json();
+    
+    // Log raw request from Butler for debugging
     console.log('========================================');
-    console.log('🚀 [ACP-JOB] New Job Request:', JSON.stringify(jobRequest, null, 2));
+    console.log('🚀 [ACP-JOB] Raw request from Butler:', JSON.stringify({
+      job_id: jobRequest.job_id,
+      persona_criteria: jobRequest.persona_criteria,
+      research_query: jobRequest.research_query,
+      questions: jobRequest.questions,
+      num_personas: jobRequest.num_personas
+    }, null, 2));
     console.log('========================================');
 
     const {
       job_id,
       research_query,
+      persona_criteria,
       questions,
       num_personas = 5,
       include_summary = true
     } = jobRequest;
+
+    // Determine the effective query for persona search
+    // Priority: persona_criteria > research_query > inferred from questions
+    let effectiveQuery = persona_criteria || research_query || '';
+
+    if (!effectiveQuery || effectiveQuery.length < 10) {
+      // Fall back to inferring from questions if query is missing or too short
+      effectiveQuery = `Find personas relevant to: ${questions.join(' ')}`;
+      console.log(`⚠️ [ACP-JOB] No specific criteria provided, inferring from questions`);
+    }
+
+    console.log(`🎯 [ACP-JOB] Effective query for persona search: "${effectiveQuery}"`);
 
     // ============= STEP 1: PERSONA SELECTION via acp-persona-search-v2 =============
     console.log('📦 [ACP-JOB] STEP 1: Finding personas via LLM-powered search');
@@ -49,10 +71,10 @@ serve(async (req) => {
     let searchMetadata: any = {};
     
     try {
-      // Call the new LLM-powered persona search
+      // Call the new LLM-powered persona search with effectiveQuery
       const { data: searchData, error: searchError } = await supabase.functions.invoke('acp-persona-search-v2', {
         body: {
-          research_query,
+          research_query: effectiveQuery,
           persona_count: num_personas,
           min_results: 3
         }
@@ -99,7 +121,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'persona_search_failed',
-          message: `Could not find personas matching: "${research_query}"`,
+          message: `Could not find personas matching: "${effectiveQuery}"${persona_criteria ? ` (criteria: ${persona_criteria})` : ''}`,
           details: searchError instanceof Error ? searchError.message : 'Unknown error',
           suggestion: 'Try broader criteria or different keywords',
           job_id
@@ -113,11 +135,11 @@ serve(async (req) => {
     
     // Return error if no personas found
     if (selectedPersonas.length === 0) {
-      console.error('❌ [ACP-JOB] No matching personas found for research query');
+      console.error('❌ [ACP-JOB] No matching personas found for effective query');
       return new Response(
         JSON.stringify({ 
           error: 'no_matching_personas',
-          message: `Could not find personas matching: "${research_query}"`,
+          message: `Could not find personas matching: "${effectiveQuery}"${persona_criteria ? ` (criteria: ${persona_criteria})` : ''}`,
           suggestion: 'Try broader criteria or different keywords',
           job_id
         }),
