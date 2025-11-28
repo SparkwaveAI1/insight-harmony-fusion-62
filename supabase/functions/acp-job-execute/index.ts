@@ -242,7 +242,7 @@ serve(async (req) => {
     // ============= STEP 4: GENERATE SUMMARY REPORT =============
     let summary_report = null;
     if (include_summary) {
-      console.log('📊 [ACP-JOB] STEP 4: Generating structured summary report');
+      console.log('📊 [ACP-JOB] STEP 4: Generating structured summary report with qualitative insights');
       
       // Build responsesByQuestion
       const responsesByQuestion = questions.map((questionText, questionIndex) => ({
@@ -273,6 +273,64 @@ serve(async (req) => {
         }))
       }));
 
+      // Generate qualitative insights using the SAME function as the app
+      let qualitative_report = null;
+      try {
+        console.log('🔬 [ACP-JOB] Calling compile-research-insights for qualitative analysis...');
+        
+        // Build responses in the format expected by compile-research-insights
+        const flatResponses: Array<{
+          persona_id: string;
+          question_index: number;
+          question_text: string;
+          response_text: string;
+        }> = [];
+        
+        selectedPersonas.forEach((persona: any, personaIdx: number) => {
+          const personaResults = allResults[persona.persona_id] || [];
+          personaResults.forEach((result: any, questionIdx: number) => {
+            if (!result.error) {
+              flatResponses.push({
+                persona_id: persona.persona_id,
+                question_index: questionIdx,
+                question_text: result.question,
+                response_text: result.response
+              });
+            }
+          });
+        });
+
+        // Build personas in the format expected
+        const personasForAnalysis = selectedPersonas.map((p: any) => ({
+          persona_id: p.persona_id,
+          name: p.name,
+          full_profile: p.full_profile,
+          summary: p.summary
+        }));
+
+        // Call compile-research-insights with direct data
+        const { data: insightsData, error: insightsError } = await supabase.functions.invoke('compile-research-insights', {
+          body: {
+            direct_data: {
+              responses: flatResponses,
+              personas: personasForAnalysis,
+              questions: questions,
+              study_name: persona_criteria || research_query || 'ACP Research Study',
+              study_description: `ACP research study with ${selectedPersonas.length} personas and ${questions.length} questions`
+            }
+          }
+        });
+
+        if (insightsError) {
+          console.error('❌ [ACP-JOB] Failed to generate qualitative insights:', insightsError);
+        } else if (insightsData?.insights) {
+          qualitative_report = insightsData.insights;
+          console.log('✅ [ACP-JOB] Qualitative insights generated successfully');
+        }
+      } catch (insightsErr) {
+        console.error('❌ [ACP-JOB] Error calling compile-research-insights:', insightsErr);
+      }
+
       summary_report = {
         surveyName: persona_criteria || research_query || 'ACP Research Study',
         timestamp: new Date().toISOString(),
@@ -287,7 +345,9 @@ serve(async (req) => {
           matchedCollections: searchMetadata.matched_collections,
           relaxedCriteria: searchMetadata.relaxed_criteria || false,
           relaxationSteps: searchMetadata.relaxation_steps || []
-        }
+        },
+        // Include the qualitative insights report (same format as the app)
+        qualitative_report
       };
     }
 
