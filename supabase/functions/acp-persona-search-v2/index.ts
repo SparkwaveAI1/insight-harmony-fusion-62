@@ -7,6 +7,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Country alias normalization - converts common abbreviations to full names
+const COUNTRY_ALIASES: Record<string, string> = {
+  'US': 'United States',
+  'USA': 'United States',
+  'U.S.': 'United States',
+  'U.S.A.': 'United States',
+  'AMERICA': 'United States',
+  'UK': 'United Kingdom',
+  'GB': 'United Kingdom',
+  'GREAT BRITAIN': 'United Kingdom',
+  'BRITAIN': 'United Kingdom',
+  'UAE': 'United Arab Emirates',
+  'CA': 'Canada',
+  'AU': 'Australia',
+  'NZ': 'New Zealand',
+  'DE': 'Germany',
+  'FR': 'France',
+  'ES': 'Spain',
+  'IT': 'Italy',
+  'JP': 'Japan',
+  'CN': 'China',
+  'IN': 'India',
+  'BR': 'Brazil',
+  'MX': 'Mexico',
+};
+
 const QUERY_PARSER_PROMPT = `You parse natural language persona search queries into structured criteria.
 
 SEARCHABLE FIELDS:
@@ -14,7 +40,7 @@ SEARCHABLE FIELDS:
 - education_level: text ("high school", "bachelor", "master", "phd", "some college")
 - bmi_category: "underweight" (<18.5), "normal" (18.5-25), "overweight" (25-30), "obese" (>30)
 - diet_keywords: array of terms to match in diet_pattern (e.g., ["fast food", "takeout", "junk"])
-- location_country: text
+- location_country: ALWAYS use FULL country name (e.g., "United States" NOT "US" or "USA", "United Kingdom" NOT "UK")
 - location_region: text (US states, etc.)
 - occupation_keywords: array of terms (e.g., ["engineer", "developer"])
 - income_bracket: text patterns like "under 25", "25k-50k", "50k-75k", "75k-100k", "100k-150k", "150k", "200k"
@@ -29,6 +55,10 @@ RULES:
 - Return null for fields not mentioned, empty arrays for keyword fields not mentioned
 - search_keywords should include ALL meaningful keywords extracted from the query, including synonyms
 - Expand keywords with synonyms (e.g., "gaming" -> ["gaming", "gamer", "video game", "games"])
+- CRITICAL: For location_country, ALWAYS use full country name. Examples:
+  - "US" or "USA" -> "United States"
+  - "UK" or "Britain" -> "United Kingdom"
+  - "in the US" -> "United States"
 
 OUTPUT FORMAT (JSON only, no explanation):
 {
@@ -66,6 +96,29 @@ interface ParsedCriteria {
 interface SearchRequest {
   research_query: string;
   persona_count?: number;
+}
+
+interface SearchResult {
+  personas: any[];
+  relaxation_applied: string | null;
+  attempts: string[];
+}
+
+/**
+ * Normalize country name - converts abbreviations to full names
+ */
+function normalizeCountry(country: string | null): string | null {
+  if (!country) return null;
+  
+  const upperCountry = country.toUpperCase().trim();
+  const normalized = COUNTRY_ALIASES[upperCountry];
+  
+  if (normalized) {
+    console.log(`[acp-persona-search-v2] Normalized country: "${country}" -> "${normalized}"`);
+    return normalized;
+  }
+  
+  return country;
 }
 
 async function parseQueryWithLLM(query: string, openaiKey: string): Promise<ParsedCriteria> {
@@ -123,6 +176,9 @@ async function parseQueryWithLLM(query: string, openaiKey: string): Promise<Pars
   parsed.interests_keywords = parsed.interests_keywords || [];
   parsed.lifestyle_keywords = parsed.lifestyle_keywords || [];
   parsed.search_keywords = parsed.search_keywords || [];
+
+  // CRITICAL: Normalize country name after LLM parsing
+  parsed.location_country = normalizeCountry(parsed.location_country);
 
   console.log('[acp-persona-search-v2] Parsed criteria:', JSON.stringify(parsed, null, 2));
   return parsed;
@@ -230,7 +286,15 @@ async function searchPersonas(
   collectionIds: string[],
   limit: number
 ): Promise<any[]> {
-  console.log('[acp-persona-search-v2] Searching with criteria, limit:', limit, 'collections:', collectionIds.length);
+  console.log('[acp-persona-search-v2] Searching with criteria:', {
+    age_min: criteria.age_min,
+    age_max: criteria.age_max,
+    location_country: criteria.location_country,
+    location_region: criteria.location_region,
+    occupation_keywords: criteria.occupation_keywords,
+    collections: collectionIds.length,
+    limit
+  });
 
   const { data, error } = await supabase.rpc('search_personas_advanced', {
     p_age_min: criteria.age_min,
@@ -258,6 +322,99 @@ async function searchPersonas(
   return data || [];
 }
 
+/**
+ * Progressive search with filter relaxation
+ * If initial search returns fewer results than requested, progressively relax filters
+ */
+async function searchWithRetry(
+  supabase: any,
+  criteria: ParsedCriteria,
+  collectionIds: string[],
+  requestedCount: number
+): Promise<SearchResult> {
+  const attempts: string[] = [];
+  
+  // Attempt 1: Full criteria
+  attempts.push('full_criteria');
+  console.log('[acp-persona-search-v2] Attempt 1: Full criteria search');
+  let personas = await searchPersonas(supabase, criteria, collectionIds, requestedCount);
+  
+  if (personas.length >= requestedCount) {
+    console.log(`[acp-persona-search-v2] Success with full criteria: ${personas.length} personas`);
+    return { personas, relaxation_applied: null, attempts };
+  }
+  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, relaxing filters...`);
+
+  // Attempt 2: Drop country filter
+  attempts.push('dropped_country');
+  console.log('[acp-persona-search-v2] Attempt 2: Dropping country filter');
+  const criteriaNoCountry: ParsedCriteria = { ...criteria, location_country: null };
+  personas = await searchPersonas(supabase, criteriaNoCountry, collectionIds, requestedCount);
+  
+  if (personas.length >= requestedCount) {
+    console.log(`[acp-persona-search-v2] Success after dropping country: ${personas.length} personas`);
+    return { personas, relaxation_applied: 'dropped_country_filter', attempts };
+  }
+  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, relaxing more...`);
+
+  // Attempt 3: Drop region filter too
+  attempts.push('dropped_location');
+  console.log('[acp-persona-search-v2] Attempt 3: Dropping all location filters');
+  const criteriaNoLocation: ParsedCriteria = { 
+    ...criteriaNoCountry, 
+    location_region: null 
+  };
+  personas = await searchPersonas(supabase, criteriaNoLocation, collectionIds, requestedCount);
+  
+  if (personas.length >= requestedCount) {
+    console.log(`[acp-persona-search-v2] Success after dropping location: ${personas.length} personas`);
+    return { personas, relaxation_applied: 'dropped_location_filters', attempts };
+  }
+  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, using collection-only...`);
+
+  // Attempt 4: Collection matching only (drop occupation keywords)
+  attempts.push('collection_only');
+  console.log('[acp-persona-search-v2] Attempt 4: Collection matching with age only');
+  const criteriaCollectionOnly: ParsedCriteria = { 
+    ...criteriaNoLocation,
+    occupation_keywords: [],
+    education_level: null,
+    income_bracket: null,
+  };
+  personas = await searchPersonas(supabase, criteriaCollectionOnly, collectionIds, requestedCount);
+  
+  if (personas.length >= requestedCount) {
+    console.log(`[acp-persona-search-v2] Success with collection-only: ${personas.length} personas`);
+    return { personas, relaxation_applied: 'collection_matching_only', attempts };
+  }
+  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, final fallback...`);
+
+  // Attempt 5: Age only fallback
+  attempts.push('age_only');
+  console.log('[acp-persona-search-v2] Attempt 5: Age filter only');
+  const criteriaMinimal: ParsedCriteria = {
+    age_min: criteria.age_min,
+    age_max: criteria.age_max,
+    education_level: null,
+    bmi_min: null,
+    bmi_max: null,
+    diet_keywords: [],
+    location_country: null,
+    location_region: null,
+    occupation_keywords: [],
+    income_bracket: null,
+    interests_keywords: [],
+    lifestyle_keywords: [],
+    search_keywords: [],
+  };
+  personas = await searchPersonas(supabase, criteriaMinimal, collectionIds, requestedCount);
+  
+  const relaxation = personas.length > 0 ? 'age_and_collection_only' : 'no_matches_found';
+  console.log(`[acp-persona-search-v2] Final result: ${personas.length} personas (${relaxation})`);
+  
+  return { personas, relaxation_applied: relaxation, attempts };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -282,21 +439,31 @@ serve(async (req) => {
       );
     }
 
-    console.log('[acp-persona-search-v2] Starting search for:', research_query);
+    console.log('[acp-persona-search-v2] ========== NEW SEARCH ==========');
+    console.log('[acp-persona-search-v2] Query:', research_query);
+    console.log('[acp-persona-search-v2] Requested count:', persona_count);
 
-    // Step 1: Parse query with LLM
+    // Step 1: Parse query with LLM (includes country normalization)
     const criteria = await parseQueryWithLLM(research_query, openaiKey);
 
-    // Step 2: Find matching collections using KEYWORD-BASED lookup (not LLM guessing)
+    // Step 2: Find matching collections using KEYWORD-BASED lookup
     const { ids: collectionIds, matchedCollections } = await findMatchingCollectionsByKeywords(supabase, criteria);
 
-    // Step 3: Search personas (NO RELAXATION - return exact matches only)
-    const personas = await searchPersonas(supabase, criteria, collectionIds, persona_count);
+    // Step 3: Search personas WITH PROGRESSIVE RELAXATION
+    const { personas, relaxation_applied, attempts } = await searchWithRetry(
+      supabase, 
+      criteria, 
+      collectionIds, 
+      persona_count
+    );
 
-    // Build note if fewer results than requested
+    // Build note about results
     let result_note: string | null = null;
     if (personas.length < persona_count) {
-      result_note = `Found ${personas.length} personas matching criteria (requested ${persona_count})`;
+      result_note = `Found ${personas.length} personas (requested ${persona_count}). Search attempts: ${attempts.join(' → ')}`;
+    }
+    if (relaxation_applied) {
+      result_note = (result_note || '') + ` Filter relaxation applied: ${relaxation_applied}`;
     }
 
     // Format response
@@ -308,6 +475,8 @@ serve(async (req) => {
       matched_collection_details: matchedCollections.slice(0, 10),
       total_found: personas.length,
       requested_count: persona_count,
+      relaxation_applied,
+      search_attempts: attempts,
       result_note,
       personas: personas.map((p: any) => ({
         persona_id: p.persona_id,
@@ -327,7 +496,10 @@ serve(async (req) => {
       })),
     };
 
-    console.log('[acp-persona-search-v2] Search complete. Found:', personas.length, 'of', persona_count, 'requested. Collections matched:', matchedCollections.length);
+    console.log('[acp-persona-search-v2] ========== SEARCH COMPLETE ==========');
+    console.log('[acp-persona-search-v2] Found:', personas.length, 'of', persona_count, 'requested');
+    console.log('[acp-persona-search-v2] Relaxation:', relaxation_applied || 'none');
+    console.log('[acp-persona-search-v2] Attempts:', attempts.join(' → '));
 
     return new Response(
       JSON.stringify(response),
