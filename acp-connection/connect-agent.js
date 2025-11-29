@@ -17,7 +17,7 @@
  * - ACP_ENVIRONMENT: 'sandbox' or 'mainnet' (default: sandbox)
  */
 
-import AcpClient, { AcpContractClient, sandboxAcpConfig, baseAcpConfig } from '@virtuals-protocol/acp-node';
+import AcpClient, { AcpContractClient, baseSepoliaAcpConfig, baseAcpConfig } from '@virtuals-protocol/acp-node';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -48,7 +48,7 @@ const config = {
 };
 
 // Select ACP config based on environment
-const acpConfig = config.environment === 'mainnet' ? baseAcpConfig : sandboxAcpConfig;
+const acpConfig = config.environment === 'mainnet' ? baseAcpConfig : baseSepoliaAcpConfig;
 
 console.log('🚀 PersonaAI ACP Connector');
 console.log('========================');
