@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, MapPin, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +21,8 @@ interface FilterSectionProps {
   onIncomeChange: (income: string) => void;
   selectedSourceType: string;
   onSourceTypeChange: (sourceType: string) => void;
+  selectedOccupation?: string;
+  onOccupationChange?: (occupation: string) => void;
 }
 
 const tagOptions = [
@@ -28,13 +30,52 @@ const tagOptions = [
   "healthcare", "education", "retail", "entertainment", "politics"
 ];
 
-const demographicOptions = {
-  age: ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"],
-  region: ["urban", "suburban", "rural"],
-  income: ["low", "middle", "high"]
-};
+// Real US states and regions for location filtering
+const locationOptions = [
+  { value: "", label: "Any location" },
+  { value: "california", label: "California" },
+  { value: "texas", label: "Texas" },
+  { value: "florida", label: "Florida" },
+  { value: "new york", label: "New York" },
+  { value: "illinois", label: "Illinois" },
+  { value: "pennsylvania", label: "Pennsylvania" },
+  { value: "ohio", label: "Ohio" },
+  { value: "georgia", label: "Georgia" },
+  { value: "michigan", label: "Michigan" },
+  { value: "north carolina", label: "North Carolina" },
+  { value: "washington", label: "Washington" },
+  { value: "arizona", label: "Arizona" },
+  { value: "colorado", label: "Colorado" },
+  { value: "massachusetts", label: "Massachusetts" },
+  { value: "oregon", label: "Oregon" },
+];
 
-const sourceTypes = ["simulated", "interview-based", "user-prompted"];
+// Common occupations for filtering
+const occupationOptions = [
+  { value: "", label: "Any occupation" },
+  { value: "engineer", label: "Engineer" },
+  { value: "teacher", label: "Teacher" },
+  { value: "nurse", label: "Nurse / Healthcare" },
+  { value: "manager", label: "Manager" },
+  { value: "developer", label: "Developer" },
+  { value: "designer", label: "Designer" },
+  { value: "sales", label: "Sales" },
+  { value: "marketing", label: "Marketing" },
+  { value: "analyst", label: "Analyst" },
+  { value: "consultant", label: "Consultant" },
+  { value: "retired", label: "Retired" },
+  { value: "student", label: "Student" },
+];
+
+// Better age range options
+const ageOptions = [
+  { value: "", label: "Any age" },
+  { value: "18-25", label: "18-25 (Gen Z)" },
+  { value: "26-35", label: "26-35 (Millennial)" },
+  { value: "36-50", label: "36-50 (Gen X)" },
+  { value: "51-65", label: "51-65 (Boomer)" },
+  { value: "65+", label: "65+ (Senior)" },
+];
 
 export default function FilterSection({ 
   searchQuery, 
@@ -49,7 +90,9 @@ export default function FilterSection({
   selectedIncome,
   onIncomeChange,
   selectedSourceType,
-  onSourceTypeChange
+  onSourceTypeChange,
+  selectedOccupation = "",
+  onOccupationChange
 }: FilterSectionProps) {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
@@ -64,18 +107,18 @@ export default function FilterSection({
     onTagsChange(newTags);
   };
 
-  const hasActiveFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedIncome || selectedSourceType;
+  const hasActiveFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedOccupation;
 
   return (
     <div className="bg-card border rounded-lg p-6 mb-6">
       <div className="space-y-4">
         {/* Search Bar Row */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          {/* Enhanced Search Bar - Now wider and responsive */}
+          {/* Enhanced Search Bar */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder="Search by name, description, traits, or keywords..."
+              placeholder="Search by name, occupation, location, or traits..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10 pr-10 w-full"
@@ -102,6 +145,11 @@ export default function FilterSection({
             >
               <Filter className="h-4 w-4" />
               Filters
+              {hasActiveFilters && !searchQuery && (
+                <span className="bg-primary text-primary-foreground text-xs rounded-full px-1.5">
+                  {[selectedAge, selectedRegion, selectedOccupation, ...selectedTags].filter(Boolean).length}
+                </span>
+              )}
             </Button>
             <Button 
               variant="outline" 
@@ -129,23 +177,20 @@ export default function FilterSection({
               </span>
             ))}
             {selectedAge && (
-              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md flex items-center gap-1">
                 Age: {selectedAge}
               </span>
             )}
             {selectedRegion && (
-              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
-                Region: {selectedRegion}
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {locationOptions.find(l => l.value === selectedRegion)?.label || selectedRegion}
               </span>
             )}
-            {selectedIncome && (
-              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
-                Income: {selectedIncome}
-              </span>
-            )}
-            {selectedSourceType && (
-              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md">
-                Source: {selectedSourceType}
+            {selectedOccupation && (
+              <span className="bg-accent text-accent-foreground px-2 py-1 rounded-md flex items-center gap-1">
+                <Briefcase className="h-3 w-3" />
+                {occupationOptions.find(o => o.value === selectedOccupation)?.label || selectedOccupation}
               </span>
             )}
           </div>
@@ -153,10 +198,63 @@ export default function FilterSection({
 
         {/* Advanced Filters */}
         <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
-          <CollapsibleContent className="space-y-4">
+          <CollapsibleContent className="space-y-4 pt-2">
+            {/* Demographics Filters - Primary Row */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+                  Age Range
+                </h4>
+                <Select value={selectedAge} onValueChange={onAgeChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Any age" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ageOptions.map(age => (
+                      <SelectItem key={age.value} value={age.value || "any"}>{age.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Location
+                </h4>
+                <Select value={selectedRegion} onValueChange={onRegionChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Any location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locationOptions.map(location => (
+                      <SelectItem key={location.value} value={location.value || "any"}>{location.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+                  <Briefcase className="h-3.5 w-3.5" />
+                  Occupation
+                </h4>
+                <Select value={selectedOccupation} onValueChange={onOccupationChange || (() => {})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Any occupation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {occupationOptions.map(occ => (
+                      <SelectItem key={occ.value} value={occ.value || "any"}>{occ.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             {/* Tags Filter */}
             <div>
-              <h4 className="text-sm font-medium mb-2">Use Case Tags</h4>
+              <h4 className="text-sm font-medium mb-2">Interest Tags</h4>
               <div className="flex flex-wrap gap-2">
                 {tagOptions.map(tag => (
                   <div key={tag} className="flex items-center space-x-2">
@@ -167,75 +265,13 @@ export default function FilterSection({
                     />
                     <label
                       htmlFor={tag}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
                     >
                       {tag}
                     </label>
                   </div>
                 ))}
               </div>
-            </div>
-
-            {/* Demographics Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <h4 className="text-sm font-medium mb-2">Age Range</h4>
-                <Select value={selectedAge} onValueChange={onAgeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select age range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {demographicOptions.age.map(age => (
-                      <SelectItem key={age} value={age}>{age}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2">Region</h4>
-                <Select value={selectedRegion} onValueChange={onRegionChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {demographicOptions.region.map(region => (
-                      <SelectItem key={region} value={region} className="capitalize">{region}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-medium mb-2">Income Level</h4>
-                <Select value={selectedIncome} onValueChange={onIncomeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select income level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {demographicOptions.income.map(income => (
-                      <SelectItem key={income} value={income} className="capitalize">{income}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Source Type Filter */}
-            <div>
-              <h4 className="text-sm font-medium mb-2">Source Type</h4>
-              <Select value={selectedSourceType} onValueChange={onSourceTypeChange}>
-                <SelectTrigger className="w-full md:w-64">
-                  <SelectValue placeholder="Select source type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sourceTypes.map(type => (
-                    <SelectItem key={type} value={type} className="capitalize">
-                      {type.replace('-', ' ')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </CollapsibleContent>
         </Collapsible>

@@ -43,6 +43,7 @@ const PersonaViewerContent = () => {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedIncome, setSelectedIncome] = useState("");
   const [selectedSourceType, setSelectedSourceType] = useState("");
+  const [selectedOccupation, setSelectedOccupation] = useState("");
   
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -67,6 +68,7 @@ const PersonaViewerContent = () => {
     setSelectedRegion("");
     setSelectedIncome("");
     setSelectedSourceType("");
+    setSelectedOccupation("");
   };
 
   // If viewing a specific persona, show the detail view
@@ -110,7 +112,7 @@ const PersonaViewerContent = () => {
             <div className="w-32 h-1 bg-accent mb-6"></div>
           </div>
 
-          {/* Filter Section - Now with enhanced functionality */}
+          {/* Filter Section - Enhanced with structured search */}
           <FilterSection 
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -118,13 +120,15 @@ const PersonaViewerContent = () => {
             selectedTags={selectedTags}
             onTagsChange={setSelectedTags}
             selectedAge={selectedAge}
-            onAgeChange={setSelectedAge}
+            onAgeChange={(val) => setSelectedAge(val === "any" ? "" : val)}
             selectedRegion={selectedRegion}
-            onRegionChange={setSelectedRegion}
+            onRegionChange={(val) => setSelectedRegion(val === "any" ? "" : val)}
             selectedIncome={selectedIncome}
             onIncomeChange={setSelectedIncome}
             selectedSourceType={selectedSourceType}
             onSourceTypeChange={setSelectedSourceType}
+            selectedOccupation={selectedOccupation}
+            onOccupationChange={(val) => setSelectedOccupation(val === "any" ? "" : val)}
           />
 
           {/* Tabbed View - Always show both tabs */}
@@ -143,6 +147,7 @@ const PersonaViewerContent = () => {
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
+                selectedOccupation={selectedOccupation}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
@@ -156,6 +161,7 @@ const PersonaViewerContent = () => {
                 selectedRegion={selectedRegion}
                 selectedIncome={selectedIncome}
                 selectedSourceType={selectedSourceType}
+                selectedOccupation={selectedOccupation}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
