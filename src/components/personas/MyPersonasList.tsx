@@ -19,6 +19,7 @@ interface MyPersonasListProps {
   selectedRegion?: string;
   selectedIncome?: string;
   selectedSourceType?: string;
+  selectedOccupation?: string;
   className?: string;
 }
 
@@ -30,6 +31,7 @@ const MyPersonasList = ({
   selectedRegion = "",
   selectedIncome = "",
   selectedSourceType = "",
+  selectedOccupation = "",
   className = "grid grid-cols-1 lg:grid-cols-2 gap-6"
 }: MyPersonasListProps) => {
   const { user, isLoading: authLoading } = useAuth();
@@ -100,8 +102,11 @@ const MyPersonasList = ({
           case "36-50":
             if (ageNum < 36 || ageNum > 50) return false;
             break;
-          case "51+":
-            if (ageNum < 51) return false;
+          case "51-65":
+            if (ageNum < 51 || ageNum > 65) return false;
+            break;
+          case "65+":
+            if (ageNum < 65) return false;
             break;
         }
       }
@@ -114,9 +119,12 @@ const MyPersonasList = ({
         }
       }
 
-      // Source type filter (if you have this data)
-      if (selectedSourceType) {
-        // Add source type filtering logic if available
+      // Occupation filter
+      if (selectedOccupation) {
+        const occupation = persona.conversation_summary?.demographics?.occupation;
+        if (!occupation || !occupation.toLowerCase().includes(selectedOccupation.toLowerCase())) {
+          return false;
+        }
       }
 
       return true;
@@ -144,7 +152,7 @@ const MyPersonasList = ({
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedTags, selectedAge, selectedRegion, selectedIncome, selectedSourceType]);
+  }, [searchQuery, selectedTags, selectedAge, selectedRegion, selectedIncome, selectedSourceType, selectedOccupation]);
 
   // Handle visibility changes
   const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
@@ -208,7 +216,7 @@ const MyPersonasList = ({
   }
 
   if (personas.length === 0) {
-    const hasFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedSourceType;
+    const hasFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedSourceType || selectedOccupation;
     
     if (hasFilters) {
       return (
