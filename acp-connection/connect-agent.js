@@ -17,13 +17,9 @@
  * - ACP_ENVIRONMENT: 'sandbox' or 'mainnet' (default: sandbox)
  */
 
-// Try both import styles for compatibility
-import pkg from '@virtuals-protocol/acp-node';
-import { AcpContractClient, baseSepoliaAcpConfig, baseAcpConfig } from '@virtuals-protocol/acp-node';
+// Import per official documentation: https://github.com/Virtual-Protocol/acp-node
+import AcpClient, { AcpContractClient, baseSepoliaAcpConfig, baseAcpConfig } from '@virtuals-protocol/acp-node';
 import dotenv from 'dotenv';
-
-// Handle default export - could be the class itself or an object with default
-const AcpClient = pkg.default || pkg;
 
 dotenv.config();
 
@@ -60,14 +56,6 @@ console.log('========================');
 console.log('Wallet:', config.walletAddress);
 console.log('Environment:', config.environment);
 console.log('Webhook:', config.jobExecutionWebhook);
-console.log('');
-
-// Debug: Check what we imported
-console.log('📦 Package import check:');
-console.log('   pkg type:', typeof pkg);
-console.log('   pkg.default:', typeof pkg.default);
-console.log('   AcpClient:', typeof AcpClient);
-console.log('   AcpContractClient:', typeof AcpContractClient);
 console.log('');
 
 // Track active jobs for logging
@@ -130,13 +118,6 @@ async function main() {
     );
     
     console.log('✅ Contract client built successfully');
-    
-    // Check if AcpClient is a valid constructor
-    if (typeof AcpClient !== 'function') {
-      console.error('❌ AcpClient is not a constructor. Package may have different export structure.');
-      console.log('   Available exports from package:', Object.keys(pkg));
-      process.exit(1);
-    }
     
     // Create the ACP Client with callbacks
     const acpClient = new AcpClient({
