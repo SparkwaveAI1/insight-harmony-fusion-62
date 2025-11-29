@@ -63,9 +63,20 @@ const activeJobs = new Map();
 async function executeJob(job) {
   console.log(`\n📋 Job Details:`);
   console.log(`   ID: ${job.id}`);
+  console.log(`   Memo ID: ${job.memoId}`);
   console.log(`   Service Requirement:`, JSON.stringify(job.serviceRequirement, null, 2));
   
   try {
+    // Flatten serviceRequirement fields to root level for edge function compatibility
+    const payload = {
+      job_id: job.id,
+      memo_id: job.memoId,
+      ...job.serviceRequirement,  // Spread persona_criteria, questions, etc. to root level
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log(`   Webhook Payload:`, JSON.stringify(payload, null, 2));
+    
     // Forward job to execution webhook
     const response = await fetch(config.jobExecutionWebhook, {
       method: 'POST',
@@ -73,12 +84,7 @@ async function executeJob(job) {
         'Content-Type': 'application/json',
         'X-ACP-Job-ID': job.id
       },
-      body: JSON.stringify({
-        jobId: job.id,
-        serviceRequirement: job.serviceRequirement,
-        memoId: job.memoId,
-        timestamp: new Date().toISOString()
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
