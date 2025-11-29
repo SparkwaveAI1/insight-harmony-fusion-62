@@ -23,6 +23,9 @@ serve(async (req) => {
   }
 
   try {
+    // DIAGNOSTIC: First line timestamp
+    console.log(`🔔 [ACP-JOB] REQUEST RECEIVED at ${new Date().toISOString()}`);
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
@@ -33,6 +36,7 @@ serve(async (req) => {
     
     // Log raw request from Butler for debugging
     console.log('========================================');
+    console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - Parsed request`);
     console.log('🚀 [ACP-JOB] Raw request from Butler:', JSON.stringify({
       job_id: jobRequest.job_id,
       persona_criteria: jobRequest.persona_criteria,
@@ -71,6 +75,9 @@ serve(async (req) => {
     let searchMetadata: any = {};
     
     try {
+      // DIAGNOSTIC: Before persona search
+      console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING acp-persona-search-v2`);
+      
       // Call the new LLM-powered persona search with effectiveQuery
       const { data: searchData, error: searchError } = await supabase.functions.invoke('acp-persona-search-v2', {
         body: {
@@ -79,6 +86,9 @@ serve(async (req) => {
           min_results: 3
         }
       });
+      
+      // DIAGNOSTIC: After persona search
+      console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED acp-persona-search-v2`);
 
       if (searchError) {
         console.error('❌ [ACP-JOB] acp-persona-search-v2 error:', searchError);
@@ -180,7 +190,8 @@ serve(async (req) => {
         const history = conversationHistories[personaId];
 
         try {
-          console.log(`🔄 [ACP-JOB] Calling v4-grok-conversation for ${persona?.name || personaId}`);
+          // DIAGNOSTIC: Before Grok call
+          console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING v4-grok-conversation for ${persona?.name || personaId}`);
 
           const { data: grokData, error: grokError } = await supabase.functions.invoke('v4-grok-conversation', {
             body: {
@@ -189,6 +200,9 @@ serve(async (req) => {
               conversation_history: history
             }
           });
+          
+          // DIAGNOSTIC: After Grok call
+          console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED v4-grok-conversation for ${persona?.name || personaId}`);
 
           if (grokError) {
             console.error(`❌ [ACP-JOB] v4-grok-conversation error for ${persona?.name}:`, grokError);
@@ -276,7 +290,8 @@ serve(async (req) => {
       // Generate qualitative insights using the SAME function as the app
       let qualitative_report = null;
       try {
-        console.log('🔬 [ACP-JOB] Calling compile-research-insights for qualitative analysis...');
+        // DIAGNOSTIC: Before insights call
+        console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING compile-research-insights`);
         
         // Build responses in the format expected by compile-research-insights
         const flatResponses: Array<{
@@ -320,6 +335,9 @@ serve(async (req) => {
             }
           }
         });
+        
+        // DIAGNOSTIC: After insights call
+        console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED compile-research-insights`);
 
         if (insightsError) {
           console.error('❌ [ACP-JOB] Failed to generate qualitative insights:', insightsError);
@@ -388,7 +406,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('❌ [ACP-JOB] Execution Error:', error);
+    // DIAGNOSTIC: Error with timestamp and stack
+    console.error(`❌ [ACP-JOB] ${new Date().toISOString()} - FATAL ERROR:`, error);
+    console.error(`   Stack:`, error.stack);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
