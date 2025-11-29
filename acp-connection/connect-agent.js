@@ -2,12 +2,12 @@
  * PersonaAI ACP Connection Script
  * 
  * This script connects PersonaAI to the Agent Commerce Protocol (ACP) network.
- * It uses the official @virtuals-protocol/acp-node SDK (v0.3.0-beta.5+).
+ * It uses the official @virtuals-protocol/acp-node SDK.
  * 
  * Usage: node connect-agent.js
  * 
  * Required environment variables:
- * - ACP_API_KEY: Your ACP API key from console.game.virtuals.io
+ * - ACP_API_KEY: Your session entity key ID from console.game.virtuals.io
  * - AGENT_WALLET_PRIVATE_KEY: Private key for the whitelisted wallet (without 0x prefix)
  * - AGENT_WALLET_ADDRESS: Address of the whitelisted wallet
  * - JOB_EXECUTION_WEBHOOK: URL of the edge function that executes jobs
@@ -17,8 +17,13 @@
  * - ACP_ENVIRONMENT: 'sandbox' or 'mainnet' (default: sandbox)
  */
 
-import AcpClient, { AcpContractClient, baseSepoliaAcpConfig, baseAcpConfig } from '@virtuals-protocol/acp-node';
+// Try both import styles for compatibility
+import pkg from '@virtuals-protocol/acp-node';
+import { AcpContractClient, baseSepoliaAcpConfig, baseAcpConfig } from '@virtuals-protocol/acp-node';
 import dotenv from 'dotenv';
+
+// Handle default export - could be the class itself or an object with default
+const AcpClient = pkg.default || pkg;
 
 dotenv.config();
 
@@ -39,7 +44,7 @@ for (const envVar of requiredEnvVars) {
 
 // Configuration
 const config = {
-  apiKey: process.env.ACP_API_KEY,
+  apiKey: process.env.ACP_API_KEY,  // This is the session-entity-key-id
   walletPrivateKey: process.env.AGENT_WALLET_PRIVATE_KEY,
   walletAddress: process.env.AGENT_WALLET_ADDRESS,
   rpcUrl: process.env.RPC_URL || undefined,
@@ -55,6 +60,14 @@ console.log('========================');
 console.log('Wallet:', config.walletAddress);
 console.log('Environment:', config.environment);
 console.log('Webhook:', config.jobExecutionWebhook);
+console.log('');
+
+// Debug: Check what we imported
+console.log('📦 Package import check:');
+console.log('   pkg type:', typeof pkg);
+console.log('   pkg.default:', typeof pkg.default);
+console.log('   AcpClient:', typeof AcpClient);
+console.log('   AcpContractClient:', typeof AcpContractClient);
 console.log('');
 
 // Track active jobs for logging
@@ -107,15 +120,23 @@ async function main() {
   
   try {
     // Build the ACP Contract Client
+    // Parameters: privateKey, sessionEntityKeyId, walletAddress, rpcUrl?, config?
     const acpContractClient = await AcpContractClient.build(
-      config.apiKey,
-      config.walletPrivateKey,
-      config.walletAddress,
-      config.rpcUrl,
-      acpConfig
+      config.walletPrivateKey,  // First: wallet private key
+      config.apiKey,            // Second: session entity key ID (ACP_API_KEY)
+      config.walletAddress,     // Third: wallet address
+      config.rpcUrl,            // Fourth: optional RPC URL
+      acpConfig                 // Fifth: optional chain config
     );
     
     console.log('✅ Contract client built successfully');
+    
+    // Check if AcpClient is a valid constructor
+    if (typeof AcpClient !== 'function') {
+      console.error('❌ AcpClient is not a constructor. Package may have different export structure.');
+      console.log('   Available exports from package:', Object.keys(pkg));
+      process.exit(1);
+    }
     
     // Create the ACP Client with callbacks
     const acpClient = new AcpClient({
@@ -124,6 +145,7 @@ async function main() {
       // Called when a new job/task is received
       onNewTask: async (job) => {
         console.log(`\n📥 NEW JOB REQUEST: ${job.id}`);
+        console.log(`   Full job object:`, JSON.stringify(job, null, 2));
         activeJobs.set(job.id, { status: 'received', receivedAt: new Date() });
         
         try {
@@ -165,7 +187,6 @@ async function main() {
         console.log(`   Service Requirement:`, job.serviceRequirement);
         
         // For now, auto-approve evaluations
-        // In production, you'd implement actual evaluation logic
         try {
           await job.evaluate(true, 'Deliverable meets requirements');
           console.log(`✅ Job ${job.id} evaluation submitted: APPROVED`);
@@ -218,9 +239,10 @@ async function main() {
     console.error('   ', error.message);
     console.error('');
     console.error('Troubleshooting:');
-    console.error('1. Verify ACP_API_KEY is correct (get from console.game.virtuals.io)');
+    console.error('1. Verify ACP_API_KEY is correct (session entity key ID from console.game.virtuals.io)');
     console.error('2. Ensure wallet is whitelisted in Service Registry');
     console.error('3. Check if using correct environment (sandbox vs mainnet)');
+    console.error('4. Verify wallet private key does not have 0x prefix');
     console.error('');
     process.exit(1);
   }
