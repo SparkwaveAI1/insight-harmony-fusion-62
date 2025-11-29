@@ -66,7 +66,6 @@ const US_STATES: Record<string, string> = {
   'sd': 'South Dakota', 'tn': 'Tennessee', 'tx': 'Texas', 'ut': 'Utah',
   'vt': 'Vermont', 'va': 'Virginia', 'wa': 'Washington', 'wv': 'West Virginia',
   'wi': 'Wisconsin', 'wy': 'Wyoming', 'dc': 'Washington D.C.',
-  // Full names map to themselves
   'alabama': 'Alabama', 'alaska': 'Alaska', 'arizona': 'Arizona', 'arkansas': 'Arkansas',
   'california': 'California', 'colorado': 'Colorado', 'connecticut': 'Connecticut', 'delaware': 'Delaware',
   'florida': 'Florida', 'georgia': 'Georgia', 'hawaii': 'Hawaii', 'idaho': 'Idaho',
@@ -109,80 +108,128 @@ const STOPWORDS = new Set([
 interface ParsedCriteria {
   age_min: number | null;
   age_max: number | null;
-  education_level: string | null;
-  bmi_min: number | null;
-  bmi_max: number | null;
-  diet_keywords: string[];
+  gender: string[] | null;
+  marital_status: string[] | null;
+  has_children: boolean | null;
   location_country: string | null;
   location_region: string | null;
+  location_city: string | null;
   occupation_keywords: string[];
+  education_level: string | null;
   income_bracket: string | null;
   interests_keywords: string[];
+  health_keywords: string[];
   lifestyle_keywords: string[];
   search_keywords: string[];
+  // Strictness settings
+  strictness: {
+    hard_match_min: number;
+    soft_match_min: number;
+    allow_near_matches: boolean;
+    max_near_match_fraction: number;
+  };
 }
 
 interface SearchRequest {
   research_query: string;
   persona_count?: number;
+  strictness?: {
+    hard_match_min?: number;
+    soft_match_min?: number;
+    allow_near_matches?: boolean;
+  };
 }
 
-interface SearchResult {
-  personas: any[];
-  relaxation_applied: string | null;
-  attempts: string[];
+interface StageResult {
+  stage: string;
+  count: number;
+  relaxation?: string;
 }
 
 // ============================================================
 // DETERMINISTIC QUERY PARSER (NO LLM!)
 // ============================================================
-
-function parseQueryDeterministic(query: string): ParsedCriteria {
+function parseQueryDeterministic(query: string, customStrictness?: SearchRequest['strictness']): ParsedCriteria {
   const q = query.toLowerCase();
-  const originalQuery = query;
   
-  console.log(`📝 [PARSER] Input: "${originalQuery}"`);
+  console.log(`📝 [PARSER] Input: "${query}"`);
   
-  // Initialize empty criteria
+  // Initialize criteria with defaults
   const criteria: ParsedCriteria = {
     age_min: null,
     age_max: null,
-    education_level: null,
-    bmi_min: null,
-    bmi_max: null,
-    diet_keywords: [],
+    gender: null,
+    marital_status: null,
+    has_children: null,
     location_country: null,
     location_region: null,
+    location_city: null,
     occupation_keywords: [],
+    education_level: null,
     income_bracket: null,
     interests_keywords: [],
+    health_keywords: [],
     lifestyle_keywords: [],
     search_keywords: [],
+    strictness: {
+      hard_match_min: customStrictness?.hard_match_min ?? 0.85,
+      soft_match_min: customStrictness?.soft_match_min ?? 0.70,
+      allow_near_matches: customStrictness?.allow_near_matches ?? true,
+      max_near_match_fraction: 0.3,
+    },
   };
 
+  // ---- EXTRACT GENDER ----
+  if (/\b(women|woman|female|females|ladies)\b/i.test(q)) {
+    criteria.gender = ['female', 'woman', 'Female', 'Woman'];
+    console.log(`   👤 Gender: female`);
+  } else if (/\b(men|man|male|males|guys)\b/i.test(q)) {
+    criteria.gender = ['male', 'man', 'Male', 'Man'];
+    console.log(`   👤 Gender: male`);
+  }
+
+  // ---- EXTRACT MARITAL STATUS ----
+  if (/\b(married|spouse|husband|wife)\b/i.test(q)) {
+    criteria.marital_status = ['married', 'Married'];
+    console.log(`   💑 Marital: married`);
+  } else if (/\b(single|unmarried|bachelor)\b/i.test(q)) {
+    criteria.marital_status = ['single', 'Single', 'never married'];
+    console.log(`   💑 Marital: single`);
+  } else if (/\b(divorced|separated)\b/i.test(q)) {
+    criteria.marital_status = ['divorced', 'Divorced', 'separated'];
+    console.log(`   💑 Marital: divorced`);
+  }
+
+  // ---- EXTRACT HAS CHILDREN ----
+  if (/\b(parent|parents|mother|father|mom|dad|kids|children|child)\b/i.test(q)) {
+    if (/\b(no\s+kids|no\s+children|childless|child-?free)\b/i.test(q)) {
+      criteria.has_children = false;
+      console.log(`   👶 Has children: false`);
+    } else {
+      criteria.has_children = true;
+      console.log(`   👶 Has children: true`);
+    }
+  }
+
   // ---- EXTRACT AGE RANGE ----
-  // Patterns: "age 30-50", "ages 30 to 50", "30-50 years old", "in their 30s", "aged 25-35"
   const agePatterns = [
-    /(?:age[sd]?\s*)?(\d{2})\s*[-–to]+\s*(\d{2})(?:\s*years?\s*old)?/i,  // "30-50" or "30 to 50"
-    /(?:age[sd]?\s+)(\d{2})(?:\s*years?\s*old)?/i,                        // "age 30" (single age)
-    /in\s+their\s+(\d)0s/i,                                                // "in their 30s"
-    /(\d{2})\+?\s*years?\s*old/i,                                          // "30 years old" or "30+ years old"
+    /(?:age[sd]?\s*)?(\d{2})\s*[-–to]+\s*(\d{2})(?:\s*years?\s*old)?/i,
+    /(?:age[sd]?\s+)(\d{2})(?:\s*years?\s*old)?/i,
+    /in\s+their\s+(\d)0s/i,
+    /(\d{2})\+?\s*years?\s*old/i,
   ];
   
   for (const pattern of agePatterns) {
     const match = q.match(pattern);
     if (match) {
       if (match[2]) {
-        // Range found
         criteria.age_min = parseInt(match[1]);
         criteria.age_max = parseInt(match[2]);
       } else if (pattern.source.includes('their')) {
-        // "in their 30s" -> 30-39
         const decade = parseInt(match[1]) * 10;
         criteria.age_min = decade;
         criteria.age_max = decade + 9;
       } else {
-        // Single age - use as center point with ±5 range
         const age = parseInt(match[1]);
         criteria.age_min = Math.max(18, age - 5);
         criteria.age_max = age + 5;
@@ -193,21 +240,19 @@ function parseQueryDeterministic(query: string): ParsedCriteria {
   }
 
   // ---- EXTRACT COUNTRY ----
-  // Check for country patterns
   for (const [alias, country] of Object.entries(COUNTRY_ALIASES)) {
-    // Use word boundaries for short codes, flexible for longer names
     const regex = alias.length <= 3 
       ? new RegExp(`\\b${alias}\\b`, 'i')
       : new RegExp(alias, 'i');
     
     if (regex.test(q)) {
       criteria.location_country = country;
-      console.log(`   🌍 Country: ${country} (matched: "${alias}")`);
+      console.log(`   🌍 Country: ${country}`);
       break;
     }
   }
 
-  // ---- EXTRACT US STATE (implies US country) ----
+  // ---- EXTRACT US STATE ----
   if (!criteria.location_country || criteria.location_country === 'United States') {
     for (const [stateKey, stateName] of Object.entries(US_STATES)) {
       const regex = stateKey.length <= 2
@@ -217,24 +262,10 @@ function parseQueryDeterministic(query: string): ParsedCriteria {
       if (regex.test(q)) {
         criteria.location_region = stateName;
         criteria.location_country = 'United States';
-        console.log(`   🏛️ State: ${stateName} (matched: "${stateKey}")`);
+        console.log(`   🏛️ State: ${stateName}`);
         break;
       }
     }
-  }
-
-  // ---- EXTRACT BMI/WEIGHT KEYWORDS ----
-  if (/\b(overweight|heavy|obese|fat)\b/i.test(q)) {
-    criteria.bmi_min = 25;
-    console.log(`   ⚖️ BMI: overweight (≥25)`);
-  }
-  if (/\bobese\b/i.test(q)) {
-    criteria.bmi_min = 30;
-    console.log(`   ⚖️ BMI: obese (≥30)`);
-  }
-  if (/\b(underweight|thin|skinny)\b/i.test(q)) {
-    criteria.bmi_max = 18.5;
-    console.log(`   ⚖️ BMI: underweight (≤18.5)`);
   }
 
   // ---- EXTRACT EDUCATION ----
@@ -260,79 +291,53 @@ function parseQueryDeterministic(query: string): ParsedCriteria {
     [/\b(middle[- ]?class|middle[- ]?income)\b/i, '50k-75k'],
     [/\b(upper[- ]?middle)\b/i, '100k-150k'],
     [/\b(high[- ]?income|wealthy|affluent|rich)\b/i, '150k+'],
-    [/\b(\d{2,3})k\s*[-–to]+\s*(\d{2,3})k\b/i, '$1k-$2k'],
-    [/\bunder\s*(\d{2,3})k\b/i, 'under $1k'],
-    [/\bover\s*(\d{2,3})k\b/i, '$1k+'],
   ];
   
   for (const [pattern, income] of incomePatterns) {
-    const match = q.match(pattern);
-    if (match) {
-      let bracket = income;
-      if (match[1] && income.includes('$1')) {
-        bracket = income.replace('$1', match[1]).replace('$2', match[2] || '');
-      }
-      criteria.income_bracket = bracket;
-      console.log(`   💰 Income: ${bracket}`);
+    if (pattern.test(q)) {
+      criteria.income_bracket = income;
+      console.log(`   💰 Income: ${income}`);
       break;
     }
   }
 
+  // ---- EXTRACT HEALTH KEYWORDS ----
+  const healthPatterns = [
+    'diabetes', 'diabetic', 'type 2', 'type2', 'hypertension', 'high blood pressure',
+    'obese', 'overweight', 'heart disease', 'cardiac', 'cancer', 'asthma',
+    'depression', 'anxiety', 'mental health', 'chronic', 'autoimmune',
+  ];
+  for (const hp of healthPatterns) {
+    if (q.includes(hp)) {
+      criteria.health_keywords.push(hp);
+    }
+  }
+  if (criteria.health_keywords.length > 0) {
+    console.log(`   🏥 Health: [${criteria.health_keywords.join(', ')}]`);
+  }
+
   // ---- EXTRACT ALL KEYWORDS ----
-  // Split on whitespace and punctuation, filter stopwords
   const words = q
     .replace(/[^\w\s-]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length >= 3 && !STOPWORDS.has(w.toLowerCase()))
     .map(w => w.toLowerCase());
   
-  // Remove words that are just numbers (ages, counts)
   const keywords = words.filter(w => !/^\d+$/.test(w));
-  
-  // Also extract compound terms (2-word phrases that aren't stopwords)
-  const compounds: string[] = [];
-  const wordsArray = q.replace(/[^\w\s-]/g, ' ').split(/\s+/).map(w => w.toLowerCase());
-  for (let i = 0; i < wordsArray.length - 1; i++) {
-    const w1 = wordsArray[i];
-    const w2 = wordsArray[i + 1];
-    if (w1.length >= 3 && w2.length >= 3 && !STOPWORDS.has(w1) && !STOPWORDS.has(w2)) {
-      compounds.push(`${w1} ${w2}`);
-    }
-  }
 
-  // Combine individual keywords and compounds
-  const allKeywords = [...new Set([...keywords, ...compounds])];
+  // Occupation keywords
+  const occupationIndicators = ['owner', 'manager', 'worker', 'employee', 'professional', 'executive', 'ceo', 'founder', 'entrepreneur', 'developer', 'engineer', 'designer', 'analyst', 'consultant', 'director', 'specialist', 'technician', 'nurse', 'doctor', 'teacher', 'driver', 'chef', 'artist', 'restaurant', 'retail', 'healthcare', 'tech', 'finance'];
   
-  // Assign keywords to appropriate categories
-  const occupationIndicators = ['owner', 'manager', 'worker', 'employee', 'professional', 'executive', 'ceo', 'founder', 'entrepreneur', 'developer', 'engineer', 'designer', 'analyst', 'consultant', 'director', 'specialist', 'technician', 'nurse', 'doctor', 'teacher', 'driver', 'chef', 'artist'];
-  const lifestyleIndicators = ['active', 'sedentary', 'remote', 'urban', 'rural', 'suburban', 'fitness', 'health', 'wellness'];
-  const dietIndicators = ['vegan', 'vegetarian', 'keto', 'paleo', 'organic', 'fast food', 'junk', 'healthy'];
-  
-  for (const kw of allKeywords) {
-    // Check if it's an occupation keyword
-    if (occupationIndicators.some(ind => kw.includes(ind)) || 
-        kw.includes('business') || kw.includes('small business') || kw.includes('owner')) {
+  for (const kw of keywords) {
+    if (occupationIndicators.some(ind => kw.includes(ind))) {
       criteria.occupation_keywords.push(kw);
     }
-    // Check if it's a lifestyle keyword
-    else if (lifestyleIndicators.some(ind => kw.includes(ind))) {
-      criteria.lifestyle_keywords.push(kw);
-    }
-    // Check if it's a diet keyword
-    else if (dietIndicators.some(ind => kw.includes(ind))) {
-      criteria.diet_keywords.push(kw);
-    }
-    // Everything else goes to search_keywords for collection matching
-    else if (kw.length >= 3) {
-      criteria.search_keywords.push(kw);
-    }
   }
-
-  // Dedupe occupation_keywords and split compound terms for better matching
+  
+  // Dedupe and expand occupation keywords
   const expandedOccupation = new Set<string>();
   for (const kw of criteria.occupation_keywords) {
     expandedOccupation.add(kw);
-    // Also add individual words from compound terms
     kw.split(/\s+/).forEach(w => {
       if (w.length >= 3 && !STOPWORDS.has(w)) {
         expandedOccupation.add(w);
@@ -341,159 +346,360 @@ function parseQueryDeterministic(query: string): ParsedCriteria {
   }
   criteria.occupation_keywords = [...expandedOccupation];
 
-  // Move occupation keywords to search_keywords too for collection matching
-  criteria.search_keywords = [...new Set([...criteria.search_keywords, ...criteria.occupation_keywords])];
+  // Store all keywords for search
+  criteria.search_keywords = [...new Set([...keywords, ...criteria.occupation_keywords])];
 
-  console.log(`   🔑 Occupation keywords: [${criteria.occupation_keywords.join(', ')}]`);
-  console.log(`   🔍 Search keywords: [${criteria.search_keywords.join(', ')}]`);
+  console.log(`   🔑 Occupation: [${criteria.occupation_keywords.join(', ')}]`);
+  console.log(`   🔍 Keywords: [${criteria.search_keywords.slice(0, 10).join(', ')}${criteria.search_keywords.length > 10 ? '...' : ''}]`);
 
   return criteria;
 }
 
 // ============================================================
-// COLLECTION MATCHING (keyword-based)
+// COLLECTION MATCHING
 // ============================================================
 async function findMatchingCollections(
   supabase: any,
   criteria: ParsedCriteria
-): Promise<{ ids: string[]; matchedCollections: Array<{ id: string; name: string; matchedKeywords: string[] }> }> {
+): Promise<{ ids: string[]; matchedCollections: Array<{ id: string; name: string }> }> {
   const allKeywords = new Set<string>();
   
   criteria.search_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
   criteria.occupation_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
-  criteria.lifestyle_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
-  criteria.diet_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
+  criteria.health_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
   
-  // Add BMI keywords
-  if (criteria.bmi_min !== null && criteria.bmi_min >= 25) {
-    allKeywords.add('overweight');
-    if (criteria.bmi_min >= 30) allKeywords.add('obese');
-  }
-
   const keywordArray = Array.from(allKeywords).filter(k => k.length >= 3);
   
   if (keywordArray.length === 0) {
-    console.log(`   📁 No keywords for collection matching`);
     return { ids: [], matchedCollections: [] };
   }
-
-  console.log(`   📁 Searching collections with keywords: [${keywordArray.join(', ')}]`);
 
   const { data: collections, error } = await supabase
     .from('collections')
     .select('id, name, description')
     .eq('is_public', true);
 
-  if (error) {
-    console.error(`   ❌ Collection fetch error:`, error);
+  if (error || !collections) {
+    console.error(`Collection fetch error:`, error);
     return { ids: [], matchedCollections: [] };
   }
 
-  const matchedCollections: Array<{ id: string; name: string; matchedKeywords: string[] }> = [];
+  const matchedCollections: Array<{ id: string; name: string }> = [];
   
-  for (const collection of collections || []) {
+  for (const collection of collections) {
     const nameLower = (collection.name || '').toLowerCase();
     const descLower = (collection.description || '').toLowerCase();
-    const matchedKeywords: string[] = [];
     
     for (const keyword of keywordArray) {
       if (nameLower.includes(keyword) || descLower.includes(keyword)) {
-        matchedKeywords.push(keyword);
+        matchedCollections.push({ id: collection.id, name: collection.name });
+        break;
       }
-    }
-    
-    if (matchedKeywords.length > 0) {
-      matchedCollections.push({ id: collection.id, name: collection.name, matchedKeywords });
     }
   }
 
-  matchedCollections.sort((a, b) => b.matchedKeywords.length - a.matchedKeywords.length);
-  
   console.log(`   📁 Matched ${matchedCollections.length} collections`);
-  matchedCollections.slice(0, 5).forEach(c => {
-    console.log(`      - "${c.name}": [${c.matchedKeywords.join(', ')}]`);
-  });
-  
   return { ids: matchedCollections.map(c => c.id), matchedCollections };
 }
 
 // ============================================================
-// PERSONA SEARCH
+// STAGE 1: HARD FILTER (SQL via RPC)
 // ============================================================
-async function searchPersonas(
+async function stage1HardFilter(
   supabase: any,
   criteria: ParsedCriteria,
   collectionIds: string[],
-  limit: number
-): Promise<any[]> {
-  const { data, error } = await supabase.rpc('search_personas_advanced', {
+  limit: number = 500
+): Promise<{ candidates: any[]; relaxation: string | null }> {
+  console.log(`\n🔍 [STAGE 1] Hard filter with indexed columns`);
+  
+  // First attempt: full criteria
+  let { data, error } = await supabase.rpc('search_personas_stage1', {
     p_age_min: criteria.age_min,
     p_age_max: criteria.age_max,
-    p_bmi_min: criteria.bmi_min,
-    p_bmi_max: criteria.bmi_max,
-    p_education: criteria.education_level,
-    p_location_region: criteria.location_region,
-    p_location_country: criteria.location_country,
+    p_gender: criteria.gender,
+    p_marital_status: criteria.marital_status,
+    p_has_children: criteria.has_children,
+    p_country: criteria.location_country,
+    p_state_region: criteria.location_region,
+    p_city: criteria.location_city,
     p_occupation_keywords: criteria.occupation_keywords.length > 0 ? criteria.occupation_keywords : null,
-    p_diet_keywords: criteria.diet_keywords.length > 0 ? criteria.diet_keywords : null,
-    p_interest_keywords: criteria.interests_keywords.length > 0 ? criteria.interests_keywords : null,
-    p_lifestyle_keywords: criteria.lifestyle_keywords.length > 0 ? criteria.lifestyle_keywords : null,
-    p_income_bracket: criteria.income_bracket,
     p_collection_ids: collectionIds.length > 0 ? collectionIds : null,
     p_limit: limit,
   });
 
   if (error) {
-    console.error(`   ❌ RPC error:`, error);
+    console.error(`   ❌ Stage 1 RPC error:`, error);
     throw error;
   }
 
-  return data || [];
-}
+  console.log(`   → Found ${data?.length || 0} candidates (full criteria)`);
 
-// ============================================================
-// SEARCH WITH LIMITED RELAXATION
-// Only drop region, then give up - NO aggressive relaxation
-// ============================================================
-async function searchWithRetry(
-  supabase: any,
-  criteria: ParsedCriteria,
-  collectionIds: string[],
-  requestedCount: number
-): Promise<SearchResult> {
-  const attempts: string[] = [];
-  
-  // Attempt 1: Full criteria
-  attempts.push('full_criteria');
-  console.log(`   🔍 Attempt 1: Full criteria`);
-  let personas = await searchPersonas(supabase, criteria, collectionIds, requestedCount);
-  console.log(`      → Found ${personas.length}/${requestedCount}`);
-  
-  if (personas.length >= requestedCount) {
-    return { personas, relaxation_applied: null, attempts };
+  if (data && data.length > 0) {
+    return { candidates: data, relaxation: null };
   }
 
-  // Attempt 2: Drop region only (keep country, occupation, age)
+  // Relaxation 1: Drop state/region, keep country
   if (criteria.location_region) {
-    attempts.push('dropped_region');
-    console.log(`   🔍 Attempt 2: Dropping region filter`);
-    const criteriaNoRegion = { ...criteria, location_region: null };
-    personas = await searchPersonas(supabase, criteriaNoRegion, collectionIds, requestedCount);
-    console.log(`      → Found ${personas.length}/${requestedCount}`);
-    
-    if (personas.length >= requestedCount) {
-      return { personas, relaxation_applied: 'dropped_region', attempts };
+    console.log(`   🔄 Relaxing: dropping state/region filter`);
+    const { data: relaxed1, error: err1 } = await supabase.rpc('search_personas_stage1', {
+      p_age_min: criteria.age_min,
+      p_age_max: criteria.age_max,
+      p_gender: criteria.gender,
+      p_marital_status: criteria.marital_status,
+      p_has_children: criteria.has_children,
+      p_country: criteria.location_country,
+      p_state_region: null,
+      p_city: null,
+      p_occupation_keywords: criteria.occupation_keywords.length > 0 ? criteria.occupation_keywords : null,
+      p_collection_ids: collectionIds.length > 0 ? collectionIds : null,
+      p_limit: limit,
+    });
+
+    if (!err1 && relaxed1 && relaxed1.length > 0) {
+      console.log(`   → Found ${relaxed1.length} candidates (dropped region)`);
+      return { candidates: relaxed1, relaxation: 'dropped_region' };
     }
   }
 
-  // NO FURTHER RELAXATION - return what we have
-  // This prevents returning irrelevant personas for impossible queries
-  console.log(`   ⚠️ Search complete: ${personas.length} personas (no further relaxation)`);
+  // Relaxation 2: Widen age by ±5
+  if (criteria.age_min !== null || criteria.age_max !== null) {
+    console.log(`   🔄 Relaxing: widening age range ±5`);
+    const { data: relaxed2, error: err2 } = await supabase.rpc('search_personas_stage1', {
+      p_age_min: criteria.age_min ? criteria.age_min - 5 : null,
+      p_age_max: criteria.age_max ? criteria.age_max + 5 : null,
+      p_gender: criteria.gender,
+      p_marital_status: criteria.marital_status,
+      p_has_children: criteria.has_children,
+      p_country: criteria.location_country,
+      p_state_region: null,
+      p_city: null,
+      p_occupation_keywords: criteria.occupation_keywords.length > 0 ? criteria.occupation_keywords : null,
+      p_collection_ids: collectionIds.length > 0 ? collectionIds : null,
+      p_limit: limit,
+    });
+
+    if (!err2 && relaxed2 && relaxed2.length > 0) {
+      console.log(`   → Found ${relaxed2.length} candidates (widened age)`);
+      return { candidates: relaxed2, relaxation: 'widened_age' };
+    }
+  }
+
+  // No candidates found even after relaxation
+  console.log(`   ⚠️ No candidates found after relaxation`);
+  return { candidates: [], relaxation: 'no_match' };
+}
+
+// ============================================================
+// STAGE 3: LLM EVALUATION (via evaluate-persona-batch)
+// ============================================================
+async function stage3LLMEvaluation(
+  supabaseUrl: string,
+  supabaseKey: string,
+  originalQuery: string,
+  criteria: ParsedCriteria,
+  candidates: any[]
+): Promise<{ evaluations: any[]; summary: any }> {
+  console.log(`\n🤖 [STAGE 3] LLM evaluation of ${candidates.length} candidates`);
+
+  if (candidates.length === 0) {
+    return { evaluations: [], summary: { exact_matches: 0, near_matches: 0, best_score: 0 } };
+  }
+
+  // Call the evaluate-persona-batch edge function
+  const evalUrl = `${supabaseUrl}/functions/v1/evaluate-persona-batch`;
   
-  return { 
-    personas, 
-    relaxation_applied: personas.length > 0 ? 'partial_match' : 'no_match', 
-    attempts 
+  const response = await fetch(evalUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      spec: {
+        demographics: {
+          age: criteria.age_min || criteria.age_max ? { min: criteria.age_min, max: criteria.age_max } : undefined,
+          gender: criteria.gender,
+          marital_status: criteria.marital_status,
+          has_children: criteria.has_children,
+          location: {
+            country: criteria.location_country,
+            state_region: criteria.location_region,
+            city: criteria.location_city,
+          },
+        },
+        occupation_keywords: criteria.occupation_keywords,
+        interests: criteria.interests_keywords.map(k => ({ tag: k, weight: 0.5 })),
+        health: criteria.health_keywords.map(k => ({ tag: k, hard: true })),
+        original_query: originalQuery,
+      },
+      candidates: candidates,
+      strictness: {
+        hard_match_min: criteria.strictness.hard_match_min,
+        soft_match_min: criteria.strictness.soft_match_min,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`   ❌ Evaluation failed:`, errorText);
+    // Fallback: return candidates with neutral scores
+    return {
+      evaluations: candidates.map(c => ({
+        persona_id: c.persona_id,
+        overall_match: 0.5,
+        fails_hard_requirements: false,
+        reason: 'LLM evaluation unavailable',
+      })),
+      summary: { exact_matches: 0, near_matches: candidates.length, best_score: 0.5 },
+    };
+  }
+
+  const result = await response.json();
+  console.log(`   → Evaluation complete: ${result.summary?.exact_matches || 0} exact, ${result.summary?.near_matches || 0} near`);
+  
+  return {
+    evaluations: result.evaluations || [],
+    summary: result.summary || { exact_matches: 0, near_matches: 0, best_score: 0 },
+  };
+}
+
+// ============================================================
+// STRICT DECISION GATE
+// ============================================================
+function applyDecisionGate(
+  requestedCount: number,
+  evaluations: any[],
+  strictness: ParsedCriteria['strictness'],
+  candidates: any[]
+): {
+  success: boolean;
+  status: 'SUCCESS' | 'NO_MATCH' | 'INSUFFICIENT_EXACT' | 'INSUFFICIENT_QUALIFIED';
+  reason: string;
+  selectedPersonas: any[];
+  summary: {
+    requested: number;
+    exact_matches: number;
+    near_matches: number;
+    returned: number;
+  };
+} {
+  console.log(`\n🚦 [DECISION GATE] Applying strict rules`);
+
+  // Create lookup for evaluations
+  const evalMap = new Map(evaluations.map(e => [e.persona_id, e]));
+
+  // Categorize candidates
+  const exact: any[] = [];
+  const near: any[] = [];
+  const failed: any[] = [];
+
+  for (const candidate of candidates) {
+    const evaluation = evalMap.get(candidate.persona_id);
+    if (!evaluation) {
+      // No evaluation = treat as near match
+      near.push({ ...candidate, evaluation: { overall_match: 0.5, reason: 'Not evaluated' } });
+      continue;
+    }
+
+    if (evaluation.fails_hard_requirements) {
+      failed.push({ ...candidate, evaluation });
+      continue;
+    }
+
+    if (evaluation.overall_match >= strictness.hard_match_min) {
+      exact.push({ ...candidate, evaluation });
+    } else if (evaluation.overall_match >= strictness.soft_match_min) {
+      near.push({ ...candidate, evaluation });
+    } else {
+      failed.push({ ...candidate, evaluation });
+    }
+  }
+
+  // Sort by score
+  exact.sort((a, b) => b.evaluation.overall_match - a.evaluation.overall_match);
+  near.sort((a, b) => b.evaluation.overall_match - a.evaluation.overall_match);
+
+  const bestScore = exact[0]?.evaluation?.overall_match || near[0]?.evaluation?.overall_match || 0;
+
+  console.log(`   Exact matches: ${exact.length}`);
+  console.log(`   Near matches: ${near.length}`);
+  console.log(`   Failed hard: ${failed.length}`);
+  console.log(`   Best score: ${bestScore.toFixed(2)}`);
+
+  // Rule 1: Strong deny - nothing comes close
+  if (bestScore < 0.5) {
+    return {
+      success: false,
+      status: 'NO_MATCH',
+      reason: `No personas meet the requirements. Best match score: ${bestScore.toFixed(2)}. Try broadening your criteria.`,
+      selectedPersonas: [],
+      summary: { requested: requestedCount, exact_matches: exact.length, near_matches: near.length, returned: 0 },
+    };
+  }
+
+  // Rule 2: Check if we have enough exact matches
+  if (exact.length >= requestedCount) {
+    const selected = exact.slice(0, requestedCount);
+    return {
+      success: true,
+      status: 'SUCCESS',
+      reason: `Found ${exact.length} exact matches`,
+      selectedPersonas: selected,
+      summary: { requested: requestedCount, exact_matches: exact.length, near_matches: near.length, returned: selected.length },
+    };
+  }
+
+  // Rule 3: Try to fill with near matches if allowed
+  if (strictness.allow_near_matches) {
+    const combined = [...exact, ...near];
+    const maxNear = Math.floor(requestedCount * strictness.max_near_match_fraction);
+    
+    if (combined.length >= requestedCount) {
+      // Select up to requestedCount, respecting max_near_match_fraction
+      const selected: any[] = [...exact];
+      let nearAdded = 0;
+      
+      for (const n of near) {
+        if (selected.length >= requestedCount) break;
+        if (nearAdded < maxNear || exact.length < requestedCount - maxNear) {
+          selected.push(n);
+          nearAdded++;
+        }
+      }
+
+      if (selected.length >= requestedCount) {
+        return {
+          success: true,
+          status: 'SUCCESS',
+          reason: `Returning ${exact.length} exact + ${nearAdded} near matches`,
+          selectedPersonas: selected.slice(0, requestedCount),
+          summary: { requested: requestedCount, exact_matches: exact.length, near_matches: nearAdded, returned: Math.min(selected.length, requestedCount) },
+        };
+      }
+    }
+
+    // Partial fulfillment - return what we have
+    const selected = [...exact, ...near.slice(0, maxNear)];
+    if (selected.length > 0) {
+      return {
+        success: true,
+        status: 'SUCCESS',
+        reason: `Partial match: ${exact.length} exact + ${Math.min(near.length, maxNear)} near (requested ${requestedCount})`,
+        selectedPersonas: selected,
+        summary: { requested: requestedCount, exact_matches: exact.length, near_matches: Math.min(near.length, maxNear), returned: selected.length },
+      };
+    }
+  }
+
+  // Rule 4: Insufficient matches
+  return {
+    success: false,
+    status: exact.length > 0 ? 'INSUFFICIENT_EXACT' : 'INSUFFICIENT_QUALIFIED',
+    reason: `Found only ${exact.length} exact + ${near.length} near matches but ${requestedCount} requested. ${!strictness.allow_near_matches ? 'Near matches not allowed.' : ''}`,
+    selectedPersonas: [],
+    summary: { requested: requestedCount, exact_matches: exact.length, near_matches: near.length, returned: 0 },
   };
 }
 
@@ -513,7 +719,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { research_query, persona_count = 10 }: SearchRequest = await req.json();
+    const { research_query, persona_count = 10, strictness: customStrictness }: SearchRequest = await req.json();
 
     if (!research_query) {
       return new Response(
@@ -522,77 +728,91 @@ serve(async (req) => {
       );
     }
 
-    // ========== COMPREHENSIVE LOGGING ==========
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`🔎 [ACP-SEARCH] Request ${requestId}`);
+    console.log(`🔎 [ACP-SEARCH-V3] Request ${requestId}`);
     console.log(`   Query: "${research_query}"`);
     console.log(`   Requested: ${persona_count} personas`);
     console.log(`   Time: ${new Date().toISOString()}`);
     console.log(`${'='.repeat(60)}`);
 
-    // Step 1: Parse query DETERMINISTICALLY (no LLM!)
-    const criteria = parseQueryDeterministic(research_query);
+    const stages: StageResult[] = [];
+
+    // Step 1: Parse query deterministically
+    const criteria = parseQueryDeterministic(research_query, customStrictness);
 
     // Step 2: Find matching collections
     const { ids: collectionIds, matchedCollections } = await findMatchingCollections(supabase, criteria);
 
-    // Step 3: Search with limited relaxation
-    const { personas, relaxation_applied, attempts } = await searchWithRetry(
-      supabase, 
-      criteria, 
-      collectionIds, 
-      persona_count
+    // Step 3: STAGE 1 - Hard filter via indexed columns
+    const { candidates, relaxation } = await stage1HardFilter(supabase, criteria, collectionIds);
+    stages.push({ stage: 'hard_filter', count: candidates.length, relaxation: relaxation || undefined });
+
+    // Early exit if no candidates
+    if (candidates.length === 0) {
+      const duration = Date.now() - startTime;
+      console.log(`\n❌ [ACP-SEARCH-V3] No candidates found`);
+      
+      return new Response(
+        JSON.stringify({
+          success: false,
+          status: 'NO_MATCH',
+          request_id: requestId,
+          query: research_query,
+          parsed_criteria: criteria,
+          reason: 'No personas match the specified criteria. Try broadening your search.',
+          stages,
+          duration_ms: duration,
+          personas: [],
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Step 4: STAGE 3 - LLM Evaluation (skip Stage 2 embeddings for now)
+    const { evaluations, summary: evalSummary } = await stage3LLMEvaluation(
+      supabaseUrl,
+      supabaseServiceKey,
+      research_query,
+      criteria,
+      candidates.slice(0, 60) // Cap at 60 for cost control
     );
+    stages.push({ stage: 'llm_evaluation', count: evaluations.length });
+
+    // Step 5: DECISION GATE
+    const decision = applyDecisionGate(persona_count, evaluations, criteria.strictness, candidates);
 
     const duration = Date.now() - startTime;
 
-    // ========== RESULT LOGGING ==========
-    console.log(`\n📊 [ACP-SEARCH] Result ${requestId}`);
-    console.log(`   Found: ${personas.length}/${persona_count} personas`);
-    console.log(`   Relaxation: ${relaxation_applied || 'none'}`);
-    console.log(`   Attempts: ${attempts.join(' → ')}`);
+    console.log(`\n📊 [ACP-SEARCH-V3] Result ${requestId}`);
+    console.log(`   Status: ${decision.status}`);
+    console.log(`   Returned: ${decision.selectedPersonas.length}/${persona_count}`);
     console.log(`   Duration: ${duration}ms`);
-    if (personas.length > 0) {
-      console.log(`   Sample personas:`);
-      personas.slice(0, 3).forEach((p: any) => {
-        console.log(`      - ${p.name} (${p.persona_id})`);
-      });
-    }
     console.log(`${'='.repeat(60)}\n`);
 
     // Build response
-    let result_note: string | null = null;
-    if (personas.length < persona_count) {
-      result_note = `Found ${personas.length}/${persona_count} personas. Attempts: ${attempts.join(' → ')}`;
-    }
-    if (relaxation_applied && relaxation_applied !== 'no_match') {
-      result_note = (result_note || '') + ` [${relaxation_applied}]`;
-    }
-
     const response = {
-      success: true,
+      success: decision.success,
+      status: decision.status,
       request_id: requestId,
       query: research_query,
       parsed_criteria: criteria,
       matched_collections: matchedCollections.length,
-      matched_collection_details: matchedCollections.slice(0, 10),
-      total_found: personas.length,
-      requested_count: persona_count,
-      relaxation_applied,
-      search_attempts: attempts,
-      result_note,
+      stages,
+      decision_summary: decision.summary,
+      reason: decision.reason,
       duration_ms: duration,
-      personas: personas.map((p: any) => ({
+      personas: decision.selectedPersonas.map((p: any) => ({
         persona_id: p.persona_id,
         name: p.name,
-        relevance_score: p.relevance_score,
+        match_score: p.evaluation?.overall_match || 0.5,
+        match_reason: p.evaluation?.reason || 'No evaluation',
         profile_image_url: p.profile_image_url,
         demographics: {
-          age: p.full_profile?.identity?.age,
-          location: p.full_profile?.identity?.location,
-          occupation: p.full_profile?.identity?.occupation,
-          education: p.full_profile?.identity?.education_level,
-          income: p.full_profile?.identity?.income_bracket,
+          age: p.age_computed || p.full_profile?.identity?.age,
+          gender: p.gender_computed || p.full_profile?.identity?.gender,
+          location: [p.city_computed, p.state_region_computed, p.country_computed].filter(Boolean).join(', ') || 
+                    p.full_profile?.identity?.location,
+          occupation: p.occupation_computed || p.full_profile?.identity?.occupation,
         },
         summary: p.conversation_summary,
       })),
@@ -605,14 +825,13 @@ serve(async (req) => {
 
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`\n❌ [ACP-SEARCH] Error ${requestId}`);
+    console.error(`\n❌ [ACP-SEARCH-V3] Error ${requestId}`);
     console.error(`   Message: ${error.message}`);
-    console.error(`   Duration: ${duration}ms`);
     console.error(`   Stack: ${error.stack}`);
-    console.error(`${'='.repeat(60)}\n`);
 
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: error.message,
         request_id: requestId,
         duration_ms: duration,
