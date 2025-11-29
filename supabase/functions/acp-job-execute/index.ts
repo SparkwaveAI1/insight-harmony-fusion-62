@@ -68,7 +68,7 @@ serve(async (req) => {
     console.log(`🎯 [ACP-JOB] Effective query for persona search: "${effectiveQuery}"`);
 
     // ============= STEP 1: PERSONA SELECTION via acp-persona-search-v2 =============
-    console.log('📦 [ACP-JOB] STEP 1: Finding personas via LLM-powered search');
+    console.log('📦 [ACP-JOB] STEP 1: Finding personas via deterministic search');
     
     let selectedPersonas: any[] = [];
     let selectionMethod = 'acp-persona-search-v2';
@@ -143,15 +143,19 @@ serve(async (req) => {
       );
     }
     
-    // Return error if no personas found
+    // Return error if no personas found - NO CHARGE
     if (selectedPersonas.length === 0) {
-      console.error('❌ [ACP-JOB] No matching personas found for effective query');
+      console.error(`❌ [ACP-JOB] NO PERSONAS FOUND - Returning 404 with $0.00 cost`);
+      console.error(`   Query: "${effectiveQuery}"`);
+      console.error(`   Parsed criteria: ${JSON.stringify(searchMetadata.parsed_criteria)}`);
       return new Response(
         JSON.stringify({ 
           error: 'no_matching_personas',
-          message: `Could not find personas matching: "${effectiveQuery}"${persona_criteria ? ` (criteria: ${persona_criteria})` : ''}`,
-          suggestion: 'Try broader criteria or different keywords',
-          job_id
+          message: `No personas found matching: "${effectiveQuery}"`,
+          parsed_criteria: searchMetadata.parsed_criteria,
+          suggestion: 'Try broader search terms (e.g., remove specific locations or occupations)',
+          job_id,
+          cost: '$0.00'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

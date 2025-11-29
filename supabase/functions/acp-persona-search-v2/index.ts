@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
@@ -7,76 +6,106 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Country alias normalization - converts common abbreviations to full names
+// ============================================================
+// COUNTRY NORMALIZATION
+// ============================================================
 const COUNTRY_ALIASES: Record<string, string> = {
-  'US': 'United States',
-  'USA': 'United States',
-  'U.S.': 'United States',
-  'U.S.A.': 'United States',
-  'AMERICA': 'United States',
-  'UK': 'United Kingdom',
-  'GB': 'United Kingdom',
-  'GREAT BRITAIN': 'United Kingdom',
-  'BRITAIN': 'United Kingdom',
-  'UAE': 'United Arab Emirates',
-  'CA': 'Canada',
-  'AU': 'Australia',
-  'NZ': 'New Zealand',
-  'DE': 'Germany',
-  'FR': 'France',
-  'ES': 'Spain',
-  'IT': 'Italy',
-  'JP': 'Japan',
-  'CN': 'China',
-  'IN': 'India',
-  'BR': 'Brazil',
-  'MX': 'Mexico',
+  'us': 'United States',
+  'usa': 'United States',
+  'u.s.': 'United States',
+  'u.s.a.': 'United States',
+  'america': 'United States',
+  'united states': 'United States',
+  'united states of america': 'United States',
+  'uk': 'United Kingdom',
+  'gb': 'United Kingdom',
+  'great britain': 'United Kingdom',
+  'britain': 'United Kingdom',
+  'england': 'United Kingdom',
+  'uae': 'United Arab Emirates',
+  'canada': 'Canada',
+  'ca': 'Canada',
+  'australia': 'Australia',
+  'au': 'Australia',
+  'new zealand': 'New Zealand',
+  'nz': 'New Zealand',
+  'germany': 'Germany',
+  'de': 'Germany',
+  'france': 'France',
+  'fr': 'France',
+  'spain': 'Spain',
+  'es': 'Spain',
+  'italy': 'Italy',
+  'it': 'Italy',
+  'japan': 'Japan',
+  'jp': 'Japan',
+  'china': 'China',
+  'cn': 'China',
+  'india': 'India',
+  'in': 'India',
+  'brazil': 'Brazil',
+  'br': 'Brazil',
+  'mexico': 'Mexico',
+  'mx': 'Mexico',
+  'russia': 'Russia',
+  'russian': 'Russia',
 };
 
-const QUERY_PARSER_PROMPT = `You parse natural language persona search queries into structured criteria.
+// US State abbreviations and names
+const US_STATES: Record<string, string> = {
+  'al': 'Alabama', 'ak': 'Alaska', 'az': 'Arizona', 'ar': 'Arkansas',
+  'ca': 'California', 'co': 'Colorado', 'ct': 'Connecticut', 'de': 'Delaware',
+  'fl': 'Florida', 'ga': 'Georgia', 'hi': 'Hawaii', 'id': 'Idaho',
+  'il': 'Illinois', 'in': 'Indiana', 'ia': 'Iowa', 'ks': 'Kansas',
+  'ky': 'Kentucky', 'la': 'Louisiana', 'me': 'Maine', 'md': 'Maryland',
+  'ma': 'Massachusetts', 'mi': 'Michigan', 'mn': 'Minnesota', 'ms': 'Mississippi',
+  'mo': 'Missouri', 'mt': 'Montana', 'ne': 'Nebraska', 'nv': 'Nevada',
+  'nh': 'New Hampshire', 'nj': 'New Jersey', 'nm': 'New Mexico', 'ny': 'New York',
+  'nc': 'North Carolina', 'nd': 'North Dakota', 'oh': 'Ohio', 'ok': 'Oklahoma',
+  'or': 'Oregon', 'pa': 'Pennsylvania', 'ri': 'Rhode Island', 'sc': 'South Carolina',
+  'sd': 'South Dakota', 'tn': 'Tennessee', 'tx': 'Texas', 'ut': 'Utah',
+  'vt': 'Vermont', 'va': 'Virginia', 'wa': 'Washington', 'wv': 'West Virginia',
+  'wi': 'Wisconsin', 'wy': 'Wyoming', 'dc': 'Washington D.C.',
+  // Full names map to themselves
+  'alabama': 'Alabama', 'alaska': 'Alaska', 'arizona': 'Arizona', 'arkansas': 'Arkansas',
+  'california': 'California', 'colorado': 'Colorado', 'connecticut': 'Connecticut', 'delaware': 'Delaware',
+  'florida': 'Florida', 'georgia': 'Georgia', 'hawaii': 'Hawaii', 'idaho': 'Idaho',
+  'illinois': 'Illinois', 'indiana': 'Indiana', 'iowa': 'Iowa', 'kansas': 'Kansas',
+  'kentucky': 'Kentucky', 'louisiana': 'Louisiana', 'maine': 'Maine', 'maryland': 'Maryland',
+  'massachusetts': 'Massachusetts', 'michigan': 'Michigan', 'minnesota': 'Minnesota', 'mississippi': 'Mississippi',
+  'missouri': 'Missouri', 'montana': 'Montana', 'nebraska': 'Nebraska', 'nevada': 'Nevada',
+  'new hampshire': 'New Hampshire', 'new jersey': 'New Jersey', 'new mexico': 'New Mexico', 'new york': 'New York',
+  'north carolina': 'North Carolina', 'north dakota': 'North Dakota', 'ohio': 'Ohio', 'oklahoma': 'Oklahoma',
+  'oregon': 'Oregon', 'pennsylvania': 'Pennsylvania', 'rhode island': 'Rhode Island', 'south carolina': 'South Carolina',
+  'south dakota': 'South Dakota', 'tennessee': 'Tennessee', 'texas': 'Texas', 'utah': 'Utah',
+  'vermont': 'Vermont', 'virginia': 'Virginia', 'washington': 'Washington', 'west virginia': 'West Virginia',
+  'wisconsin': 'Wisconsin', 'wyoming': 'Wyoming',
+};
 
-SEARCHABLE FIELDS:
-- age: numeric (e.g., 25, or range "23-31")
-- education_level: text ("high school", "bachelor", "master", "phd", "some college")
-- bmi_category: "underweight" (<18.5), "normal" (18.5-25), "overweight" (25-30), "obese" (>30)
-- diet_keywords: array of terms to match in diet_pattern (e.g., ["fast food", "takeout", "junk"])
-- location_country: ALWAYS use FULL country name (e.g., "United States" NOT "US" or "USA", "United Kingdom" NOT "UK")
-- location_region: text (US states, etc.)
-- occupation_keywords: array of terms (e.g., ["engineer", "developer"])
-- income_bracket: text patterns like "under 25", "25k-50k", "50k-75k", "75k-100k", "100k-150k", "150k", "200k"
-- interests_keywords: array for full-text search (e.g., ["gaming", "crypto", "fitness"])
-- lifestyle_keywords: array for full-text search (e.g., ["sedentary", "active", "remote work"])
-- search_keywords: array of ALL relevant keywords from the query for collection matching (e.g., ["overweight", "gamer", "gaming", "30s"])
+// Stopwords to filter from keyword extraction
+const STOPWORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+  'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been', 'be', 'have', 'has', 'had',
+  'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+  'shall', 'can', 'need', 'dare', 'ought', 'used', 'i', 'me', 'my', 'myself', 'we',
+  'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he',
+  'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself',
+  'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom',
+  'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been',
+  'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'about',
+  'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between',
+  'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where',
+  'why', 'how', 'all', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no',
+  'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 'also',
+  'now', 'find', 'get', 'give', 'looking', 'want', 'need', 'personas', 'persona',
+  'people', 'participants', 'respondents', 'users', 'individuals', 'aged', 'ages',
+  'years', 'year', 'old', 'between', 'range', 'around', 'approximately', 'about',
+  'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'one', 'two',
+]);
 
-RULES:
-- Only include fields explicitly mentioned or strongly implied
-- For age ranges, use age_min and age_max
-- For BMI: "overweight" means bmi_min: 25, "obese" means bmi_min: 30
-- Return null for fields not mentioned, empty arrays for keyword fields not mentioned
-- search_keywords should include ALL meaningful keywords extracted from the query, including synonyms
-- Expand keywords with synonyms (e.g., "gaming" -> ["gaming", "gamer", "video game", "games"])
-- CRITICAL: For location_country, ALWAYS use full country name. Examples:
-  - "US" or "USA" -> "United States"
-  - "UK" or "Britain" -> "United Kingdom"
-  - "in the US" -> "United States"
-
-OUTPUT FORMAT (JSON only, no explanation):
-{
-  "age_min": number | null,
-  "age_max": number | null,
-  "education_level": string | null,
-  "bmi_min": number | null,
-  "bmi_max": number | null,
-  "diet_keywords": string[],
-  "location_country": string | null,
-  "location_region": string | null,
-  "occupation_keywords": string[],
-  "income_bracket": string | null,
-  "interests_keywords": string[],
-  "lifestyle_keywords": string[],
-  "search_keywords": string[]
-}`;
-
+// ============================================================
+// INTERFACES
+// ============================================================
 interface ParsedCriteria {
   age_min: number | null;
   age_max: number | null;
@@ -104,147 +133,262 @@ interface SearchResult {
   attempts: string[];
 }
 
-/**
- * Normalize country name - converts abbreviations to full names
- */
-function normalizeCountry(country: string | null): string | null {
-  if (!country) return null;
+// ============================================================
+// DETERMINISTIC QUERY PARSER (NO LLM!)
+// ============================================================
+
+function parseQueryDeterministic(query: string): ParsedCriteria {
+  const q = query.toLowerCase();
+  const originalQuery = query;
   
-  const upperCountry = country.toUpperCase().trim();
-  const normalized = COUNTRY_ALIASES[upperCountry];
+  console.log(`📝 [PARSER] Input: "${originalQuery}"`);
   
-  if (normalized) {
-    console.log(`[acp-persona-search-v2] Normalized country: "${country}" -> "${normalized}"`);
-    return normalized;
+  // Initialize empty criteria
+  const criteria: ParsedCriteria = {
+    age_min: null,
+    age_max: null,
+    education_level: null,
+    bmi_min: null,
+    bmi_max: null,
+    diet_keywords: [],
+    location_country: null,
+    location_region: null,
+    occupation_keywords: [],
+    income_bracket: null,
+    interests_keywords: [],
+    lifestyle_keywords: [],
+    search_keywords: [],
+  };
+
+  // ---- EXTRACT AGE RANGE ----
+  // Patterns: "age 30-50", "ages 30 to 50", "30-50 years old", "in their 30s", "aged 25-35"
+  const agePatterns = [
+    /(?:age[sd]?\s*)?(\d{2})\s*[-–to]+\s*(\d{2})(?:\s*years?\s*old)?/i,  // "30-50" or "30 to 50"
+    /(?:age[sd]?\s+)(\d{2})(?:\s*years?\s*old)?/i,                        // "age 30" (single age)
+    /in\s+their\s+(\d)0s/i,                                                // "in their 30s"
+    /(\d{2})\+?\s*years?\s*old/i,                                          // "30 years old" or "30+ years old"
+  ];
+  
+  for (const pattern of agePatterns) {
+    const match = q.match(pattern);
+    if (match) {
+      if (match[2]) {
+        // Range found
+        criteria.age_min = parseInt(match[1]);
+        criteria.age_max = parseInt(match[2]);
+      } else if (pattern.source.includes('their')) {
+        // "in their 30s" -> 30-39
+        const decade = parseInt(match[1]) * 10;
+        criteria.age_min = decade;
+        criteria.age_max = decade + 9;
+      } else {
+        // Single age - use as center point with ±5 range
+        const age = parseInt(match[1]);
+        criteria.age_min = Math.max(18, age - 5);
+        criteria.age_max = age + 5;
+      }
+      console.log(`   📅 Age: ${criteria.age_min}-${criteria.age_max}`);
+      break;
+    }
   }
+
+  // ---- EXTRACT COUNTRY ----
+  // Check for country patterns
+  for (const [alias, country] of Object.entries(COUNTRY_ALIASES)) {
+    // Use word boundaries for short codes, flexible for longer names
+    const regex = alias.length <= 3 
+      ? new RegExp(`\\b${alias}\\b`, 'i')
+      : new RegExp(alias, 'i');
+    
+    if (regex.test(q)) {
+      criteria.location_country = country;
+      console.log(`   🌍 Country: ${country} (matched: "${alias}")`);
+      break;
+    }
+  }
+
+  // ---- EXTRACT US STATE (implies US country) ----
+  if (!criteria.location_country || criteria.location_country === 'United States') {
+    for (const [stateKey, stateName] of Object.entries(US_STATES)) {
+      const regex = stateKey.length <= 2
+        ? new RegExp(`\\b${stateKey}\\b`, 'i')
+        : new RegExp(`\\b${stateKey}\\b`, 'i');
+      
+      if (regex.test(q)) {
+        criteria.location_region = stateName;
+        criteria.location_country = 'United States';
+        console.log(`   🏛️ State: ${stateName} (matched: "${stateKey}")`);
+        break;
+      }
+    }
+  }
+
+  // ---- EXTRACT BMI/WEIGHT KEYWORDS ----
+  if (/\b(overweight|heavy|obese|fat)\b/i.test(q)) {
+    criteria.bmi_min = 25;
+    console.log(`   ⚖️ BMI: overweight (≥25)`);
+  }
+  if (/\bobese\b/i.test(q)) {
+    criteria.bmi_min = 30;
+    console.log(`   ⚖️ BMI: obese (≥30)`);
+  }
+  if (/\b(underweight|thin|skinny)\b/i.test(q)) {
+    criteria.bmi_max = 18.5;
+    console.log(`   ⚖️ BMI: underweight (≤18.5)`);
+  }
+
+  // ---- EXTRACT EDUCATION ----
+  const eduPatterns: [RegExp, string][] = [
+    [/\b(phd|doctorate|doctoral)\b/i, 'phd'],
+    [/\b(master'?s?|mba|graduate)\b/i, 'master'],
+    [/\b(bachelor'?s?|college|university)\b/i, 'bachelor'],
+    [/\b(high\s*school|hs|secondary)\b/i, 'high school'],
+    [/\b(some\s*college|associate)\b/i, 'some college'],
+  ];
   
-  return country;
+  for (const [pattern, edu] of eduPatterns) {
+    if (pattern.test(q)) {
+      criteria.education_level = edu;
+      console.log(`   🎓 Education: ${edu}`);
+      break;
+    }
+  }
+
+  // ---- EXTRACT INCOME ----
+  const incomePatterns: [RegExp, string][] = [
+    [/\b(low[- ]?income|poor|struggling)\b/i, 'under 25k'],
+    [/\b(middle[- ]?class|middle[- ]?income)\b/i, '50k-75k'],
+    [/\b(upper[- ]?middle)\b/i, '100k-150k'],
+    [/\b(high[- ]?income|wealthy|affluent|rich)\b/i, '150k+'],
+    [/\b(\d{2,3})k\s*[-–to]+\s*(\d{2,3})k\b/i, '$1k-$2k'],
+    [/\bunder\s*(\d{2,3})k\b/i, 'under $1k'],
+    [/\bover\s*(\d{2,3})k\b/i, '$1k+'],
+  ];
+  
+  for (const [pattern, income] of incomePatterns) {
+    const match = q.match(pattern);
+    if (match) {
+      let bracket = income;
+      if (match[1] && income.includes('$1')) {
+        bracket = income.replace('$1', match[1]).replace('$2', match[2] || '');
+      }
+      criteria.income_bracket = bracket;
+      console.log(`   💰 Income: ${bracket}`);
+      break;
+    }
+  }
+
+  // ---- EXTRACT ALL KEYWORDS ----
+  // Split on whitespace and punctuation, filter stopwords
+  const words = q
+    .replace(/[^\w\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !STOPWORDS.has(w.toLowerCase()))
+    .map(w => w.toLowerCase());
+  
+  // Remove words that are just numbers (ages, counts)
+  const keywords = words.filter(w => !/^\d+$/.test(w));
+  
+  // Also extract compound terms (2-word phrases that aren't stopwords)
+  const compounds: string[] = [];
+  const wordsArray = q.replace(/[^\w\s-]/g, ' ').split(/\s+/).map(w => w.toLowerCase());
+  for (let i = 0; i < wordsArray.length - 1; i++) {
+    const w1 = wordsArray[i];
+    const w2 = wordsArray[i + 1];
+    if (w1.length >= 3 && w2.length >= 3 && !STOPWORDS.has(w1) && !STOPWORDS.has(w2)) {
+      compounds.push(`${w1} ${w2}`);
+    }
+  }
+
+  // Combine individual keywords and compounds
+  const allKeywords = [...new Set([...keywords, ...compounds])];
+  
+  // Assign keywords to appropriate categories
+  const occupationIndicators = ['owner', 'manager', 'worker', 'employee', 'professional', 'executive', 'ceo', 'founder', 'entrepreneur', 'developer', 'engineer', 'designer', 'analyst', 'consultant', 'director', 'specialist', 'technician', 'nurse', 'doctor', 'teacher', 'driver', 'chef', 'artist'];
+  const lifestyleIndicators = ['active', 'sedentary', 'remote', 'urban', 'rural', 'suburban', 'fitness', 'health', 'wellness'];
+  const dietIndicators = ['vegan', 'vegetarian', 'keto', 'paleo', 'organic', 'fast food', 'junk', 'healthy'];
+  
+  for (const kw of allKeywords) {
+    // Check if it's an occupation keyword
+    if (occupationIndicators.some(ind => kw.includes(ind)) || 
+        kw.includes('business') || kw.includes('small business') || kw.includes('owner')) {
+      criteria.occupation_keywords.push(kw);
+    }
+    // Check if it's a lifestyle keyword
+    else if (lifestyleIndicators.some(ind => kw.includes(ind))) {
+      criteria.lifestyle_keywords.push(kw);
+    }
+    // Check if it's a diet keyword
+    else if (dietIndicators.some(ind => kw.includes(ind))) {
+      criteria.diet_keywords.push(kw);
+    }
+    // Everything else goes to search_keywords for collection matching
+    else if (kw.length >= 3) {
+      criteria.search_keywords.push(kw);
+    }
+  }
+
+  // Dedupe occupation_keywords and split compound terms for better matching
+  const expandedOccupation = new Set<string>();
+  for (const kw of criteria.occupation_keywords) {
+    expandedOccupation.add(kw);
+    // Also add individual words from compound terms
+    kw.split(/\s+/).forEach(w => {
+      if (w.length >= 3 && !STOPWORDS.has(w)) {
+        expandedOccupation.add(w);
+      }
+    });
+  }
+  criteria.occupation_keywords = [...expandedOccupation];
+
+  // Move occupation keywords to search_keywords too for collection matching
+  criteria.search_keywords = [...new Set([...criteria.search_keywords, ...criteria.occupation_keywords])];
+
+  console.log(`   🔑 Occupation keywords: [${criteria.occupation_keywords.join(', ')}]`);
+  console.log(`   🔍 Search keywords: [${criteria.search_keywords.join(', ')}]`);
+
+  return criteria;
 }
 
-async function parseQueryWithLLM(query: string, openaiKey: string): Promise<ParsedCriteria> {
-  console.log('[acp-persona-search-v2] Parsing query with LLM:', query);
-  
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: QUERY_PARSER_PROMPT },
-        { role: 'user', content: query }
-      ],
-      temperature: 0.1,
-      max_tokens: 500,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[acp-persona-search-v2] OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices[0]?.message?.content;
-  
-  if (!content) {
-    throw new Error('No response from LLM');
-  }
-
-  console.log('[acp-persona-search-v2] LLM response:', content);
-
-  // Parse JSON from response (handle markdown code blocks)
-  let jsonStr = content.trim();
-  if (jsonStr.startsWith('```json')) {
-    jsonStr = jsonStr.slice(7);
-  } else if (jsonStr.startsWith('```')) {
-    jsonStr = jsonStr.slice(3);
-  }
-  if (jsonStr.endsWith('```')) {
-    jsonStr = jsonStr.slice(0, -3);
-  }
-  jsonStr = jsonStr.trim();
-
-  const parsed: ParsedCriteria = JSON.parse(jsonStr);
-  
-  // Ensure arrays are initialized
-  parsed.diet_keywords = parsed.diet_keywords || [];
-  parsed.occupation_keywords = parsed.occupation_keywords || [];
-  parsed.interests_keywords = parsed.interests_keywords || [];
-  parsed.lifestyle_keywords = parsed.lifestyle_keywords || [];
-  parsed.search_keywords = parsed.search_keywords || [];
-
-  // CRITICAL: Normalize country name after LLM parsing
-  parsed.location_country = normalizeCountry(parsed.location_country);
-
-  console.log('[acp-persona-search-v2] Parsed criteria:', JSON.stringify(parsed, null, 2));
-  return parsed;
-}
-
-/**
- * KEYWORD-BASED collection matching
- * Instead of relying on LLM to guess collection names, we:
- * 1. Extract ALL keywords from the parsed criteria
- * 2. Find ALL collections whose name or description contains any of those keywords
- */
-async function findMatchingCollectionsByKeywords(
+// ============================================================
+// COLLECTION MATCHING (keyword-based)
+// ============================================================
+async function findMatchingCollections(
   supabase: any,
   criteria: ParsedCriteria
 ): Promise<{ ids: string[]; matchedCollections: Array<{ id: string; name: string; matchedKeywords: string[] }> }> {
-  // Gather ALL keywords from the criteria
   const allKeywords = new Set<string>();
   
-  // Add search_keywords from LLM
   criteria.search_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
-  
-  // Add interest keywords
-  criteria.interests_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
-  
-  // Add occupation keywords
   criteria.occupation_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
-  
-  // Add lifestyle keywords  
   criteria.lifestyle_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
-  
-  // Add diet keywords
   criteria.diet_keywords.forEach(k => allKeywords.add(k.toLowerCase()));
   
-  // Add BMI-related keywords if BMI filter is set
+  // Add BMI keywords
   if (criteria.bmi_min !== null && criteria.bmi_min >= 25) {
     allKeywords.add('overweight');
-    if (criteria.bmi_min >= 30) {
-      allKeywords.add('obese');
-      allKeywords.add('obesity');
-    }
-  }
-  if (criteria.bmi_max !== null && criteria.bmi_max <= 18.5) {
-    allKeywords.add('underweight');
+    if (criteria.bmi_min >= 30) allKeywords.add('obese');
   }
 
-  const keywordArray = Array.from(allKeywords).filter(k => k.length >= 3); // Skip very short keywords
+  const keywordArray = Array.from(allKeywords).filter(k => k.length >= 3);
   
   if (keywordArray.length === 0) {
-    console.log('[acp-persona-search-v2] No keywords to match collections');
+    console.log(`   📁 No keywords for collection matching`);
     return { ids: [], matchedCollections: [] };
   }
 
-  console.log('[acp-persona-search-v2] Finding collections with keywords:', keywordArray);
+  console.log(`   📁 Searching collections with keywords: [${keywordArray.join(', ')}]`);
 
-  // Fetch ALL public collections
   const { data: collections, error } = await supabase
     .from('collections')
     .select('id, name, description')
     .eq('is_public', true);
 
   if (error) {
-    console.error('[acp-persona-search-v2] Error fetching collections:', error);
+    console.error(`   ❌ Collection fetch error:`, error);
     return { ids: [], matchedCollections: [] };
   }
 
-  // Match collections by checking if any keyword appears in name or description
   const matchedCollections: Array<{ id: string; name: string; matchedKeywords: string[] }> = [];
   
   for (const collection of collections || []) {
@@ -259,43 +403,29 @@ async function findMatchingCollectionsByKeywords(
     }
     
     if (matchedKeywords.length > 0) {
-      matchedCollections.push({
-        id: collection.id,
-        name: collection.name,
-        matchedKeywords
-      });
+      matchedCollections.push({ id: collection.id, name: collection.name, matchedKeywords });
     }
   }
 
-  // Sort by number of matched keywords (more matches = more relevant)
   matchedCollections.sort((a, b) => b.matchedKeywords.length - a.matchedKeywords.length);
   
-  const ids = matchedCollections.map(c => c.id);
-  
-  console.log('[acp-persona-search-v2] Matched', matchedCollections.length, 'collections:');
-  matchedCollections.forEach(c => {
-    console.log(`  - ${c.name}: matched [${c.matchedKeywords.join(', ')}]`);
+  console.log(`   📁 Matched ${matchedCollections.length} collections`);
+  matchedCollections.slice(0, 5).forEach(c => {
+    console.log(`      - "${c.name}": [${c.matchedKeywords.join(', ')}]`);
   });
   
-  return { ids, matchedCollections };
+  return { ids: matchedCollections.map(c => c.id), matchedCollections };
 }
 
+// ============================================================
+// PERSONA SEARCH
+// ============================================================
 async function searchPersonas(
   supabase: any,
   criteria: ParsedCriteria,
   collectionIds: string[],
   limit: number
 ): Promise<any[]> {
-  console.log('[acp-persona-search-v2] Searching with criteria:', {
-    age_min: criteria.age_min,
-    age_max: criteria.age_max,
-    location_country: criteria.location_country,
-    location_region: criteria.location_region,
-    occupation_keywords: criteria.occupation_keywords,
-    collections: collectionIds.length,
-    limit
-  });
-
   const { data, error } = await supabase.rpc('search_personas_advanced', {
     p_age_min: criteria.age_min,
     p_age_max: criteria.age_max,
@@ -314,18 +444,17 @@ async function searchPersonas(
   });
 
   if (error) {
-    console.error('[acp-persona-search-v2] RPC error:', error);
+    console.error(`   ❌ RPC error:`, error);
     throw error;
   }
 
-  console.log('[acp-persona-search-v2] Found', data?.length || 0, 'personas');
   return data || [];
 }
 
-/**
- * Progressive search with filter relaxation
- * If initial search returns fewer results than requested, progressively relax filters
- */
+// ============================================================
+// SEARCH WITH LIMITED RELAXATION
+// Only drop region, then give up - NO aggressive relaxation
+// ============================================================
 async function searchWithRetry(
   supabase: any,
   criteria: ParsedCriteria,
@@ -336,96 +465,50 @@ async function searchWithRetry(
   
   // Attempt 1: Full criteria
   attempts.push('full_criteria');
-  console.log('[acp-persona-search-v2] Attempt 1: Full criteria search');
+  console.log(`   🔍 Attempt 1: Full criteria`);
   let personas = await searchPersonas(supabase, criteria, collectionIds, requestedCount);
+  console.log(`      → Found ${personas.length}/${requestedCount}`);
   
   if (personas.length >= requestedCount) {
-    console.log(`[acp-persona-search-v2] Success with full criteria: ${personas.length} personas`);
     return { personas, relaxation_applied: null, attempts };
   }
-  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, relaxing filters...`);
 
-  // Attempt 2: Drop country filter
-  attempts.push('dropped_country');
-  console.log('[acp-persona-search-v2] Attempt 2: Dropping country filter');
-  const criteriaNoCountry: ParsedCriteria = { ...criteria, location_country: null };
-  personas = await searchPersonas(supabase, criteriaNoCountry, collectionIds, requestedCount);
-  
-  if (personas.length >= requestedCount) {
-    console.log(`[acp-persona-search-v2] Success after dropping country: ${personas.length} personas`);
-    return { personas, relaxation_applied: 'dropped_country_filter', attempts };
+  // Attempt 2: Drop region only (keep country, occupation, age)
+  if (criteria.location_region) {
+    attempts.push('dropped_region');
+    console.log(`   🔍 Attempt 2: Dropping region filter`);
+    const criteriaNoRegion = { ...criteria, location_region: null };
+    personas = await searchPersonas(supabase, criteriaNoRegion, collectionIds, requestedCount);
+    console.log(`      → Found ${personas.length}/${requestedCount}`);
+    
+    if (personas.length >= requestedCount) {
+      return { personas, relaxation_applied: 'dropped_region', attempts };
+    }
   }
-  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, relaxing more...`);
 
-  // Attempt 3: Drop region filter too
-  attempts.push('dropped_location');
-  console.log('[acp-persona-search-v2] Attempt 3: Dropping all location filters');
-  const criteriaNoLocation: ParsedCriteria = { 
-    ...criteriaNoCountry, 
-    location_region: null 
+  // NO FURTHER RELAXATION - return what we have
+  // This prevents returning irrelevant personas for impossible queries
+  console.log(`   ⚠️ Search complete: ${personas.length} personas (no further relaxation)`);
+  
+  return { 
+    personas, 
+    relaxation_applied: personas.length > 0 ? 'partial_match' : 'no_match', 
+    attempts 
   };
-  personas = await searchPersonas(supabase, criteriaNoLocation, collectionIds, requestedCount);
-  
-  if (personas.length >= requestedCount) {
-    console.log(`[acp-persona-search-v2] Success after dropping location: ${personas.length} personas`);
-    return { personas, relaxation_applied: 'dropped_location_filters', attempts };
-  }
-  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, using collection-only...`);
-
-  // Attempt 4: Collection matching only (drop occupation keywords)
-  attempts.push('collection_only');
-  console.log('[acp-persona-search-v2] Attempt 4: Collection matching with age only');
-  const criteriaCollectionOnly: ParsedCriteria = { 
-    ...criteriaNoLocation,
-    occupation_keywords: [],
-    education_level: null,
-    income_bracket: null,
-  };
-  personas = await searchPersonas(supabase, criteriaCollectionOnly, collectionIds, requestedCount);
-  
-  if (personas.length >= requestedCount) {
-    console.log(`[acp-persona-search-v2] Success with collection-only: ${personas.length} personas`);
-    return { personas, relaxation_applied: 'collection_matching_only', attempts };
-  }
-  console.log(`[acp-persona-search-v2] Got ${personas.length}/${requestedCount}, final fallback...`);
-
-  // Attempt 5: Age only fallback
-  attempts.push('age_only');
-  console.log('[acp-persona-search-v2] Attempt 5: Age filter only');
-  const criteriaMinimal: ParsedCriteria = {
-    age_min: criteria.age_min,
-    age_max: criteria.age_max,
-    education_level: null,
-    bmi_min: null,
-    bmi_max: null,
-    diet_keywords: [],
-    location_country: null,
-    location_region: null,
-    occupation_keywords: [],
-    income_bracket: null,
-    interests_keywords: [],
-    lifestyle_keywords: [],
-    search_keywords: [],
-  };
-  personas = await searchPersonas(supabase, criteriaMinimal, collectionIds, requestedCount);
-  
-  const relaxation = personas.length > 0 ? 'age_and_collection_only' : 'no_matches_found';
-  console.log(`[acp-persona-search-v2] Final result: ${personas.length} personas (${relaxation})`);
-  
-  return { personas, relaxation_applied: relaxation, attempts };
 }
 
+// ============================================================
+// MAIN HANDLER
+// ============================================================
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const openaiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
-    }
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID().slice(0, 8);
 
+  try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -439,17 +522,21 @@ serve(async (req) => {
       );
     }
 
-    console.log('[acp-persona-search-v2] ========== NEW SEARCH ==========');
-    console.log('[acp-persona-search-v2] Query:', research_query);
-    console.log('[acp-persona-search-v2] Requested count:', persona_count);
+    // ========== COMPREHENSIVE LOGGING ==========
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`🔎 [ACP-SEARCH] Request ${requestId}`);
+    console.log(`   Query: "${research_query}"`);
+    console.log(`   Requested: ${persona_count} personas`);
+    console.log(`   Time: ${new Date().toISOString()}`);
+    console.log(`${'='.repeat(60)}`);
 
-    // Step 1: Parse query with LLM (includes country normalization)
-    const criteria = await parseQueryWithLLM(research_query, openaiKey);
+    // Step 1: Parse query DETERMINISTICALLY (no LLM!)
+    const criteria = parseQueryDeterministic(research_query);
 
-    // Step 2: Find matching collections using KEYWORD-BASED lookup
-    const { ids: collectionIds, matchedCollections } = await findMatchingCollectionsByKeywords(supabase, criteria);
+    // Step 2: Find matching collections
+    const { ids: collectionIds, matchedCollections } = await findMatchingCollections(supabase, criteria);
 
-    // Step 3: Search personas WITH PROGRESSIVE RELAXATION
+    // Step 3: Search with limited relaxation
     const { personas, relaxation_applied, attempts } = await searchWithRetry(
       supabase, 
       criteria, 
@@ -457,18 +544,34 @@ serve(async (req) => {
       persona_count
     );
 
-    // Build note about results
+    const duration = Date.now() - startTime;
+
+    // ========== RESULT LOGGING ==========
+    console.log(`\n📊 [ACP-SEARCH] Result ${requestId}`);
+    console.log(`   Found: ${personas.length}/${persona_count} personas`);
+    console.log(`   Relaxation: ${relaxation_applied || 'none'}`);
+    console.log(`   Attempts: ${attempts.join(' → ')}`);
+    console.log(`   Duration: ${duration}ms`);
+    if (personas.length > 0) {
+      console.log(`   Sample personas:`);
+      personas.slice(0, 3).forEach((p: any) => {
+        console.log(`      - ${p.name} (${p.persona_id})`);
+      });
+    }
+    console.log(`${'='.repeat(60)}\n`);
+
+    // Build response
     let result_note: string | null = null;
     if (personas.length < persona_count) {
-      result_note = `Found ${personas.length} personas (requested ${persona_count}). Search attempts: ${attempts.join(' → ')}`;
+      result_note = `Found ${personas.length}/${persona_count} personas. Attempts: ${attempts.join(' → ')}`;
     }
-    if (relaxation_applied) {
-      result_note = (result_note || '') + ` Filter relaxation applied: ${relaxation_applied}`;
+    if (relaxation_applied && relaxation_applied !== 'no_match') {
+      result_note = (result_note || '') + ` [${relaxation_applied}]`;
     }
 
-    // Format response
     const response = {
       success: true,
+      request_id: requestId,
       query: research_query,
       parsed_criteria: criteria,
       matched_collections: matchedCollections.length,
@@ -478,28 +581,22 @@ serve(async (req) => {
       relaxation_applied,
       search_attempts: attempts,
       result_note,
+      duration_ms: duration,
       personas: personas.map((p: any) => ({
         persona_id: p.persona_id,
         name: p.name,
         relevance_score: p.relevance_score,
         profile_image_url: p.profile_image_url,
-        summary: {
+        demographics: {
           age: p.full_profile?.identity?.age,
-          occupation: p.full_profile?.identity?.occupation,
           location: p.full_profile?.identity?.location,
+          occupation: p.full_profile?.identity?.occupation,
           education: p.full_profile?.identity?.education_level,
-          bmi: p.full_profile?.health_profile?.bmi,
-          diet: p.full_profile?.health_profile?.diet_pattern,
+          income: p.full_profile?.identity?.income_bracket,
         },
-        full_profile: p.full_profile,
-        conversation_summary: p.conversation_summary,
+        summary: p.conversation_summary,
       })),
     };
-
-    console.log('[acp-persona-search-v2] ========== SEARCH COMPLETE ==========');
-    console.log('[acp-persona-search-v2] Found:', personas.length, 'of', persona_count, 'requested');
-    console.log('[acp-persona-search-v2] Relaxation:', relaxation_applied || 'none');
-    console.log('[acp-persona-search-v2] Attempts:', attempts.join(' → '));
 
     return new Response(
       JSON.stringify(response),
@@ -507,11 +604,18 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[acp-persona-search-v2] Error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`\n❌ [ACP-SEARCH] Error ${requestId}`);
+    console.error(`   Message: ${error.message}`);
+    console.error(`   Duration: ${duration}ms`);
+    console.error(`   Stack: ${error.stack}`);
+    console.error(`${'='.repeat(60)}\n`);
+
     return new Response(
       JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: error.message,
+        request_id: requestId,
+        duration_ms: duration,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
