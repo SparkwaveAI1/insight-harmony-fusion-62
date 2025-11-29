@@ -1458,8 +1458,12 @@ export type Database = {
       }
       v4_personas: {
         Row: {
+          age_computed: number | null
           background: string | null
+          buying_style_tags: string[] | null
+          city_computed: string | null
           conversation_summary: Json | null
+          country_computed: string | null
           created_at: string | null
           creation_completed: boolean | null
           creation_stage: string | null
@@ -1468,22 +1472,35 @@ export type Database = {
           enrichment_status: string | null
           evidence_notes: string | null
           full_profile: Json
+          gender_computed: string | null
+          has_children_computed: boolean | null
+          health_tags: string[] | null
           income_bracket: string | null
+          industry_tags: string[] | null
+          interest_tags: string[] | null
           is_public: boolean
+          marital_status_computed: string | null
           missing_fields: string[] | null
           name: string
+          occupation_computed: string | null
           persona_id: string
           profile_image_url: string | null
           profile_thumbnail_url: string | null
           schema_version: string
+          state_region_computed: string | null
           statistical_enhancement_status: string | null
           thought_coherence: number | null
           updated_at: string | null
           user_id: string
+          work_role_tags: string[] | null
         }
         Insert: {
+          age_computed?: number | null
           background?: string | null
+          buying_style_tags?: string[] | null
+          city_computed?: string | null
           conversation_summary?: Json | null
+          country_computed?: string | null
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
@@ -1492,22 +1509,35 @@ export type Database = {
           enrichment_status?: string | null
           evidence_notes?: string | null
           full_profile?: Json
+          gender_computed?: string | null
+          has_children_computed?: boolean | null
+          health_tags?: string[] | null
           income_bracket?: string | null
+          industry_tags?: string[] | null
+          interest_tags?: string[] | null
           is_public?: boolean
+          marital_status_computed?: string | null
           missing_fields?: string[] | null
           name: string
+          occupation_computed?: string | null
           persona_id: string
           profile_image_url?: string | null
           profile_thumbnail_url?: string | null
           schema_version?: string
+          state_region_computed?: string | null
           statistical_enhancement_status?: string | null
           thought_coherence?: number | null
           updated_at?: string | null
           user_id: string
+          work_role_tags?: string[] | null
         }
         Update: {
+          age_computed?: number | null
           background?: string | null
+          buying_style_tags?: string[] | null
+          city_computed?: string | null
           conversation_summary?: Json | null
+          country_computed?: string | null
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
@@ -1516,18 +1546,27 @@ export type Database = {
           enrichment_status?: string | null
           evidence_notes?: string | null
           full_profile?: Json
+          gender_computed?: string | null
+          has_children_computed?: boolean | null
+          health_tags?: string[] | null
           income_bracket?: string | null
+          industry_tags?: string[] | null
+          interest_tags?: string[] | null
           is_public?: boolean
+          marital_status_computed?: string | null
           missing_fields?: string[] | null
           name?: string
+          occupation_computed?: string | null
           persona_id?: string
           profile_image_url?: string | null
           profile_thumbnail_url?: string | null
           schema_version?: string
+          state_region_computed?: string | null
           statistical_enhancement_status?: string | null
           thought_coherence?: number | null
           updated_at?: string | null
           user_id?: string
+          work_role_tags?: string[] | null
         }
         Relationships: []
       }
@@ -1775,6 +1814,43 @@ export type Database = {
           persona_id: string
           profile_image_url: string
           relevance_score: number
+        }[]
+      }
+      search_personas_stage1: {
+        Args: {
+          p_age_max?: number
+          p_age_min?: number
+          p_city?: string
+          p_collection_ids?: string[]
+          p_country?: string
+          p_gender?: string[]
+          p_has_children?: boolean
+          p_health_tags?: string[]
+          p_industry_tags?: string[]
+          p_interest_tags?: string[]
+          p_limit?: number
+          p_marital_status?: string[]
+          p_occupation_keywords?: string[]
+          p_state_region?: string
+          p_work_role_tags?: string[]
+        }
+        Returns: {
+          age_computed: number
+          city_computed: string
+          conversation_summary: Json
+          country_computed: string
+          full_profile: Json
+          gender_computed: string
+          has_children_computed: boolean
+          health_tags: string[]
+          interest_tags: string[]
+          marital_status_computed: string
+          name: string
+          occupation_computed: string
+          persona_id: string
+          profile_image_url: string
+          state_region_computed: string
+          work_role_tags: string[]
         }[]
       }
       show_limit: { Args: never; Returns: number }

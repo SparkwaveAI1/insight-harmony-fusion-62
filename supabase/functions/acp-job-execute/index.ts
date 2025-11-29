@@ -95,35 +95,69 @@ serve(async (req) => {
         throw new Error(`Persona search failed: ${searchError.message}`);
       }
 
+      // Handle the new 3-stage pipeline response format
       if (!searchData?.success) {
-        console.error('❌ [ACP-JOB] Search returned unsuccessful:', searchData?.error);
-        throw new Error(searchData?.error || 'Persona search failed');
+        // NEW: Strict denial from decision gate
+        const status = searchData?.status || 'UNKNOWN_ERROR';
+        const reason = searchData?.reason || searchData?.error || 'Persona search failed';
+        const decisionSummary = searchData?.decision_summary || {};
+        
+        console.error(`❌ [ACP-JOB] Search denied with status: ${status}`);
+        console.error(`   Reason: ${reason}`);
+        console.error(`   Decision summary:`, JSON.stringify(decisionSummary));
+        
+        // Return 400 (Bad Request) not 404 - the request was understood but cannot be fulfilled
+        return new Response(
+          JSON.stringify({ 
+            error: 'persona_search_denied',
+            status: status,
+            message: reason,
+            query: effectiveQuery,
+            persona_criteria: persona_criteria || null,
+            parsed_criteria: searchData?.parsed_criteria || null,
+            decision_summary: decisionSummary,
+            stages: searchData?.stages || [],
+            suggestion: status === 'NO_MATCH' 
+              ? 'No personas match these criteria. Try broader terms (e.g., remove specific locations, widen age range, or use more common occupations).'
+              : status === 'INSUFFICIENT_EXACT'
+              ? `Found ${decisionSummary.exact_matches || 0} exact matches but ${decisionSummary.requested || num_personas} requested. Try reducing persona_count or broadening criteria.`
+              : 'Try adjusting your search criteria for better results.',
+            job_id,
+            cost: '$0.00'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400, // Changed from 404 to 400
+          }
+        );
       }
 
-      console.log(`✅ [ACP-JOB] Search found ${searchData.total_found} personas`);
+      console.log(`✅ [ACP-JOB] Search found ${searchData.personas?.length || 0} personas`);
+      console.log(`   Status: ${searchData.status}`);
+      console.log(`   Decision: ${searchData.decision_summary?.exact_matches || 0} exact, ${searchData.decision_summary?.near_matches || 0} near`);
       console.log(`   Parsed criteria:`, JSON.stringify(searchData.parsed_criteria, null, 2));
       console.log(`   Matched collections: ${searchData.matched_collections}`);
-      
-      if (searchData.relaxed_criteria) {
-        console.log(`⚠️ [ACP-JOB] Criteria was relaxed: ${searchData.relaxation_steps.join(', ')}`);
-      }
 
       // Map to the format expected by the rest of the function
       selectedPersonas = (searchData.personas || []).map((p: any) => ({
         persona_id: p.persona_id,
         name: p.name,
-        summary: p.summary?.occupation 
-          ? `${p.summary.occupation}, ${p.summary.age || 'unknown age'}, ${p.summary.location?.city || p.summary.location?.region || 'unknown location'}`
+        match_score: p.match_score || 0.5,
+        match_reason: p.match_reason || 'No evaluation',
+        summary: p.demographics?.occupation 
+          ? `${p.demographics.occupation}, ${p.demographics.age || 'unknown age'}, ${p.demographics.location || 'unknown location'}`
+          : p.summary?.demographics?.occupation
+          ? `${p.summary.demographics.occupation}, ${p.summary.demographics.age || 'unknown age'}, ${p.summary.demographics.location?.city || 'unknown location'}`
           : 'No summary available',
         full_profile: p.full_profile,
-        relevance_score: p.relevance_score
+        demographics: p.demographics
       }));
 
       searchMetadata = {
         parsed_criteria: searchData.parsed_criteria,
         matched_collections: searchData.matched_collections,
-        relaxed_criteria: searchData.relaxed_criteria,
-        relaxation_steps: searchData.relaxation_steps || []
+        decision_summary: searchData.decision_summary,
+        stages: searchData.stages || []
       };
 
     } catch (searchError) {
@@ -134,23 +168,23 @@ serve(async (req) => {
           message: `Could not find personas matching: "${effectiveQuery}"${persona_criteria ? ` (criteria: ${persona_criteria})` : ''}`,
           details: searchError instanceof Error ? searchError.message : 'Unknown error',
           suggestion: 'Try broader criteria or different keywords',
-          job_id
+          job_id,
+          cost: '$0.00'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
+          status: 500,
         }
       );
     }
     
-    // Return error if no personas found - NO CHARGE
+    // This should rarely happen now since search returns success:false if no matches
     if (selectedPersonas.length === 0) {
-      console.error(`❌ [ACP-JOB] NO PERSONAS FOUND - Returning 404 with $0.00 cost`);
-      console.error(`   Query: "${effectiveQuery}"`);
-      console.error(`   Parsed criteria: ${JSON.stringify(searchMetadata.parsed_criteria)}`);
+      console.error(`❌ [ACP-JOB] NO PERSONAS after mapping - Returning 400 with $0.00 cost`);
       return new Response(
         JSON.stringify({ 
           error: 'no_matching_personas',
+          status: 'NO_MATCH',
           message: `No personas found matching: "${effectiveQuery}"`,
           parsed_criteria: searchMetadata.parsed_criteria,
           suggestion: 'Try broader search terms (e.g., remove specific locations or occupations)',
@@ -159,7 +193,7 @@ serve(async (req) => {
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 404,
+          status: 400,
         }
       );
     }
@@ -365,8 +399,8 @@ serve(async (req) => {
           method: selectionMethod,
           parsedCriteria: searchMetadata.parsed_criteria,
           matchedCollections: searchMetadata.matched_collections,
-          relaxedCriteria: searchMetadata.relaxed_criteria || false,
-          relaxationSteps: searchMetadata.relaxation_steps || []
+          decisionSummary: searchMetadata.decision_summary || null,
+          stages: searchMetadata.stages || []
         },
         // Include the qualitative insights report (same format as the app)
         qualitative_report

@@ -1,5 +1,8 @@
 project_id = "wgerdrdsuusnrdnwwelt"
 
+[functions.evaluate-persona-batch]
+verify_jwt = false
+
 [functions.acp-persona-search]
 verify_jwt = false
 
