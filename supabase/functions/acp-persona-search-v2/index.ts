@@ -114,6 +114,8 @@ interface ParsedCriteria {
   location_country: string | null;
   location_region: string | null;
   location_city: string | null;
+  location_cities: string[] | null;  // NEW: For LLM-expanded regional terms
+  location_counties: string[] | null; // NEW: For county-level filtering
   occupation_keywords: string[];
   education_level: string | null;
   income_bracket: string | null;
@@ -121,6 +123,7 @@ interface ParsedCriteria {
   health_keywords: string[];
   lifestyle_keywords: string[];
   search_keywords: string[];
+  suggested_collections: string[];  // NEW: Collections suggested by LLM
   // Strictness settings
   strictness: {
     hard_match_min: number;
@@ -128,6 +131,31 @@ interface ParsedCriteria {
     allow_near_matches: boolean;
     max_near_match_fraction: number;
   };
+}
+
+interface LLMParseResult {
+  success: boolean;
+  recommendation: 'PROCEED' | 'PROCEED_WITH_WARNING' | 'CANNOT_INTERPRET';
+  confidence: number;
+  parsed: {
+    count: number | null;
+    age_min: number | null;
+    age_max: number | null;
+    gender: string[] | null;
+    marital_status: string[] | null;
+    has_children: boolean | null;
+    location_country: string | null;
+    location_state: string | null;
+    location_cities: string[] | null;
+    location_counties: string[] | null;
+    occupation_keywords: string[];
+    health_keywords: string[];
+    interest_keywords: string[];
+    suggested_collections: string[];
+  };
+  assumptions_made: string[];
+  warnings: string[];
+  error?: string;
 }
 
 interface SearchRequest {
@@ -164,6 +192,8 @@ function parseQueryDeterministic(query: string, customStrictness?: SearchRequest
     location_country: null,
     location_region: null,
     location_city: null,
+    location_cities: null,
+    location_counties: null,
     occupation_keywords: [],
     education_level: null,
     income_bracket: null,
@@ -171,6 +201,7 @@ function parseQueryDeterministic(query: string, customStrictness?: SearchRequest
     health_keywords: [],
     lifestyle_keywords: [],
     search_keywords: [],
+    suggested_collections: [],
     strictness: {
       hard_match_min: customStrictness?.hard_match_min ?? 0.85,
       soft_match_min: customStrictness?.soft_match_min ?? 0.70,
@@ -704,6 +735,223 @@ function applyDecisionGate(
 }
 
 // ============================================================
+// LLM QUERY PARSER (calls acp-parse-query)
+// ============================================================
+async function parseQueryWithLLM(
+  supabaseUrl: string,
+  supabaseKey: string,
+  query: string,
+  availableCollections: Array<{ name: string; description?: string }>,
+  customStrictness?: SearchRequest['strictness']
+): Promise<{ criteria: ParsedCriteria; llmResult: LLMParseResult | null; usedFallback: boolean }> {
+  console.log(`\n🧠 [LLM PARSER] Attempting LLM parse...`);
+  
+  try {
+    const parseUrl = `${supabaseUrl}/functions/v1/acp-parse-query`;
+    
+    const response = await fetch(parseUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        available_collections: availableCollections,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn(`   ⚠️ LLM parser returned ${response.status}, falling back to deterministic`);
+      const criteria = parseQueryDeterministic(query, customStrictness);
+      return { criteria, llmResult: null, usedFallback: true };
+    }
+
+    const llmResult: LLMParseResult = await response.json();
+    
+    if (!llmResult.success || llmResult.recommendation === 'CANNOT_INTERPRET') {
+      console.warn(`   ⚠️ LLM could not interpret, falling back to deterministic`);
+      const criteria = parseQueryDeterministic(query, customStrictness);
+      return { criteria, llmResult, usedFallback: true };
+    }
+
+    console.log(`   ✅ LLM parsed successfully (confidence: ${llmResult.confidence})`);
+    console.log(`   Assumptions: ${llmResult.assumptions_made?.join(', ') || 'none'}`);
+
+    // Convert LLM result to ParsedCriteria format
+    const criteria: ParsedCriteria = {
+      age_min: llmResult.parsed.age_min,
+      age_max: llmResult.parsed.age_max,
+      gender: llmResult.parsed.gender,
+      marital_status: llmResult.parsed.marital_status,
+      has_children: llmResult.parsed.has_children,
+      location_country: llmResult.parsed.location_country,
+      location_region: llmResult.parsed.location_state,
+      location_city: null, // Deprecated, using location_cities instead
+      location_cities: llmResult.parsed.location_cities,
+      location_counties: llmResult.parsed.location_counties,
+      occupation_keywords: llmResult.parsed.occupation_keywords || [],
+      education_level: null,
+      income_bracket: null,
+      interests_keywords: llmResult.parsed.interest_keywords || [],
+      health_keywords: llmResult.parsed.health_keywords || [],
+      lifestyle_keywords: [],
+      search_keywords: [
+        ...(llmResult.parsed.occupation_keywords || []),
+        ...(llmResult.parsed.interest_keywords || []),
+        ...(llmResult.parsed.health_keywords || []),
+      ],
+      suggested_collections: llmResult.parsed.suggested_collections || [],
+      strictness: {
+        hard_match_min: customStrictness?.hard_match_min ?? 0.85,
+        soft_match_min: customStrictness?.soft_match_min ?? 0.70,
+        allow_near_matches: customStrictness?.allow_near_matches ?? true,
+        max_near_match_fraction: 0.3,
+      },
+    };
+
+    return { criteria, llmResult, usedFallback: false };
+
+  } catch (error) {
+    console.error(`   ❌ LLM parser error: ${error.message}, falling back to deterministic`);
+    const criteria = parseQueryDeterministic(query, customStrictness);
+    return { criteria, llmResult: null, usedFallback: true };
+  }
+}
+
+// ============================================================
+// ENHANCED STAGE 1: Supports city/county arrays
+// ============================================================
+async function stage1HardFilterEnhanced(
+  supabase: any,
+  criteria: ParsedCriteria,
+  collectionIds: string[],
+  limit: number = 500
+): Promise<{ candidates: any[]; relaxation: string | null; searchedLocations?: string }> {
+  console.log(`\n🔍 [STAGE 1] Hard filter with indexed columns`);
+  
+  // If we have city/county arrays from LLM, search each one
+  const cities = criteria.location_cities || [];
+  const counties = criteria.location_counties || [];
+  
+  // Build location search description for error messages
+  let searchedLocations = '';
+  if (cities.length > 0) {
+    searchedLocations = `cities: ${cities.join(', ')}`;
+  } else if (counties.length > 0) {
+    searchedLocations = `counties: ${counties.join(', ')}`;
+  } else if (criteria.location_city) {
+    searchedLocations = `city: ${criteria.location_city}`;
+  } else if (criteria.location_region) {
+    searchedLocations = `state: ${criteria.location_region}`;
+  } else if (criteria.location_country) {
+    searchedLocations = `country: ${criteria.location_country}`;
+  }
+  
+  // Strategy: If we have expanded cities/counties, try each one
+  if (cities.length > 0) {
+    console.log(`   Searching across ${cities.length} cities: ${cities.join(', ')}`);
+    
+    const allCandidates: any[] = [];
+    const seenIds = new Set<string>();
+    
+    for (const city of cities) {
+      const { data, error } = await supabase.rpc('search_personas_stage1', {
+        p_age_min: criteria.age_min,
+        p_age_max: criteria.age_max,
+        p_gender: criteria.gender,
+        p_marital_status: criteria.marital_status,
+        p_has_children: criteria.has_children,
+        p_country: criteria.location_country,
+        p_state_region: criteria.location_region,
+        p_city: city,
+        p_occupation_keywords: criteria.occupation_keywords.length > 0 ? criteria.occupation_keywords : null,
+        p_collection_ids: collectionIds.length > 0 ? collectionIds : null,
+        p_limit: Math.ceil(limit / cities.length),
+      });
+      
+      if (!error && data) {
+        for (const candidate of data) {
+          if (!seenIds.has(candidate.persona_id)) {
+            seenIds.add(candidate.persona_id);
+            allCandidates.push(candidate);
+          }
+        }
+      }
+    }
+    
+    console.log(`   → Found ${allCandidates.length} candidates across cities`);
+    if (allCandidates.length > 0) {
+      return { candidates: allCandidates.slice(0, limit), relaxation: null, searchedLocations };
+    }
+  }
+  
+  // Fallback to original stage1HardFilter logic
+  return { ...(await stage1HardFilter(supabase, criteria, collectionIds, limit)), searchedLocations };
+}
+
+// ============================================================
+// GENERATE ACTIONABLE FAILURE EXPLANATION
+// ============================================================
+function generateFailureExplanation(
+  criteria: ParsedCriteria,
+  llmResult: LLMParseResult | null,
+  searchedLocations: string,
+  candidateCount: number
+): { status: string; reason: string; suggestion: string; alternatives?: string[] } {
+  // If we had location criteria and found nothing, it's likely NO_COVERAGE
+  if (searchedLocations && candidateCount === 0) {
+    const alternatives = [];
+    
+    // Suggest broadening location
+    if (criteria.location_cities && criteria.location_cities.length > 0) {
+      alternatives.push(`Try searching the entire state of ${criteria.location_region || 'the region'}`);
+    }
+    if (criteria.location_region) {
+      alternatives.push(`Try searching all of ${criteria.location_country || 'the country'}`);
+    }
+    if (criteria.occupation_keywords.length > 0) {
+      alternatives.push(`Remove occupation filter to see all personas in this area`);
+    }
+    
+    const assumptionNote = llmResult?.assumptions_made?.length 
+      ? ` (Note: We interpreted your query as ${llmResult.assumptions_made[0]})`
+      : '';
+    
+    return {
+      status: 'NO_COVERAGE',
+      reason: `No personas found in ${searchedLocations}.${assumptionNote}`,
+      suggestion: `We don't have personas in this specific location yet. ${alternatives[0] || 'Try a different location.'}`,
+      alternatives,
+    };
+  }
+  
+  // If we have very restrictive criteria
+  const criteriaCount = [
+    criteria.age_min !== null,
+    criteria.gender !== null,
+    criteria.marital_status !== null,
+    criteria.has_children !== null,
+    criteria.location_country !== null,
+    criteria.occupation_keywords.length > 0,
+  ].filter(Boolean).length;
+  
+  if (criteriaCount >= 4 && candidateCount === 0) {
+    return {
+      status: 'TOO_RESTRICTIVE',
+      reason: `Your search criteria may be too specific (${criteriaCount} filters applied).`,
+      suggestion: 'Try removing some filters. For example, remove the age range or location specificity.',
+    };
+  }
+  
+  return {
+    status: 'NO_MATCH',
+    reason: 'No personas match the specified criteria.',
+    suggestion: 'Try broadening your search terms or using different keywords.',
+  };
+}
+
+// ============================================================
 // MAIN HANDLER
 // ============================================================
 serve(async (req) => {
@@ -729,7 +977,7 @@ serve(async (req) => {
     }
 
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`🔎 [ACP-SEARCH-V3] Request ${requestId}`);
+    console.log(`🔎 [ACP-SEARCH-V4] Request ${requestId}`);
     console.log(`   Query: "${research_query}"`);
     console.log(`   Requested: ${persona_count} personas`);
     console.log(`   Time: ${new Date().toISOString()}`);
@@ -737,29 +985,79 @@ serve(async (req) => {
 
     const stages: StageResult[] = [];
 
-    // Step 1: Parse query deterministically
-    const criteria = parseQueryDeterministic(research_query, customStrictness);
+    // Step 1: Fetch available collections for LLM context
+    const { data: publicCollections } = await supabase
+      .from('collections')
+      .select('id, name, description')
+      .eq('is_public', true);
+    
+    const availableCollections = (publicCollections || []).map((c: any) => ({
+      name: c.name,
+      description: c.description,
+    }));
 
-    // Step 2: Find matching collections
-    const { ids: collectionIds, matchedCollections } = await findMatchingCollections(supabase, criteria);
+    // Step 2: Parse query with LLM (falls back to deterministic)
+    const { criteria, llmResult, usedFallback } = await parseQueryWithLLM(
+      supabaseUrl,
+      supabaseServiceKey,
+      research_query,
+      availableCollections,
+      customStrictness
+    );
+    
+    stages.push({ 
+      stage: 'query_parsing', 
+      count: usedFallback ? 0 : 1,
+      relaxation: usedFallback ? 'deterministic_fallback' : undefined,
+    });
 
-    // Step 3: STAGE 1 - Hard filter via indexed columns
-    const { candidates, relaxation } = await stage1HardFilter(supabase, criteria, collectionIds);
+    // Step 3: Find matching collections (combine LLM suggestions + keyword matching)
+    const { ids: keywordCollectionIds, matchedCollections } = await findMatchingCollections(supabase, criteria);
+    
+    // Add LLM-suggested collections
+    let allCollectionIds = [...keywordCollectionIds];
+    if (criteria.suggested_collections.length > 0 && publicCollections) {
+      for (const suggestedName of criteria.suggested_collections) {
+        const match = publicCollections.find((c: any) => 
+          c.name.toLowerCase().includes(suggestedName.toLowerCase()) ||
+          suggestedName.toLowerCase().includes(c.name.toLowerCase())
+        );
+        if (match && !allCollectionIds.includes(match.id)) {
+          allCollectionIds.push(match.id);
+          matchedCollections.push({ id: match.id, name: match.name });
+        }
+      }
+    }
+
+    // Step 4: STAGE 1 - Enhanced hard filter with city/county support
+    const { candidates, relaxation, searchedLocations } = await stage1HardFilterEnhanced(
+      supabase, 
+      criteria, 
+      allCollectionIds
+    );
     stages.push({ stage: 'hard_filter', count: candidates.length, relaxation: relaxation || undefined });
 
-    // Early exit if no candidates
+    // Step 5: Handle NO CANDIDATES - Generate actionable explanation
     if (candidates.length === 0) {
       const duration = Date.now() - startTime;
-      console.log(`\n❌ [ACP-SEARCH-V3] No candidates found`);
+      const failure = generateFailureExplanation(criteria, llmResult, searchedLocations || '', 0);
+      
+      console.log(`\n❌ [ACP-SEARCH-V4] ${failure.status}: ${failure.reason}`);
       
       return new Response(
         JSON.stringify({
           success: false,
-          status: 'NO_MATCH',
+          status: failure.status,
           request_id: requestId,
           query: research_query,
           parsed_criteria: criteria,
-          reason: 'No personas match the specified criteria. Try broadening your search.',
+          assumptions_made: llmResult?.assumptions_made || [],
+          reason: failure.reason,
+          suggestion: failure.suggestion,
+          alternatives: failure.alternatives,
+          note: llmResult?.assumptions_made?.length 
+            ? `We made the following assumptions: ${llmResult.assumptions_made.join('; ')}`
+            : undefined,
           stages,
           duration_ms: duration,
           personas: [],
@@ -768,29 +1066,29 @@ serve(async (req) => {
       );
     }
 
-    // Step 4: STAGE 3 - LLM Evaluation (skip Stage 2 embeddings for now)
+    // Step 6: STAGE 3 - LLM Evaluation
     const { evaluations, summary: evalSummary } = await stage3LLMEvaluation(
       supabaseUrl,
       supabaseServiceKey,
       research_query,
       criteria,
-      candidates.slice(0, 60) // Cap at 60 for cost control
+      candidates.slice(0, 60)
     );
     stages.push({ stage: 'llm_evaluation', count: evaluations.length });
 
-    // Step 5: DECISION GATE
+    // Step 7: DECISION GATE
     const decision = applyDecisionGate(persona_count, evaluations, criteria.strictness, candidates);
 
     const duration = Date.now() - startTime;
 
-    console.log(`\n📊 [ACP-SEARCH-V3] Result ${requestId}`);
+    console.log(`\n📊 [ACP-SEARCH-V4] Result ${requestId}`);
     console.log(`   Status: ${decision.status}`);
     console.log(`   Returned: ${decision.selectedPersonas.length}/${persona_count}`);
     console.log(`   Duration: ${duration}ms`);
     console.log(`${'='.repeat(60)}\n`);
 
-    // Build response
-    const response = {
+    // Build response with note about assumptions
+    const response: any = {
       success: decision.success,
       status: decision.status,
       request_id: requestId,
@@ -818,6 +1116,11 @@ serve(async (req) => {
       })),
     };
 
+    // Add note about assumptions if any were made
+    if (llmResult?.assumptions_made?.length) {
+      response.note = `Search included the following assumptions: ${llmResult.assumptions_made.join('; ')}`;
+    }
+
     return new Response(
       JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -825,7 +1128,7 @@ serve(async (req) => {
 
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`\n❌ [ACP-SEARCH-V3] Error ${requestId}`);
+    console.error(`\n❌ [ACP-SEARCH-V4] Error ${requestId}`);
     console.error(`   Message: ${error.message}`);
     console.error(`   Stack: ${error.stack}`);
 

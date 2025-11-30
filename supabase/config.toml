@@ -9,6 +9,9 @@ verify_jwt = false
 [functions.acp-persona-search-v2]
 verify_jwt = false
 
+[functions.acp-parse-query]
+verify_jwt = false
+
 [functions.acp-job-execute]
 verify_jwt = false
 
