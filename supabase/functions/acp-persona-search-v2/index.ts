@@ -448,8 +448,8 @@ async function stage1HardFilter(
   let { data, error } = await supabase.rpc('search_personas_stage1', {
     p_age_min: criteria.age_min,
     p_age_max: criteria.age_max,
-    p_gender: criteria.gender,
-    p_marital_status: criteria.marital_status,
+    p_gender: criteria.gender?.length > 0 ? criteria.gender : null,
+    p_marital_status: criteria.marital_status?.length > 0 ? criteria.marital_status : null,
     p_has_children: criteria.has_children,
     p_country: criteria.location_country,
     p_state_region: criteria.location_region,
@@ -476,8 +476,8 @@ async function stage1HardFilter(
     const { data: relaxed1, error: err1 } = await supabase.rpc('search_personas_stage1', {
       p_age_min: criteria.age_min,
       p_age_max: criteria.age_max,
-      p_gender: criteria.gender,
-      p_marital_status: criteria.marital_status,
+      p_gender: criteria.gender?.length > 0 ? criteria.gender : null,
+      p_marital_status: criteria.marital_status?.length > 0 ? criteria.marital_status : null,
       p_has_children: criteria.has_children,
       p_country: criteria.location_country,
       p_state_region: null,
@@ -499,8 +499,8 @@ async function stage1HardFilter(
     const { data: relaxed2, error: err2 } = await supabase.rpc('search_personas_stage1', {
       p_age_min: criteria.age_min ? criteria.age_min - 5 : null,
       p_age_max: criteria.age_max ? criteria.age_max + 5 : null,
-      p_gender: criteria.gender,
-      p_marital_status: criteria.marital_status,
+      p_gender: criteria.gender?.length > 0 ? criteria.gender : null,
+      p_marital_status: criteria.marital_status?.length > 0 ? criteria.marital_status : null,
       p_has_children: criteria.has_children,
       p_country: criteria.location_country,
       p_state_region: null,
@@ -859,8 +859,8 @@ async function stage1HardFilterEnhanced(
       const { data, error } = await supabase.rpc('search_personas_stage1', {
         p_age_min: criteria.age_min,
         p_age_max: criteria.age_max,
-        p_gender: criteria.gender,
-        p_marital_status: criteria.marital_status,
+        p_gender: criteria.gender?.length > 0 ? criteria.gender : null,
+        p_marital_status: criteria.marital_status?.length > 0 ? criteria.marital_status : null,
         p_has_children: criteria.has_children,
         p_country: criteria.location_country,
         p_state_region: criteria.location_region,
