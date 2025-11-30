@@ -205,31 +205,32 @@ serve(async (req) => {
     });
     console.log('========================================');
 
-    // ============= STEP 2: RUN STUDY =============
-    console.log('💬 [ACP-JOB] STEP 2: Running study with questions');
+    // ============= STEP 2: RUN STUDY (PARALLELIZED) =============
+    console.log('💬 [ACP-JOB] STEP 2: Running study with questions (parallelized across personas)');
     
     const personaIds = selectedPersonas.map((p: any) => p.persona_id);
-    const conversationHistories: Record<string, Array<{role: string, content: string}>> = {};
     const allResults: Record<string, any[]> = {};
 
-    // Initialize conversation histories
+    // Initialize results
     for (const personaId of personaIds) {
-      conversationHistories[personaId] = [];
       allResults[personaId] = [];
     }
 
-    // Process each question sequentially across all personas
-    for (const question of questions) {
-      console.log(`💬 [ACP-JOB] Processing question: ${question.substring(0, 80)}...`);
-      
-      // Call each persona with the question
-      for (const personaId of personaIds) {
-        const persona = selectedPersonas.find((p: any) => p.persona_id === personaId);
-        const history = conversationHistories[personaId];
+    console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING parallel persona conversations`);
+    console.log(`   Personas: ${personaIds.length}, Questions: ${questions.length}`);
 
+    // Parallelize across personas, keep questions sequential per persona (preserves conversation history)
+    const personaConversationPromises = personaIds.map(async (personaId) => {
+      const persona = selectedPersonas.find((p: any) => p.persona_id === personaId);
+      const history: Array<{role: string, content: string}> = [];
+      const results: any[] = [];
+
+      console.log(`🚀 [ACP-JOB] Starting parallel conversation for ${persona?.name || personaId}`);
+
+      // Sequential questions for this persona (preserves conversation history)
+      for (const question of questions) {
         try {
-          // DIAGNOSTIC: Before Grok call
-          console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING v4-grok-conversation for ${persona?.name || personaId}`);
+          console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - ${persona?.name}: asking "${question.substring(0, 50)}..."`);
 
           const { data: grokData, error: grokError } = await supabase.functions.invoke('v4-grok-conversation', {
             body: {
@@ -238,40 +239,48 @@ serve(async (req) => {
               conversation_history: history
             }
           });
-          
-          // DIAGNOSTIC: After Grok call
-          console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED v4-grok-conversation for ${persona?.name || personaId}`);
 
           if (grokError) {
             console.error(`❌ [ACP-JOB] v4-grok-conversation error for ${persona?.name}:`, grokError);
-            throw new Error(`v4-grok-conversation failed: ${grokError.message}`);
+            results.push({
+              question,
+              response: `Error: ${grokError.message}`,
+              traits_activated: [],
+              error: true
+            });
+            continue;
           }
 
           if (!grokData?.success || !grokData?.response) {
-            console.error(`❌ [ACP-JOB] Invalid response from v4-grok-conversation:`, JSON.stringify(grokData));
-            throw new Error(grokData?.error || 'No response from v4-grok-conversation');
+            console.error(`❌ [ACP-JOB] Invalid response for ${persona?.name}:`, JSON.stringify(grokData));
+            results.push({
+              question,
+              response: `Error: ${grokData?.error || 'No response'}`,
+              traits_activated: [],
+              error: true
+            });
+            continue;
           }
 
           const response = grokData.response;
           const traitsActivated = grokData.traits_selected || [];
-          console.log(`✅ [ACP-JOB] Got response from ${persona?.name}: ${response.substring(0, 60)}...`);
+          console.log(`✅ [ACP-JOB] ${persona?.name} responded: ${response.substring(0, 50)}...`);
 
-          // Update conversation history for this persona
-          conversationHistories[personaId].push(
+          // Update conversation history for subsequent questions
+          history.push(
             { role: 'user', content: question },
             { role: 'assistant', content: response }
           );
 
-          // Store the result
-          allResults[personaId].push({
+          results.push({
             question,
             response,
             traits_activated: traitsActivated
           });
 
         } catch (error) {
-          console.error(`❌ [ACP-JOB] Error processing persona ${personaId}:`, error);
-          allResults[personaId].push({
+          console.error(`❌ [ACP-JOB] Error for ${persona?.name} on question:`, error);
+          results.push({
             question,
             response: `Error: ${error.message}`,
             traits_activated: [],
@@ -279,7 +288,20 @@ serve(async (req) => {
           });
         }
       }
+
+      console.log(`✅ [ACP-JOB] Completed all questions for ${persona?.name}`);
+      return { personaId, results };
+    });
+
+    // Run all personas in parallel and wait for completion
+    const personaResults = await Promise.all(personaConversationPromises);
+
+    // Map results back to allResults
+    for (const { personaId, results } of personaResults) {
+      allResults[personaId] = results;
     }
+
+    console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED all parallel persona conversations`);
 
     // ============= STEP 3: FORMAT RESULTS =============
     console.log('📊 [ACP-JOB] STEP 3: Formatting results');
