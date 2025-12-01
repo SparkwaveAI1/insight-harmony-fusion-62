@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      acp_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          external_job_id: string
+          id: string
+          last_heartbeat: string | null
+          progress_data: Json | null
+          request_data: Json
+          results: Json | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          external_job_id: string
+          id?: string
+          last_heartbeat?: string | null
+          progress_data?: Json | null
+          request_data: Json
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          external_job_id?: string
+          id?: string
+          last_heartbeat?: string | null
+          progress_data?: Json | null
+          request_data?: Json
+          results?: Json | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       admin_alerts: {
         Row: {
           created_at: string

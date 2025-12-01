@@ -7,231 +7,116 @@ const corsHeaders = {
 };
 
 interface JobRequest {
+  action?: 'execute' | 'status';
   job_id: string;
-  client_address: string;
-  research_query: string;
-  persona_criteria?: string;  // NEW: Target audience description from Butler
-  questions: string[];
+  client_address?: string;
+  research_query?: string;
+  persona_criteria?: string;
+  questions?: string[];
   num_personas?: number;
   output_format?: string;
   include_summary?: boolean;
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+// Background task to execute the ACP job
+async function executeAcpJob(
+  internalJobId: string,
+  jobRequest: JobRequest,
+  supabase: any
+) {
+  const { job_id, research_query, persona_criteria, questions = [], num_personas = 5, include_summary = true } = jobRequest;
+  
+  // Register shutdown handler
+  const shutdownHandler = (event: any) => {
+    console.log(`⚠️ [ACP-JOB] Job ${job_id} shutting down:`, event.detail?.reason);
+    supabase.from('acp_jobs')
+      .update({ 
+        status: 'interrupted', 
+        last_heartbeat: new Date().toISOString(),
+        error_message: `Shutdown: ${event.detail?.reason || 'unknown'}`
+      })
+      .eq('id', internalJobId)
+      .then(() => {});
+  };
+  addEventListener('beforeunload', shutdownHandler);
+
+  // Helper to update progress
+  const updateProgress = async (message: string, percent: number) => {
+    await supabase.from('acp_jobs')
+      .update({ 
+        progress_data: { message, percent, updated_at: new Date().toISOString() },
+        last_heartbeat: new Date().toISOString()
+      })
+      .eq('id', internalJobId);
+    console.log(`📊 [ACP-JOB] Progress: ${percent}% - ${message}`);
+  };
 
   try {
-    // DIAGNOSTIC: First line timestamp
-    console.log(`🔔 [ACP-JOB] REQUEST RECEIVED at ${new Date().toISOString()}`);
-    
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Parse job request
-    const jobRequest: JobRequest = await req.json();
-    
-    // Log raw request from Butler for debugging
-    console.log('========================================');
-    console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - Parsed request`);
-    console.log('🚀 [ACP-JOB] Raw request from Butler:', JSON.stringify({
-      job_id: jobRequest.job_id,
-      persona_criteria: jobRequest.persona_criteria,
-      research_query: jobRequest.research_query,
-      questions: jobRequest.questions,
-      num_personas: jobRequest.num_personas
-    }, null, 2));
-    console.log('========================================');
-
-    const {
-      job_id,
-      research_query,
-      persona_criteria,
-      questions,
-      num_personas = 5,
-      include_summary = true
-    } = jobRequest;
-
-    // Determine the effective query for persona search
-    // Priority: persona_criteria > research_query > inferred from questions
+    // Determine effective query
     let effectiveQuery = persona_criteria || research_query || '';
-
     if (!effectiveQuery || effectiveQuery.length < 10) {
-      // Fall back to inferring from questions if query is missing or too short
       effectiveQuery = `Find personas relevant to: ${questions.join(' ')}`;
-      console.log(`⚠️ [ACP-JOB] No specific criteria provided, inferring from questions`);
     }
 
-    console.log(`🎯 [ACP-JOB] Effective query for persona search: "${effectiveQuery}"`);
-
-    // ============= STEP 1: PERSONA SELECTION via acp-persona-search-v2 =============
-    console.log('📦 [ACP-JOB] STEP 1: Finding personas via deterministic search');
+    // ============= STEP 1: PERSONA SELECTION =============
+    await updateProgress('Searching for matching personas...', 10);
     
-    let selectedPersonas: any[] = [];
-    let selectionMethod = 'acp-persona-search-v2';
-    let searchMetadata: any = {};
-    
-    try {
-      // DIAGNOSTIC: Before persona search
-      console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING acp-persona-search-v2`);
-      
-      // Call the new LLM-powered persona search with effectiveQuery
-      const { data: searchData, error: searchError } = await supabase.functions.invoke('acp-persona-search-v2', {
-        body: {
-          research_query: effectiveQuery,
-          persona_count: num_personas,
-          min_results: 3
-        }
-      });
-      
-      // DIAGNOSTIC: After persona search
-      console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED acp-persona-search-v2`);
-
-      if (searchError) {
-        console.error('❌ [ACP-JOB] acp-persona-search-v2 error:', searchError);
-        throw new Error(`Persona search failed: ${searchError.message}`);
+    const { data: searchData, error: searchError } = await supabase.functions.invoke('acp-persona-search-v2', {
+      body: {
+        research_query: effectiveQuery,
+        persona_count: num_personas,
+        min_results: 3
       }
-
-      // Handle the new 3-stage pipeline response format
-      if (!searchData?.success) {
-        // NEW: Strict denial from decision gate
-        const status = searchData?.status || 'UNKNOWN_ERROR';
-        const reason = searchData?.reason || searchData?.error || 'Persona search failed';
-        const decisionSummary = searchData?.decision_summary || {};
-        
-        console.error(`❌ [ACP-JOB] Search denied with status: ${status}`);
-        console.error(`   Reason: ${reason}`);
-        console.error(`   Decision summary:`, JSON.stringify(decisionSummary));
-        
-        // Return 400 (Bad Request) not 404 - the request was understood but cannot be fulfilled
-        return new Response(
-          JSON.stringify({ 
-            error: 'persona_search_denied',
-            status: status,
-            message: reason,
-            query: effectiveQuery,
-            persona_criteria: persona_criteria || null,
-            parsed_criteria: searchData?.parsed_criteria || null,
-            decision_summary: decisionSummary,
-            stages: searchData?.stages || [],
-            suggestion: status === 'NO_MATCH' 
-              ? 'No personas match these criteria. Try broader terms (e.g., remove specific locations, widen age range, or use more common occupations).'
-              : status === 'INSUFFICIENT_EXACT'
-              ? `Found ${decisionSummary.exact_matches || 0} exact matches but ${decisionSummary.requested || num_personas} requested. Try reducing persona_count or broadening criteria.`
-              : 'Try adjusting your search criteria for better results.',
-            job_id,
-            cost: '$0.00'
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400, // Changed from 404 to 400
-          }
-        );
-      }
-
-      console.log(`✅ [ACP-JOB] Search found ${searchData.personas?.length || 0} personas`);
-      console.log(`   Status: ${searchData.status}`);
-      console.log(`   Decision: ${searchData.decision_summary?.exact_matches || 0} exact, ${searchData.decision_summary?.near_matches || 0} near`);
-      console.log(`   Parsed criteria:`, JSON.stringify(searchData.parsed_criteria, null, 2));
-      console.log(`   Matched collections: ${searchData.matched_collections}`);
-
-      // Map to the format expected by the rest of the function
-      selectedPersonas = (searchData.personas || []).map((p: any) => ({
-        persona_id: p.persona_id,
-        name: p.name,
-        match_score: p.match_score || 0.5,
-        match_reason: p.match_reason || 'No evaluation',
-        summary: p.demographics?.occupation 
-          ? `${p.demographics.occupation}, ${p.demographics.age || 'unknown age'}, ${p.demographics.location || 'unknown location'}`
-          : p.summary?.demographics?.occupation
-          ? `${p.summary.demographics.occupation}, ${p.summary.demographics.age || 'unknown age'}, ${p.summary.demographics.location?.city || 'unknown location'}`
-          : 'No summary available',
-        full_profile: p.full_profile,
-        demographics: p.demographics
-      }));
-
-      searchMetadata = {
-        parsed_criteria: searchData.parsed_criteria,
-        matched_collections: searchData.matched_collections,
-        decision_summary: searchData.decision_summary,
-        stages: searchData.stages || []
-      };
-
-    } catch (searchError) {
-      console.error('❌ [ACP-JOB] Failed to search personas:', searchError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'persona_search_failed',
-          message: `Could not find personas matching: "${effectiveQuery}"${persona_criteria ? ` (criteria: ${persona_criteria})` : ''}`,
-          details: searchError instanceof Error ? searchError.message : 'Unknown error',
-          suggestion: 'Try broader criteria or different keywords',
-          job_id,
-          cost: '$0.00'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500,
-        }
-      );
-    }
-    
-    // This should rarely happen now since search returns success:false if no matches
-    if (selectedPersonas.length === 0) {
-      console.error(`❌ [ACP-JOB] NO PERSONAS after mapping - Returning 400 with $0.00 cost`);
-      return new Response(
-        JSON.stringify({ 
-          error: 'no_matching_personas',
-          status: 'NO_MATCH',
-          message: `No personas found matching: "${effectiveQuery}"`,
-          parsed_criteria: searchMetadata.parsed_criteria,
-          suggestion: 'Try broader search terms (e.g., remove specific locations or occupations)',
-          job_id,
-          cost: '$0.00'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      );
-    }
-
-    console.log('========================================');
-    console.log(`✅ [ACP-JOB] Selected ${selectedPersonas.length} personas via ${selectionMethod}:`);
-    selectedPersonas.forEach((p, i) => {
-      console.log(`   ${i + 1}. ${p.name} (${p.persona_id})`);
     });
-    console.log('========================================');
+
+    if (searchError || !searchData?.success) {
+      const errorMsg = searchError?.message || searchData?.reason || 'Persona search failed';
+      throw new Error(`persona_search_failed: ${errorMsg}`);
+    }
+
+    const selectedPersonas = (searchData.personas || []).map((p: any) => ({
+      persona_id: p.persona_id,
+      name: p.name,
+      match_score: p.match_score || 0.5,
+      match_reason: p.match_reason || 'No evaluation',
+      summary: p.demographics?.occupation 
+        ? `${p.demographics.occupation}, ${p.demographics.age || 'unknown age'}, ${p.demographics.location || 'unknown location'}`
+        : 'No summary available',
+      full_profile: p.full_profile,
+      demographics: p.demographics
+    }));
+
+    if (selectedPersonas.length === 0) {
+      throw new Error(`no_matching_personas: No personas found for "${effectiveQuery}"`);
+    }
+
+    const searchMetadata = {
+      parsed_criteria: searchData.parsed_criteria,
+      matched_collections: searchData.matched_collections,
+      decision_summary: searchData.decision_summary,
+      stages: searchData.stages || []
+    };
+
+    console.log(`✅ [ACP-JOB] Found ${selectedPersonas.length} personas`);
+    await updateProgress(`Found ${selectedPersonas.length} personas, starting interviews...`, 20);
 
     // ============= STEP 2: RUN STUDY (PARALLELIZED) =============
-    console.log('💬 [ACP-JOB] STEP 2: Running study with questions (parallelized across personas)');
-    
     const personaIds = selectedPersonas.map((p: any) => p.persona_id);
     const allResults: Record<string, any[]> = {};
-
-    // Initialize results
     for (const personaId of personaIds) {
       allResults[personaId] = [];
     }
 
-    console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING parallel persona conversations`);
-    console.log(`   Personas: ${personaIds.length}, Questions: ${questions.length}`);
+    const totalSteps = personaIds.length;
+    let completedPersonas = 0;
 
-    // Parallelize across personas, keep questions sequential per persona (preserves conversation history)
-    const personaConversationPromises = personaIds.map(async (personaId) => {
+    const personaConversationPromises = personaIds.map(async (personaId: string) => {
       const persona = selectedPersonas.find((p: any) => p.persona_id === personaId);
       const history: Array<{role: string, content: string}> = [];
       const results: any[] = [];
 
-      console.log(`🚀 [ACP-JOB] Starting parallel conversation for ${persona?.name || personaId}`);
-
-      // Sequential questions for this persona (preserves conversation history)
       for (const question of questions) {
         try {
-          console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - ${persona?.name}: asking "${question.substring(0, 50)}..."`);
-
           const { data: grokData, error: grokError } = await supabase.functions.invoke('v4-grok-conversation', {
             body: {
               persona_id: personaId,
@@ -240,22 +125,10 @@ serve(async (req) => {
             }
           });
 
-          if (grokError) {
-            console.error(`❌ [ACP-JOB] v4-grok-conversation error for ${persona?.name}:`, grokError);
+          if (grokError || !grokData?.success) {
             results.push({
               question,
-              response: `Error: ${grokError.message}`,
-              traits_activated: [],
-              error: true
-            });
-            continue;
-          }
-
-          if (!grokData?.success || !grokData?.response) {
-            console.error(`❌ [ACP-JOB] Invalid response for ${persona?.name}:`, JSON.stringify(grokData));
-            results.push({
-              question,
-              response: `Error: ${grokData?.error || 'No response'}`,
+              response: `Error: ${grokError?.message || grokData?.error || 'No response'}`,
               traits_activated: [],
               error: true
             });
@@ -263,10 +136,6 @@ serve(async (req) => {
           }
 
           const response = grokData.response;
-          const traitsActivated = grokData.traits_selected || [];
-          console.log(`✅ [ACP-JOB] ${persona?.name} responded: ${response.substring(0, 50)}...`);
-
-          // Update conversation history for subsequent questions
           history.push(
             { role: 'user', content: question },
             { role: 'assistant', content: response }
@@ -275,11 +144,10 @@ serve(async (req) => {
           results.push({
             question,
             response,
-            traits_activated: traitsActivated
+            traits_activated: grokData.traits_selected || []
           });
 
-        } catch (error) {
-          console.error(`❌ [ACP-JOB] Error for ${persona?.name} on question:`, error);
+        } catch (error: any) {
           results.push({
             question,
             response: `Error: ${error.message}`,
@@ -289,23 +157,21 @@ serve(async (req) => {
         }
       }
 
-      console.log(`✅ [ACP-JOB] Completed all questions for ${persona?.name}`);
+      completedPersonas++;
+      const progressPercent = 20 + Math.round((completedPersonas / totalSteps) * 60);
+      await updateProgress(`Interviewed ${completedPersonas}/${totalSteps} personas`, progressPercent);
+
       return { personaId, results };
     });
 
-    // Run all personas in parallel and wait for completion
     const personaResults = await Promise.all(personaConversationPromises);
-
-    // Map results back to allResults
     for (const { personaId, results } of personaResults) {
       allResults[personaId] = results;
     }
 
-    console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED all parallel persona conversations`);
-
     // ============= STEP 3: FORMAT RESULTS =============
-    console.log('📊 [ACP-JOB] STEP 3: Formatting results');
-    
+    await updateProgress('Formatting results...', 85);
+
     const formattedResponses = selectedPersonas.map((persona: any) => ({
       persona_id: persona.persona_id,
       persona_name: persona.name,
@@ -313,12 +179,11 @@ serve(async (req) => {
       responses: allResults[persona.persona_id] || []
     }));
 
-    // ============= STEP 4: GENERATE SUMMARY REPORT =============
+    // ============= STEP 4: GENERATE SUMMARY =============
     let summary_report = null;
     if (include_summary) {
-      console.log('📊 [ACP-JOB] STEP 4: Generating structured summary report with qualitative insights');
-      
-      // Build responsesByQuestion
+      await updateProgress('Generating insights report...', 90);
+
       const responsesByQuestion = questions.map((questionText, questionIndex) => ({
         questionIndex,
         questionText,
@@ -334,7 +199,6 @@ serve(async (req) => {
         }).filter((r: any) => !r.error)
       }));
 
-      // Build responsesByPersona
       const responsesByPersona = selectedPersonas.map((persona: any) => ({
         personaId: persona.persona_id,
         personaName: persona.name,
@@ -347,21 +211,11 @@ serve(async (req) => {
         }))
       }));
 
-      // Generate qualitative insights using the SAME function as the app
+      // Generate qualitative insights
       let qualitative_report = null;
       try {
-        // DIAGNOSTIC: Before insights call
-        console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - STARTING compile-research-insights`);
-        
-        // Build responses in the format expected by compile-research-insights
-        const flatResponses: Array<{
-          persona_id: string;
-          question_index: number;
-          question_text: string;
-          response_text: string;
-        }> = [];
-        
-        selectedPersonas.forEach((persona: any, personaIdx: number) => {
+        const flatResponses: Array<any> = [];
+        selectedPersonas.forEach((persona: any) => {
           const personaResults = allResults[persona.persona_id] || [];
           personaResults.forEach((result: any, questionIdx: number) => {
             if (!result.error) {
@@ -375,7 +229,6 @@ serve(async (req) => {
           });
         });
 
-        // Build personas in the format expected
         const personasForAnalysis = selectedPersonas.map((p: any) => ({
           persona_id: p.persona_id,
           name: p.name,
@@ -383,7 +236,6 @@ serve(async (req) => {
           summary: p.summary
         }));
 
-        // Call compile-research-insights with direct data
         const { data: insightsData, error: insightsError } = await supabase.functions.invoke('compile-research-insights', {
           body: {
             direct_data: {
@@ -395,18 +247,12 @@ serve(async (req) => {
             }
           }
         });
-        
-        // DIAGNOSTIC: After insights call
-        console.log(`⏱️ [ACP-JOB] ${new Date().toISOString()} - COMPLETED compile-research-insights`);
 
-        if (insightsError) {
-          console.error('❌ [ACP-JOB] Failed to generate qualitative insights:', insightsError);
-        } else if (insightsData?.insights) {
+        if (!insightsError && insightsData?.insights) {
           qualitative_report = insightsData.insights;
-          console.log('✅ [ACP-JOB] Qualitative insights generated successfully');
         }
       } catch (insightsErr) {
-        console.error('❌ [ACP-JOB] Error calling compile-research-insights:', insightsErr);
+        console.error('❌ [ACP-JOB] Error generating insights:', insightsErr);
       }
 
       summary_report = {
@@ -418,32 +264,22 @@ serve(async (req) => {
         responsesByQuestion,
         responsesByPersona,
         selectionMetadata: {
-          method: selectionMethod,
+          method: 'acp-persona-search-v2',
           parsedCriteria: searchMetadata.parsed_criteria,
           matchedCollections: searchMetadata.matched_collections,
           decisionSummary: searchMetadata.decision_summary || null,
           stages: searchMetadata.stages || []
         },
-        // Include the qualitative insights report (same format as the app)
         qualitative_report
       };
     }
 
-    // Calculate cost: $0.12 per question per persona
+    // Calculate cost
     const totalInteractions = personaIds.length * questions.length;
     const cost = (totalInteractions * 0.12).toFixed(2);
 
-    console.log('========================================');
-    console.log(`✅ [ACP-JOB] Job ${job_id} COMPLETED`);
-    console.log(`   Personas: ${personaIds.length}`);
-    console.log(`   Questions: ${questions.length}`);
-    console.log(`   Total interactions: ${totalInteractions}`);
-    console.log(`   Selection method: ${selectionMethod}`);
-    console.log(`   Cost: $${cost}`);
-    console.log('========================================');
-
-    // Return job results
-    const response = {
+    // Store final results
+    const finalResponse = {
       job_id,
       status: 'completed',
       study_results: {
@@ -452,29 +288,189 @@ serve(async (req) => {
         total_interactions: totalInteractions,
         responses: formattedResponses,
         summary_report,
-        selection_method: selectionMethod
+        selection_method: 'acp-persona-search-v2'
       },
       cost: `$${cost}`
     };
 
-    return new Response(
-      JSON.stringify(response),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+    await supabase.from('acp_jobs')
+      .update({
+        status: 'completed',
+        results: finalResponse,
+        completed_at: new Date().toISOString(),
+        progress_data: { message: 'Complete', percent: 100 }
+      })
+      .eq('id', internalJobId);
+
+    console.log(`✅ [ACP-JOB] Job ${job_id} COMPLETED and stored. Cost: $${cost}`);
+
+  } catch (error: any) {
+    console.error(`❌ [ACP-JOB] Job ${job_id} FAILED:`, error.message);
+    await supabase.from('acp_jobs')
+      .update({
+        status: 'failed',
+        error_message: error.message,
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', internalJobId);
+  } finally {
+    removeEventListener('beforeunload', shutdownHandler);
+  }
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const jobRequest: JobRequest = await req.json();
+    const action = jobRequest.action || 'execute';
+
+    console.log(`🔔 [ACP-JOB] ${action.toUpperCase()} request for job_id: ${jobRequest.job_id}`);
+
+    // ============= STATUS ACTION =============
+    if (action === 'status') {
+      const { data: job, error: fetchError } = await supabase
+        .from('acp_jobs')
+        .select('*')
+        .eq('external_job_id', jobRequest.job_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (fetchError || !job) {
+        return new Response(
+          JSON.stringify({ error: 'job_not_found', job_id: jobRequest.job_id }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+        );
       }
+
+      // If completed, return full results
+      if (job.status === 'completed' && job.results) {
+        return new Response(
+          JSON.stringify(job.results),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+
+      // If failed, return error
+      if (job.status === 'failed') {
+        return new Response(
+          JSON.stringify({ 
+            job_id: job.external_job_id,
+            status: 'failed',
+            error: job.error_message,
+            cost: '$0.00'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+
+      // Otherwise return progress
+      return new Response(
+        JSON.stringify({
+          job_id: job.external_job_id,
+          status: job.status,
+          progress: job.progress_data,
+          started_at: job.started_at,
+          last_heartbeat: job.last_heartbeat
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
+    // ============= EXECUTE ACTION =============
+    // Validate required fields
+    if (!jobRequest.job_id || !jobRequest.questions || jobRequest.questions.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: job_id and questions' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Check for existing job (idempotency)
+    const { data: existingJob } = await supabase
+      .from('acp_jobs')
+      .select('id, status, results')
+      .eq('external_job_id', jobRequest.job_id)
+      .single();
+
+    if (existingJob) {
+      // If already completed, return results
+      if (existingJob.status === 'completed' && existingJob.results) {
+        console.log(`✅ [ACP-JOB] Returning cached results for ${jobRequest.job_id}`);
+        return new Response(
+          JSON.stringify(existingJob.results),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
+      // If still processing, return status
+      return new Response(
+        JSON.stringify({
+          job_id: jobRequest.job_id,
+          status: existingJob.status,
+          message: 'Job already in progress. Poll with action:\\"status\\" for updates.',
+          poll_interval_seconds: 5
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 202 }
+      );
+    }
+
+    // Create new job record
+    const { data: newJob, error: insertError } = await supabase
+      .from('acp_jobs')
+      .insert({
+        external_job_id: jobRequest.job_id,
+        status: 'processing',
+        request_data: jobRequest,
+        started_at: new Date().toISOString(),
+        progress_data: { message: 'Starting...', percent: 0 }
+      })
+      .select()
+      .single();
+
+    if (insertError || !newJob) {
+      console.error('❌ [ACP-JOB] Failed to create job record:', insertError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to initialize job' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    // Start background task
+    const backgroundTask = executeAcpJob(newJob.id, jobRequest, supabase);
+    
+    // Use EdgeRuntime.waitUntil if available (Supabase Edge Functions)
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime?.waitUntil) {
+      EdgeRuntime.waitUntil(backgroundTask);
+    } else {
+      // Fallback for local dev
+      backgroundTask.catch(err => console.error('Background task error:', err));
+    }
+
+    console.log(`🚀 [ACP-JOB] Job ${jobRequest.job_id} started in background`);
+
+    // Return immediately with 202 Accepted
+    return new Response(
+      JSON.stringify({
+        job_id: jobRequest.job_id,
+        status: 'processing',
+        message: 'Job started. Poll with action:\\"status\\" to get results.',
+        poll_interval_seconds: 5
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 202 }
     );
 
-  } catch (error) {
-    // DIAGNOSTIC: Error with timestamp and stack
-    console.error(`❌ [ACP-JOB] ${new Date().toISOString()} - FATAL ERROR:`, error);
-    console.error(`   Stack:`, error.stack);
+  } catch (error: any) {
+    console.error(`❌ [ACP-JOB] FATAL ERROR:`, error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
