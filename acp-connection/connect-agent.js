@@ -178,9 +178,14 @@ async function main() {
           const result = await executeJob(job);
           activeJobs.get(job.id).status = 'executed';
           
-          // Deliver the result
+          // Deliver the result - wrap in ACP-required format
           console.log(`   Delivering result...`);
-          await acpClient.deliverJob(job.id, result.deliverable || result);
+          const deliverablePayload = {
+            type: "json",
+            value: JSON.stringify(result.deliverable || result)
+          };
+          console.log(`   Deliverable type: ${deliverablePayload.type}`);
+          await acpClient.deliverJob(job.id, deliverablePayload);
           activeJobs.get(job.id).status = 'delivered';
           
           console.log(`✅ Job ${job.id} completed and delivered`);
