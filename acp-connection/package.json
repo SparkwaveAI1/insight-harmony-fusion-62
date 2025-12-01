@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@virtuals-protocol/acp-node": "^0.3.0-beta.5",
+    "@virtuals-protocol/acp-node": "latest",
     "dotenv": "^16.4.5"
   }
 }
