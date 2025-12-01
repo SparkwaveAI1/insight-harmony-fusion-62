@@ -121,7 +121,7 @@ async function executeJob(job) {
         
         if (result.status === 'completed') {
           console.log(`✅ Job ${job.id} completed after ${Math.round((Date.now() - startTime) / 1000)}s`);
-          return result.results; // Return actual results, not the status wrapper
+          return result; // Return the full results object (contains study_results)
         }
         
         if (result.status === 'failed') {
