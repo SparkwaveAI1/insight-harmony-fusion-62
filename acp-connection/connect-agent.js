@@ -93,9 +93,47 @@ async function executeJob(job) {
       throw new Error(`Webhook returned ${response.status}: ${errorText}`);
     }
 
-    const result = await response.json();
+    let result = await response.json();
+
+    // Handle async processing (202 Accepted with status: processing)
+    if (response.status === 202 && result.status === 'processing') {
+      console.log(`⏳ Job ${job.id} processing asynchronously, polling for results...`);
+      
+      const MAX_POLL_TIME = 10 * 60 * 1000; // 10 minutes max
+      const POLL_INTERVAL = 5000; // 5 seconds
+      const startTime = Date.now();
+
+      while (Date.now() - startTime < MAX_POLL_TIME) {
+        await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL));
+        
+        const statusResponse = await fetch(config.jobExecutionWebhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'status', job_id: job.id })
+        });
+        
+        result = await statusResponse.json();
+        
+        // Log progress updates
+        if (result.progress) {
+          console.log(`   📊 ${result.progress.percent || 0}% - ${result.progress.message || 'Processing...'}`);
+        }
+        
+        if (result.status === 'completed') {
+          console.log(`✅ Job ${job.id} completed after ${Math.round((Date.now() - startTime) / 1000)}s`);
+          return result.results; // Return actual results, not the status wrapper
+        }
+        
+        if (result.status === 'failed') {
+          throw new Error(result.error || 'Job failed');
+        }
+      }
+
+      throw new Error(`Job timed out after ${MAX_POLL_TIME / 1000} seconds`);
+    }
+
+    // For synchronous responses (direct completion or cached)
     console.log(`✅ Job ${job.id} executed successfully`);
-    
     return result;
   } catch (error) {
     console.error(`❌ Job ${job.id} execution failed:`, error.message);
