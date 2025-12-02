@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.billing-stripe-webhook]
 verify_jwt = false
+
+[functions.log-acp-delivery]
+verify_jwt = false
