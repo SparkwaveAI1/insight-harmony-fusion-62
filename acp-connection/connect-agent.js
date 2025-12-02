@@ -209,15 +209,27 @@ async function main() {
           const result = await executeJob(job);
           activeJobs.get(job.id).status = 'executed';
           
-          // Deliver the result - wrap in ACP-required format
+          // Deliver the result - send small JSON with results URL instead of full payload
+          // This avoids ACP payload size limits
           console.log(`   Delivering result...`);
+          
+          const studyResults = result.study_results || result.deliverable?.study_results || {};
+          const deliverableData = {
+            job_id: String(job.id),
+            status: 'completed',
+            results_url: `https://persona-ai.lovable.app/acp-results/${job.id}`,
+            personas_interviewed: studyResults.personas_interviewed || 0,
+            questions_asked: studyResults.questions_asked || 0,
+            message: 'View full research results at the URL above'
+          };
+          
           const deliverablePayload = {
             type: "json",
-            value: JSON.stringify(result.deliverable || result)
+            value: JSON.stringify(deliverableData)
           };
           console.log(`   Deliverable type: ${deliverablePayload.type}`);
           console.log(`   Deliverable size: ${deliverablePayload.value.length} bytes`);
-          
+          console.log(`   Results URL: ${deliverableData.results_url}`);
           // Log BEFORE delivery attempt
           await logDeliveryAttempt(job.id, deliverablePayload, 'before_deliver');
           
