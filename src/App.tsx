@@ -24,6 +24,7 @@ import CollectionDetail from "./pages/CollectionDetail";
 import CustomResearch from "./pages/CustomResearch";
 import Research from "./pages/Research";
 import ResearchResults from "./pages/ResearchResults";
+import ACPResults from "./pages/ACPResults";
 import Auth from "./pages/Auth";
 import UserProfile from "./pages/UserProfile";
 import Contact from "./pages/Contact";
@@ -153,6 +154,9 @@ function App() {
                 <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
                 <Route path="/research/results/:surveySessionId" element={<ProtectedRoute><ResearchResults /></ProtectedRoute>} />
                 <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
+                
+                {/* ACP Results - Public route for external buyers */}
+                <Route path="/acp-results/:jobId" element={<ACPResults />} />
                 
                 {/* Persona Creation Flow - Protected */}
                 <Route path="/create" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />
