@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      acp_delivery_logs: {
+        Row: {
+          attempt_type: string | null
+          created_at: string | null
+          deliver_error: string | null
+          full_payload_preview: string | null
+          has_qualitative_report: boolean | null
+          id: string
+          job_id: string
+          payload_keys: string[] | null
+          payload_size_bytes: number | null
+          payload_type: string | null
+          study_results_keys: string[] | null
+          summary_report_keys: string[] | null
+        }
+        Insert: {
+          attempt_type?: string | null
+          created_at?: string | null
+          deliver_error?: string | null
+          full_payload_preview?: string | null
+          has_qualitative_report?: boolean | null
+          id?: string
+          job_id: string
+          payload_keys?: string[] | null
+          payload_size_bytes?: number | null
+          payload_type?: string | null
+          study_results_keys?: string[] | null
+          summary_report_keys?: string[] | null
+        }
+        Update: {
+          attempt_type?: string | null
+          created_at?: string | null
+          deliver_error?: string | null
+          full_payload_preview?: string | null
+          has_qualitative_report?: boolean | null
+          id?: string
+          job_id?: string
+          payload_keys?: string[] | null
+          payload_size_bytes?: number | null
+          payload_type?: string | null
+          study_results_keys?: string[] | null
+          summary_report_keys?: string[] | null
+        }
+        Relationships: []
+      }
       acp_jobs: {
         Row: {
           completed_at: string | null

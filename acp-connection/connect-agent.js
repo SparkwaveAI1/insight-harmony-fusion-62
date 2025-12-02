@@ -61,6 +61,37 @@ console.log('');
 // Track active jobs for logging
 const activeJobs = new Map();
 
+async function logDeliveryAttempt(jobId, deliverable, attemptType, deliverError = null) {
+  try {
+    const value = deliverable.value;
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    const payloadStr = typeof value === 'string' ? value : JSON.stringify(value);
+    
+    await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/log-acp-delivery', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY'
+      },
+      body: JSON.stringify({
+        job_id: String(jobId),
+        attempt_type: attemptType,
+        payload_type: deliverable.type,
+        payload_size_bytes: payloadStr.length,
+        payload_keys: typeof parsed === 'object' && parsed !== null ? Object.keys(parsed) : [],
+        study_results_keys: parsed?.study_results ? Object.keys(parsed.study_results) : [],
+        summary_report_keys: parsed?.study_results?.summary_report ? Object.keys(parsed.study_results.summary_report) : [],
+        has_qualitative_report: !!parsed?.study_results?.summary_report?.qualitative_report,
+        full_payload_preview: payloadStr.substring(0, 5000),
+        deliver_error: deliverError
+      })
+    });
+    console.log(`📝 Logged delivery: ${attemptType}, size: ${payloadStr.length} bytes`);
+  } catch (e) {
+    console.log('⚠️ Failed to log delivery:', e.message);
+  }
+}
+
 async function executeJob(job) {
   console.log(`\n📋 Job Details:`);
   console.log(`   ID: ${job.id}`);
@@ -185,15 +216,32 @@ async function main() {
             value: JSON.stringify(result.deliverable || result)
           };
           console.log(`   Deliverable type: ${deliverablePayload.type}`);
-          await acpClient.deliverJob(job.id, deliverablePayload);
-          activeJobs.get(job.id).status = 'delivered';
+          console.log(`   Deliverable size: ${deliverablePayload.value.length} bytes`);
           
-          console.log(`✅ Job ${job.id} completed and delivered`);
+          // Log BEFORE delivery attempt
+          await logDeliveryAttempt(job.id, deliverablePayload, 'before_deliver');
+          
+          try {
+            await acpClient.deliverJob(job.id, deliverablePayload);
+            await logDeliveryAttempt(job.id, deliverablePayload, 'success');
+            activeJobs.get(job.id).status = 'delivered';
+            console.log(`✅ Job ${job.id} completed and delivered`);
+          } catch (deliverError) {
+            await logDeliveryAttempt(job.id, deliverablePayload, 'failed', deliverError.message);
+            throw deliverError; // Re-throw to hit outer catch
+          }
           
         } catch (error) {
           console.error(`❌ Error processing job ${job.id}:`, error.message);
           activeJobs.get(job.id).status = 'failed';
           activeJobs.get(job.id).error = error.message;
+          
+          // Log the error delivery attempt
+          const errorDeliverable = { 
+            type: "text", 
+            value: `Research execution failed: ${error.message}` 
+          };
+          await logDeliveryAttempt(job.id, errorDeliverable, 'error_fallback', error.message);
           
           // Try to respond with rejection if we haven't accepted yet
           try {
