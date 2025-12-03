@@ -84,7 +84,7 @@ const ACPResults = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 container mx-auto px-6 py-8">
+        <main className="flex-1 container mx-auto px-6 pt-24 pb-8">
           <div className="flex items-center justify-center h-64">
             <div className="flex items-center space-x-2">
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -101,7 +101,7 @@ const ACPResults = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 container mx-auto px-6 py-8">
+        <main className="flex-1 container mx-auto px-6 pt-24 pb-8">
           <Alert variant="destructive">
             <AlertDescription>
               {error || "Research results not found"}
@@ -112,7 +112,7 @@ const ACPResults = () => {
               If you believe this is an error, please contact support with job ID: {jobId}
             </p>
             <Button variant="outline" asChild>
-              <a href="https://persona-ai.lovable.app" target="_blank" rel="noopener noreferrer">
+              <a href="https://personaresearch.ai" target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Visit PersonaAI
               </a>
@@ -127,7 +127,7 @@ const ACPResults = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto px-6 py-8">
+      <main className="flex-1 container mx-auto px-6 pt-24 pb-8">
         <ACPSurveyResults job={job} />
       </main>
       <Footer />
