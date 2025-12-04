@@ -149,7 +149,7 @@ const Roadmap = () => {
                     <ul className="space-y-2">
                       <li className="flex items-center gap-2">
                         <span className="text-green-400">✓</span>
-                        <span>2500 AI personas created (and continuing to scale)</span>
+                        <span>2500+ AI personas created (and continuing to scale)</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="text-green-400">✓</span>
