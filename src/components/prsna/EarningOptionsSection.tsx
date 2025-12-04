@@ -1,8 +1,7 @@
 
-import { BrainCircuit, Coins, FileText, MapPin } from "lucide-react";
+import { FileText, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import Reveal from "@/components/ui-custom/Reveal";
-import EarningOptionCard from "./EarningOptionCard";
 import { Button } from "@/components/ui/button";
 
 const EarningOptionsSection = () => {
@@ -16,31 +15,6 @@ const EarningOptionsSection = () => {
           </p>
         </Reveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          {/* Create AI Personas Today */}
-          <EarningOptionCard
-            icon={BrainCircuit}
-            title="Create AI Personas Today"
-            description="Contribute to PersonaAI's growing network of behavioral models."
-            benefits={[
-              "Personas created now will transition into ERC-6551 on-chain assets",
-              "Early contributors will benefit from future $PRSNA-powered simulations",
-              "Be part of the future of behavioral intelligence"
-            ]}
-          />
-          
-          {/* The $PRSNA Value Loop */}
-          <EarningOptionCard
-            icon={Coins}
-            title="The $PRSNA Value Loop"
-            description="Join the ecosystem of behavioral intelligence and value creation."
-            benefits={[
-              "Power behavioral simulations across Web3",
-              "License and sponsor high-demand personas",
-              "Earn when your personas drive real insight (launching soon)"
-            ]}
-          />
-        </div>
 
         <Reveal>
           <p className="text-center text-gray-400 text-sm italic mb-8">
