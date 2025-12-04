@@ -276,7 +276,7 @@ const WhitePaper = () => {
                     <div className="p-2 bg-primary/20 rounded-lg">
                       <Coins className="h-5 w-5 text-primary" />
                     </div>
-                    <h2 className="m-0 p-0 border-0">ERC-6551 Persona Ownership</h2>
+                    <h2 className="m-0 p-0 border-0">ERC-6551 Persona Ownership (coming Q1 2026)</h2>
                   </div>
                   
                   <p className="mb-6">
