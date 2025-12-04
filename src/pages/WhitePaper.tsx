@@ -183,7 +183,7 @@ const WhitePaper = () => {
                   <p className="mb-6">
                     PersonaAI is built for Web2 accessibility and Web3 optional ownership:
                   </p>
-                  <ul className="mb-6">
+                  <ul className="mb-6 list-disc list-inside">
                     <li>Web2 users can frictionlessly create and use personas.</li>
                     <li>Agents and human users can run automated research via Virtuals ACP and the PersonaAI Insights Engine.</li>
                     <li>Coming soon: AI personas as ERC-6551 NFTs— mint, own, and commercialize personas using $PRSNA.</li>
