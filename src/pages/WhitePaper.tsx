@@ -421,7 +421,7 @@ const WhitePaper = () => {
                   <Link to="/prsna/roadmap">
                     <Button size="lg" className="flex items-center gap-2">
                       <Route className="h-5 w-5" />
-                      View Our Road Map
+                      View Our Full Roadmap
                     </Button>
                   </Link>
                 </div>
