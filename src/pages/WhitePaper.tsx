@@ -376,37 +376,6 @@ const WhitePaper = () => {
                   </p>
                 </div>
                 
-                <div id="section-research" ref={sectionRefs.research} className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      <Search className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="m-0 p-0 border-0">Research Pool</h2>
-                  </div>
-                  
-                  <p className="mb-6">
-                    The Research Pool allows both human-derived and synthetic personas to be available for general research access:
-                  </p>
-                  <ul className="mb-6">
-                    <li>Researchers pay a usage fee (in $PRSNA).</li>
-                    <li>Persona creators receive royalty rewards based on usage.</li>
-                    <li>Revenue flows to the Treasury to fund platform development.</li>
-                  </ul>
-                  
-                  <div className="my-8 p-4 border-l-4 border-primary bg-primary/5 rounded-r-lg">
-                    <p className="font-medium mt-0">
-                      Royalty Mechanism Statement:
-                    </p>
-                    <blockquote className="italic my-2 text-gray-300">
-                      "Research Pool royalty systems will be designed to prioritize sustainable ecosystem growth, platform health, and tokenholder value appreciation."
-                    </blockquote>
-                  </div>
-                  
-                  <p className="mb-6">
-                    Final royalty payment mechanisms (split percentages, currencies, and schedules) will be finalized and optimized over time to ensure alignment with these principles.
-                  </p>
-                </div>
-                
                 <div id="section-treasury" ref={sectionRefs.treasury} className="scroll-mt-24 mb-16">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
