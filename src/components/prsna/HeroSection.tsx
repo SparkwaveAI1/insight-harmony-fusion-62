@@ -27,8 +27,7 @@ const HeroSection = () => {
           
           <Reveal delay={200}>
             <p className="text-gray-300 text-pretty mb-6">
-              PersonaAI is launching ERC-6551 personas—dynamic, evolving behavioral assets anchored onchain. 
-              $PRSNA will power simulations, licensing, and the cognitive layer of Web3.
+              PersonaAI is live inside the Virtuals Agent Commerce Protocol (ACP) on Base blockchain, providing on-demand qualitative insights from thousands of AI personas. $PRSNA fuels realistic human simulations and is set to become a fundamental component of Web3 research.
             </p>
           </Reveal>
 
