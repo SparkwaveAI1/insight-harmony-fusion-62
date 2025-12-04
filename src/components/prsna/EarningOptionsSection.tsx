@@ -10,7 +10,10 @@ const EarningOptionsSection = () => {
     <div className="container px-4 mx-auto">
       <div className="max-w-4xl mx-auto">
         <Reveal>
-          <h2 className="text-3xl font-bold mb-8 text-center">$PRSNA — The First Behavioral Asset Class</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">$PRSNA — The First Behavioral Asset Class</h2>
+          <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-8">
+            $PRSNA is tied to the emergence of a new onchain asset class: behavioral agents. As thousands of ERC-6551 personas enter the ecosystem, each with deep trait structures and unique behavioral value, $PRSNA becomes the economic layer connecting their creation, licensing, and marketplace activity.
+          </p>
         </Reveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
