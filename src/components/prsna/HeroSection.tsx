@@ -9,7 +9,7 @@ const HeroSection = () => {
       <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-16">
         <Reveal>
           <div className="inline-flex items-center justify-center bg-secondary/20 px-4 py-2 rounded-full mb-6">
-            🚧 Web3 Intelligence
+            Web3 Intelligence
           </div>
         </Reveal>
 
