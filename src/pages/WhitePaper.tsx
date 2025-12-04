@@ -289,7 +289,7 @@ const WhitePaper = () => {
                     <li><strong>Ownership</strong>: Personas will be able to be bought, sold, leased, and licensed like any digital asset.</li>
                     <li><strong>Composability</strong>: Personas will be able to hold data, interact with protocols, and participate in research deployments.</li>
                     <li><strong>Provable Provenance</strong>: Every persona's creation, evolution, and history will be trackable on-chain.</li>
-                    <li><strong>Agent Economy Integration</strong>: ERC-6551 personas will be able to function independently within the broader Virtuals Protocol agent commerce ecosystem.</li>
+                    <li><strong>Agent Economy Integration</strong>: ERC-6551 personas will be able to function independently within the broader Virtuals Protocol agent commerce ecosystem for a broad range of use cases.</li>
                   </ul>
                   <p className="mb-6">
                     PersonaAI will ensure every minted persona is an active, evolving economic participant.
