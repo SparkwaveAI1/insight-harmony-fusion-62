@@ -26,7 +26,7 @@ const TokenEcosystem = () => {
           
           <Reveal delay={200}>
             <p className="text-gray-300 text-pretty mb-8 max-w-2xl mx-auto text-lg">
-              PersonaAI is live inside the Virtuals ACP, providing on-demand qualitative insights from thousands of AI personas. $PRSNA fuels realistic human simulations and is set to become a fundamental component of the Web3 research.
+              PersonaAI is live inside the Virtuals Agent Commerce Protocol (ACP) on Base blockchain, providing on-demand qualitative insights from thousands of AI personas. $PRSNA fuels realistic human simulations and is set to become a fundamental component of the Web3 research.
             </p>
           </Reveal>
           
