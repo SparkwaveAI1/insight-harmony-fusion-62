@@ -41,7 +41,6 @@ const WhitePaper = () => {
     persona: useRef(null),
     ownership: useRef(null),
     tokenomics: useRef(null),
-    earning: useRef(null),
     marketplace: useRef(null),
     research: useRef(null),
     treasury: useRef(null),
@@ -337,44 +336,6 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
-                
-                <div id="section-earning" ref={sectionRefs.earning} className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      <Coins className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="m-0 p-0 border-0">How $PRSNA Holders Earn</h2>
-                  </div>
-                  
-                  <Card className="overflow-hidden bg-gray-800/50 border-gray-700/50 mb-8">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-gray-700">
-                          <TableHead className="text-white font-semibold">Method</TableHead>
-                          <TableHead className="text-white font-semibold">Description</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Platform Discounts</TableCell>
-                          <TableCell>Reduced fees when using $PRSNA for transactions.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Early Access</TableCell>
-                          <TableCell>Eligibility for early participation in partner projects, agent collectives, and research opportunities.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Token Growth Exposure</TableCell>
-                          <TableCell>Benefit from ecosystem expansion, Treasury growth, and token scarcity mechanisms over time.</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </Card>
-                  
-                  <p className="mb-8">
-                    PersonaAI aligns platform success with tokenholder participation incentives.
-                  </p>
-                </div>
                 
                 <div id="section-roadmap" ref={sectionRefs.roadmap} className="scroll-mt-24 mb-16">
                   <div className="flex items-center gap-3 mb-6">
