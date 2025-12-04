@@ -26,9 +26,7 @@ const TokenEcosystem = () => {
           
           <Reveal delay={200}>
             <p className="text-gray-300 text-pretty mb-8 max-w-2xl mx-auto text-lg">
-              $PRSNA is the native token powering AI-driven qualitative research across Web3 and beyond. 
-              It's your key to unlocking access to custom personas, premium insights, and future rewards 
-              for contributing to next-gen market intelligence.
+              PersonaAI is live inside the Virtuals ACP, providing on-demand qualitative insights from thousands of AI personas. $PRSNA fuels realistic human simulations and is set to become a fundamental component of the Web3 research.
             </p>
           </Reveal>
           
