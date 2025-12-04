@@ -280,19 +280,19 @@ const WhitePaper = () => {
                   </div>
                   
                   <p className="mb-6">
-                    PersonaAI implements ERC-6551 — the Token-Bound Account (TBA) standard — to transform personas into fully ownable, tradable, and programmable digital assets.
+                    PersonaAI plans to implement ERC-6551 — the Token-Bound Account (TBA) standard — to transform personas into fully ownable, tradable, and programmable digital assets.
                   </p>
                   <p className="mb-6">
-                    Each ERC-6551 persona acts as a smart wallet tied directly to its NFT identity, enabling:
+                    Each ERC-6551 persona will act as a smart wallet tied directly to its NFT identity, enabling:
                   </p>
                   <ul className="mb-6">
-                    <li><strong>Ownership</strong>: Personas can be bought, sold, leased, and licensed like any digital asset.</li>
-                    <li><strong>Composability</strong>: Personas can hold data, interact with protocols, and participate in research deployments.</li>
-                    <li><strong>Provable Provenance</strong>: Every persona's creation, evolution, and history can be tracked on-chain.</li>
-                    <li><strong>Agent Economy Integration</strong>: ERC-6551 personas can function independently within the broader Virtuals Protocol agent commerce ecosystem.</li>
+                    <li><strong>Ownership</strong>: Personas will be able to be bought, sold, leased, and licensed like any digital asset.</li>
+                    <li><strong>Composability</strong>: Personas will be able to hold data, interact with protocols, and participate in research deployments.</li>
+                    <li><strong>Provable Provenance</strong>: Every persona's creation, evolution, and history will be trackable on-chain.</li>
+                    <li><strong>Agent Economy Integration</strong>: ERC-6551 personas will be able to function independently within the broader Virtuals Protocol agent commerce ecosystem.</li>
                   </ul>
                   <p className="mb-6">
-                    PersonaAI ensures every minted persona is an active, evolving economic participant.
+                    PersonaAI will ensure every minted persona is an active, evolving economic participant.
                   </p>
                   
                   <h3 className="text-xl font-bold mt-12 mb-6">Virtuals Protocol Integration</h3>
