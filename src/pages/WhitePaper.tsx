@@ -185,7 +185,7 @@ const WhitePaper = () => {
                   </p>
                   <ul className="mb-6">
                     <li>Web2 users can frictionlessly create and use personas.</li>
-                    <li>Web3 users can mint, own, and commercialize personas using $PRSNA.</li>
+                    <li>Coming soon: AI personas as ERC-6551 NFTs— mint, own, and commercialize personas using $PRSNA.</li>
                   </ul>
                   <p className="mb-6">
                     PersonaAI is not a closed platform; it is a research economy.
