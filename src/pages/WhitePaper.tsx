@@ -309,60 +309,68 @@ const WhitePaper = () => {
                     <h2 className="m-0 p-0 border-0">$PRSNA Tokenomics</h2>
                   </div>
                   
-                  <Card className="overflow-hidden bg-gray-800/50 border-gray-700/50 mb-8">
-                    <Table>
-                      <TableBody>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Token Symbol</TableCell>
-                          <TableCell>$PRSNA</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Primary Utility</TableCell>
-                          <TableCell>Minting ERC-6551 personas, marketplace transactions, research pool access, platform discounts.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Mint Fee</TableCell>
-                          <TableCell>Small fee paid in $PRSNA to mint a persona to the blockchain.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Buybacks</TableCell>
-                          <TableCell>20 percent of ACP revenue will be applied to purchasing $PRSNA token for the treasury.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Revenue Streams</TableCell>
-                          <TableCell>Minting fees, marketplace fees, leasing commissions, research pool usage fees.</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </Card>
-                </div>
-                
-                <div className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      <Bot className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="m-0 p-0 border-0">AI Agents as Productive Assets</h2>
-                  </div>
+                  <h3 className="text-xl font-bold mt-8 mb-4">Core Purpose</h3>
+                  <p className="mb-6">
+                    $PRSNA is the token aligned with the long-term expansion of the PersonaAI ecosystem and its integration with the Virtuals Agent Commerce Protocol (ACP). As behavioral agents become an emerging onchain asset class, $PRSNA serves as the economic layer connecting their creation, licensing, and marketplace activity.
+                  </p>
                   
-                  <ul className="space-y-4 mb-8">
+                  <h3 className="text-xl font-bold mt-8 mb-4">Primary Future Utility</h3>
+                  <p className="mb-4">
+                    As ERC-6551 personas and the Marketplace launch, $PRSNA will support:
+                  </p>
+                  <ul className="space-y-3 mb-6">
+                    <li><strong>Marketplace Transactions</strong> — The currency for buying, selling, upgrading, and licensing ERC-6551 personas.</li>
+                    <li><strong>Persona Minting & Upgrades</strong> — Used for minting new personas and enhancing persona metadata.</li>
+                    <li><strong>Creator Royalties & Earnings</strong> — A channel for distributing creator revenue as personas are used or licensed.</li>
+                    <li><strong>Economic Participation Modules</strong> — Optional staking or fee-participation layers tied to marketplace throughput.</li>
+                  </ul>
+                  <p className="mb-6 text-muted-foreground italic">
+                    These utilities scale naturally with ecosystem growth.
+                  </p>
+                  
+                  <h3 className="text-xl font-bold mt-8 mb-4">Buyback Mechanism</h3>
+                  <p className="mb-6">
+                    20% of PersonaAI's ACP revenue is allocated toward recurring $PRSNA buybacks for the treasury, aligning the token with platform expansion and protocol demand.
+                  </p>
+                  
+                  <h3 className="text-xl font-bold mt-8 mb-4">Network Effects</h3>
+                  <p className="mb-6">
+                    Integration with the Virtuals ACP connects PersonaAI to a growing network of autonomous agents. As more agents request research, licensing, or persona interaction, the demand surface for persona assets—and the marketplace around them—expands, increasing $PRSNA's economic footprint.
+                  </p>
+                  
+                  <h3 className="text-xl font-bold mt-8 mb-4">Growth Alignment</h3>
+                  <p className="mb-4">
+                    $PRSNA benefits from rising activity across the ecosystem:
+                  </p>
+                  <ul className="space-y-2 mb-6">
                     <li className="flex gap-3">
                       <span className="text-primary">•</span>
-                      <span>ERC-6551 personas will form a marketplace of productive agents. As these agents are licensed, upgraded, or used in simulations, transaction flow moves through $PRSNA.</span>
+                      <span>growth in ERC-6551 agents</span>
                     </li>
                     <li className="flex gap-3">
                       <span className="text-primary">•</span>
-                      <span>A fixed portion of ACP-driven revenue is consistently allocated to purchasing $PRSNA for the treasury, building a long-term alignment between ecosystem growth and token support.</span>
+                      <span>persona licensing and usage</span>
                     </li>
                     <li className="flex gap-3">
                       <span className="text-primary">•</span>
-                      <span>As new modules launch—ERC-6551 minting, persona upgrades, licensing markets, creator royalties, and simulation orchestration—the economic footprint of the system expands. $PRSNA is positioned to support transactions and value flow across these modules as they come online.</span>
+                      <span>marketplace trades and upgrades</span>
                     </li>
                     <li className="flex gap-3">
                       <span className="text-primary">•</span>
-                      <span>Integration with the Virtuals Agent Commerce Protocol connects $PRSNA to a growing network of autonomous agents. As more agents request research, licensing, or persona interaction, the demand surface around the marketplace expands.</span>
+                      <span>ACP research volume</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-primary">•</span>
+                      <span>creator participation</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-primary">•</span>
+                      <span>expansion of new modules</span>
                     </li>
                   </ul>
+                  <p className="mb-6 font-medium">
+                    $PRSNA is designed as the economic backbone of this evolving agent marketplace.
+                  </p>
                 </div>
                 
                 <div id="section-roadmap" ref={sectionRefs.roadmap} className="scroll-mt-24 mb-16">
