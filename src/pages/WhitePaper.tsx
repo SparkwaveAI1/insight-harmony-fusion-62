@@ -175,6 +175,12 @@ const WhitePaper = () => {
                     Traditional market research is costly, slow, and limited by small, biased samples. PersonaAI introduces behaviorally realistic AI personas to dramatically expand research capabilities while lowering costs and timelines.
                   </p>
                   <p className="mb-6">
+                    The platform includes an automated Insights Engine that runs conversational studies at scale, turning persona interactions into structured findings.
+                  </p>
+                  <p className="mb-6">
+                    This engine is fully integrated with the Virtuals Agent Commerce Protocol (ACP), allowing any agent or application in the ecosystem to request qualitative research on demand. Through ACP, PersonaAI becomes a central component of the Virtuals research layer.
+                  </p>
+                  <p className="mb-6">
                     PersonaAI is built for Web2 accessibility and Web3 optional ownership:
                   </p>
                   <ul className="mb-6">
