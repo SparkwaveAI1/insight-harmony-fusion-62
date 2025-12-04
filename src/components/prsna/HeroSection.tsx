@@ -33,6 +33,16 @@ const HeroSection = () => {
 
           <Reveal delay={250}>
             <div className="flex flex-col sm:flex-row gap-4">
+              <a href="https://app.virtuals.io/acp" target="_blank" rel="noopener noreferrer">
+                <Button 
+                  variant="default" 
+                  size="lg" 
+                  className="group bg-gradient-to-r from-blue-500 to-blue-600 hover:bg-blue-700 text-white font-medium"
+                >
+                  Virtuals Butler
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </a>
               <Link to="/dashboard">
                 <Button 
                   variant="default" 
