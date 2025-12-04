@@ -21,7 +21,7 @@ const HeroSection = () => {
 
           <Reveal delay={100}>
             <h1 className="text-4xl md:text-5xl font-bold mb-6 font-plasmik">
-              🚧 Building the Future of On-Chain Behavioral Intelligence
+              Building the Future of On-Chain Behavioral Intelligence
             </h1>
           </Reveal>
           
