@@ -417,6 +417,15 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
+                <div className="flex justify-center my-12">
+                  <Link to="/prsna/roadmap">
+                    <Button size="lg" className="flex items-center gap-2">
+                      <Route className="h-5 w-5" />
+                      View Our Road Map
+                    </Button>
+                  </Link>
+                </div>
+                
                 <div id="section-conclusion" ref={sectionRefs.conclusion} className="scroll-mt-24 mb-20">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
@@ -431,15 +440,6 @@ const WhitePaper = () => {
                       <li className="mb-2">$PRSNA is the fuel for an evolving system of ownership, insight, and opportunity.</li>
                       <li>With careful economic design prioritizing sustainability, participation, and tokenholder alignment, PersonaAI positions itself at the forefront of the agent commerce revolution.</li>
                     </ul>
-                  </div>
-                  
-                  <div className="flex justify-center mt-16 mb-10">
-                    <Link to="/prsna/roadmap">
-                      <Button size="lg" className="flex items-center gap-2">
-                        <Route className="h-5 w-5" />
-                        View Our Road Map
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               </div>
