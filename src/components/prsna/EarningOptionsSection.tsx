@@ -16,12 +16,6 @@ const EarningOptionsSection = () => {
         </Reveal>
 
 
-        <Reveal>
-          <p className="text-center text-gray-400 text-sm italic mb-8">
-            Token utility and rewards are in development. No active staking or earning programs live yet.
-          </p>
-        </Reveal>
-        
         {/* Buttons with improved visibility */}
         <Reveal delay={200}>
           <div className="flex flex-wrap justify-center gap-6 mt-8">
