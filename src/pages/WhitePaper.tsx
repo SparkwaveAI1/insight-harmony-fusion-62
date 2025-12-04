@@ -20,7 +20,8 @@ import {
   Calendar,
   Rocket,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Bot
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -336,6 +337,33 @@ const WhitePaper = () => {
                   </Card>
                 </div>
                 
+                <div className="scroll-mt-24 mb-16">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-primary/20 rounded-lg">
+                      <Bot className="h-5 w-5 text-primary" />
+                    </div>
+                    <h2 className="m-0 p-0 border-0">AI Agents as Productive Assets</h2>
+                  </div>
+                  
+                  <ul className="space-y-4 mb-8">
+                    <li className="flex gap-3">
+                      <span className="text-primary">•</span>
+                      <span>ERC-6551 personas will form a marketplace of productive agents. As these agents are licensed, upgraded, or used in simulations, transaction flow moves through $PRSNA.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-primary">•</span>
+                      <span>A fixed portion of ACP-driven revenue is consistently allocated to purchasing $PRSNA for the treasury, building a long-term alignment between ecosystem growth and token support.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-primary">•</span>
+                      <span>As new modules launch—ERC-6551 minting, persona upgrades, licensing markets, creator royalties, and simulation orchestration—the economic footprint of the system expands. $PRSNA is positioned to support transactions and value flow across these modules as they come online.</span>
+                    </li>
+                    <li className="flex gap-3">
+                      <span className="text-primary">•</span>
+                      <span>Integration with the Virtuals Agent Commerce Protocol connects $PRSNA to a growing network of autonomous agents. As more agents request research, licensing, or persona interaction, the demand surface around the marketplace expands.</span>
+                    </li>
+                  </ul>
+                </div>
                 
                 <div id="section-roadmap" ref={sectionRefs.roadmap} className="scroll-mt-24 mb-16">
                   <div className="flex items-center gap-3 mb-6">
