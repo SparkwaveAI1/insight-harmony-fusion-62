@@ -252,7 +252,7 @@ const WhitePaper = () => {
                   </div>
                   
                   <p className="mb-6">
-                    In PersonaAI, a "persona" is a structured behavioral model—built either from a real interview or generated using our trait engine.
+                    In PersonaAI, a "persona" is a structured behavioral model—built with over 151 traits covering demographics, personality, cognition, emotional triggers, and bias profiles.
                   </p>
                   <p className="mb-6">Each persona includes:</p>
                   <ul className="mb-6">
