@@ -376,21 +376,6 @@ const WhitePaper = () => {
                   </p>
                 </div>
                 
-                <div id="section-treasury" ref={sectionRefs.treasury} className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      <Wallet className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="m-0 p-0 border-0">Treasury Strategy</h2>
-                  </div>
-                  
-                  <ul className="mb-6">
-                    <li>Treasury receives 80% of on-chain platform revenue after royalty and token management actions.</li>
-                    <li>Supports platform sustainability, liquidity provision, growth initiatives, and strategic buybacks if needed.</li>
-                    <li>Ensures PersonaAI remains independent and scalable without reliance on external capital.</li>
-                  </ul>
-                </div>
-                
                 <div id="section-roadmap" ref={sectionRefs.roadmap} className="scroll-mt-24 mb-16">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
