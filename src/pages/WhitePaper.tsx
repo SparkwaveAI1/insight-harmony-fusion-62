@@ -325,6 +325,10 @@ const WhitePaper = () => {
                           <TableCell>Small fee paid in $PRSNA to mint a persona to the blockchain.</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
+                          <TableCell className="font-medium">Buybacks</TableCell>
+                          <TableCell>20 percent of ACP revenue will be applied to purchasing $PRSNA token for the treasury.</TableCell>
+                        </TableRow>
+                        <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Revenue Streams</TableCell>
                           <TableCell>Minting fees, marketplace fees, leasing commissions, research pool usage fees.</TableCell>
                         </TableRow>
