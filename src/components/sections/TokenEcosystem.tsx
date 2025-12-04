@@ -94,62 +94,6 @@ const TokenEcosystem = () => {
             </div>
           </Reveal>
           
-          <Reveal delay={400}>
-            <div className="mt-16 max-w-4xl mx-auto">
-              <div className="bg-gray-800/80 border border-gray-700 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold mb-6 text-left">🎯 What's Live Now</h3>
-                <ul className="space-y-4 mb-8 text-left">
-                  <li className="flex items-start">
-                    <span className="text-green-400 text-xl font-bold mr-2">✅</span>
-                    <div>
-                      <p className="font-semibold mb-1">Contribute Interviews and Surveys</p>
-                      <p className="text-gray-300">Help build the first generation of AI Personas. Your insights shape how they think.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-400 text-xl font-bold mr-2">✅</span>
-                    <div>
-                      <p className="font-semibold mb-1">Hold $PRSNA to Support the Ecosystem</p>
-                      <p className="text-gray-300">Early holders gain priority access as new features roll out.</p>
-                    </div>
-                  </li>
-                </ul>
-                
-                <h3 className="text-2xl font-bold mb-6 text-left">🔐 Coming Soon</h3>
-                <ul className="space-y-4 mb-8 text-left">
-                  <li className="flex items-start">
-                    <span className="text-blue-400 text-xl font-bold mr-2">🔄</span>
-                    <div>
-                      <p className="font-semibold mb-1">Staking & Reward Access</p>
-                      <p className="text-gray-300">Stake $PRSNA to earn research rewards and unlock advanced tools.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-blue-400 text-xl font-bold mr-2">🧠</span>
-                    <div>
-                      <p className="font-semibold mb-1">Persona Ownership</p>
-                      <p className="text-gray-300">Keep and use the AI Personas you help create—for business or personal use.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-blue-400 text-xl font-bold mr-2">💬</span>
-                    <div>
-                      <p className="font-semibold mb-1">Talk to the PersonaAI Agent</p>
-                      <p className="text-gray-300">Interact with AI Personas to test ideas, simulate decisions, and extract insights.</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-blue-400 text-xl font-bold mr-2">📈</span>
-                    <div>
-                      <p className="font-semibold mb-1">Premium AI Intelligence</p>
-                      <p className="text-gray-300">Access sentiment analysis and behavioral data from across DeFi, DAOs, and NFT communities.</p>
-                    </div>
-                  </li>
-                </ul>
-
-              </div>
-            </div>
-          </Reveal>
         </div>
       </div>
     </Section>
