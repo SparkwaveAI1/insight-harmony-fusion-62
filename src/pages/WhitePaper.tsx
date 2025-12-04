@@ -297,7 +297,7 @@ const WhitePaper = () => {
                   
                   <h3 className="text-xl font-bold mt-12 mb-6">Virtuals Protocol Integration</h3>
                   <p className="mb-6">
-                    ERC-6551 personas created within PersonaAI will be fully interoperable with the Agent Commerce Protocol (ACP) inside Virtuals, enabling agent deployment, negotiation, and autonomous action across broader Web3 ecosystems.
+                    PersonaAI is fully integrated with the Virtuals Agent Commerce Protocol (ACP), allowing agents and users to run qualitative studies directly through ACP. This connection enables on-demand insight generation, research automation, and seamless deployment of PersonaAI's full persona engine inside the Virtuals ecosystem. ERC-6551 support will extend this interoperability even further once launched.
                   </p>
                 </div>
                 
