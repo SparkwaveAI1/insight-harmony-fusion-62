@@ -215,11 +215,19 @@ const WhitePaper = () => {
                           <TableCell>Creates personas through structured human interviews or behavioral simulation.</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">ERC-6551 Integration</TableCell>
+                          <TableCell className="font-medium">Insights Engine</TableCell>
+                          <TableCell>Automatically runs conversational studies at scale and converts persona responses into structured research outputs, including summaries, themes, contradictions, and behavioral signals.</TableCell>
+                        </TableRow>
+                        <TableRow className="border-gray-700/50">
+                          <TableCell className="font-medium">PersonaAI Agent in Virtuals ACP</TableCell>
+                          <TableCell>Acts as an insight node inside the Virtuals Agent Commerce Protocol, allowing any agent or application in the ecosystem to request qualitative research and receive structured results on demand.</TableCell>
+                        </TableRow>
+                        <TableRow className="border-gray-700/50">
+                          <TableCell className="font-medium">ERC-6551 Integration (Q1 2026)</TableCell>
                           <TableCell>Enables personas to become on-chain ownable, tradable, rentable digital assets.</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Marketplace</TableCell>
+                          <TableCell className="font-medium">Marketplace (Q2 2026)</TableCell>
                           <TableCell>Facilitates the buying, selling, renting, and licensing of ERC-6551 personas.</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
