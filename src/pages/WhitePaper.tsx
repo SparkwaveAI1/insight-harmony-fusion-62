@@ -376,44 +376,6 @@ const WhitePaper = () => {
                   </p>
                 </div>
                 
-                <div id="section-marketplace" ref={sectionRefs.marketplace} className="scroll-mt-24 mb-16">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-2 bg-primary/20 rounded-lg">
-                      <ShoppingCart className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="m-0 p-0 border-0">Marketplace Mechanics</h2>
-                  </div>
-                  
-                  <Card className="overflow-hidden bg-gray-800/50 border-gray-700/50 mb-8">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-gray-700">
-                          <TableHead className="text-white font-semibold">Activity</TableHead>
-                          <TableHead className="text-white font-semibold">Role of $PRSNA</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Buy/Sell Personas</TableCell>
-                          <TableCell>Marketplace transactions use $PRSNA (with discounts) or USDC/ETH (with standard fees).</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Rent Personas</TableCell>
-                          <TableCell>Leasing personas or fleets requires $PRSNA.</TableCell>
-                        </TableRow>
-                        <TableRow className="border-gray-700/50">
-                          <TableCell className="font-medium">Fee Collection</TableCell>
-                          <TableCell>Platform revenue grows the Treasury and funds development.</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </Card>
-                  
-                  <p className="mb-8">
-                    PersonaAI positions personas as productive, value-generating research and commerce assets.
-                  </p>
-                </div>
-                
                 <div id="section-research" ref={sectionRefs.research} className="scroll-mt-24 mb-16">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
