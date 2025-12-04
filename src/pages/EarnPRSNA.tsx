@@ -26,7 +26,7 @@ const EarnPRSNA = () => {
         </Section>
 
         {/* Feedback Section */}
-        <Section className="bg-gray-900">
+        <Section className="bg-gradient-to-br from-gray-900 to-gray-800">
           <div className="container px-4 mx-auto">
             <div className="max-w-4xl mx-auto text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">We Value Your Input</h2>
