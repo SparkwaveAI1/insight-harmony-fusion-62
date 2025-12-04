@@ -185,6 +185,7 @@ const WhitePaper = () => {
                   </p>
                   <ul className="mb-6">
                     <li>Web2 users can frictionlessly create and use personas.</li>
+                    <li>Agents and human users can run automated research via Virtuals ACP and the PersonaAI Insights Engine.</li>
                     <li>Coming soon: AI personas as ERC-6551 NFTs— mint, own, and commercialize personas using $PRSNA.</li>
                   </ul>
                   <p className="mb-6">
