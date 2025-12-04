@@ -103,7 +103,7 @@ const WhitePaper = () => {
               </div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold">White Paper</h1>
-                <p className="text-gray-400 mt-2">Version 1.4 • Last Updated May 2025</p>
+                <p className="text-gray-400 mt-2">Version 1.5 • Last Updated December 2025</p>
               </div>
             </div>
             
@@ -137,7 +137,7 @@ const WhitePaper = () => {
               {/* Main Content */}
               <div className="lg:col-span-3 prose prose-lg prose-invert prose-headings:font-bold prose-h2:text-2xl lg:prose-h2:text-3xl prose-h2:flex prose-h2:items-center prose-h2:gap-3 prose-h3:text-xl prose-h2:pb-3 prose-h2:border-b prose-h2:border-gray-700/70 prose-h2:mt-16 prose-p:text-gray-300 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-code:bg-gray-800 prose-code:text-gray-200 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
                 <div id="section-abstract" ref={sectionRefs.abstract} className="mb-16 p-6 rounded-xl bg-gradient-to-br from-gray-800 to-gray-800/70 border border-gray-700/50">
-                  <h1 className="text-4xl lg:text-5xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">PersonaAI Unified Whitepaper v1.4</h1>
+                  <h1 className="text-4xl lg:text-5xl mb-8 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">PersonaAI Unified Whitepaper v1.5</h1>
                   
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-primary/20 rounded-lg">
@@ -148,6 +148,9 @@ const WhitePaper = () => {
                   
                   <p className="mb-6">
                     PersonaAI is the first AI-driven qualitative research platform designed to simulate and study real human decision-making through dynamic digital personas.
+                  </p>
+                  <p className="mb-6">
+                    PersonaAI now operates as an Insight Node inside the Virtuals Agent Commerce Protocol (ACP). Any agent, application, or human user in the Virtuals ecosystem can invoke PersonaAI to run qualitative simulations using our full persona engine. This establishes PersonaAI as a core part of the protocol's research layer, supplying structured human-like insight wherever it is needed.
                   </p>
                   <p className="mb-6">
                     The $PRSNA token powers the minting, ownership, trading, leasing, and incentivization of ERC-6551 Persona assets in an integrated Web2/Web3 research and commerce ecosystem.
