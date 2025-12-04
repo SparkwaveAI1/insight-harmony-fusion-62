@@ -4,7 +4,6 @@ import Section from "@/components/ui-custom/Section";
 import Footer from "@/components/sections/Footer";
 import HeroSection from "@/components/prsna/HeroSection";
 import EarningOptionsSection from "@/components/prsna/EarningOptionsSection";
-import RoadmapSection from "@/components/prsna/RoadmapSection";
 import FeedbackDialog from "@/components/prsna/FeedbackDialog";
 import { Button } from "@/components/ui/button";
 
@@ -24,11 +23,6 @@ const EarnPRSNA = () => {
         {/* How to Earn Section */}
         <Section className="bg-gray-900">
           <EarningOptionsSection />
-        </Section>
-
-        {/* Roadmap Section */}
-        <Section className="bg-gray-800">
-          <RoadmapSection />
         </Section>
 
         {/* Feedback Section */}
