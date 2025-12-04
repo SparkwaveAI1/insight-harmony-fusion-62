@@ -394,16 +394,26 @@ const WhitePaper = () => {
                       </TableHeader>
                       <TableBody>
                         <TableRow className="border-gray-700/50">
+                          <TableCell className="font-medium">Complete during 2025</TableCell>
+                          <TableCell>
+                            <ul className="list-disc list-inside m-0 p-0">
+                              <li>PersonaAI app with over 2500 AI personas</li>
+                              <li>Insights Engine for automated research studies</li>
+                              <li>Virtuals ACP integration</li>
+                            </ul>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Phase 1</TableCell>
-                          <TableCell>Launch marketplace and ERC-6551 minting. (Q2 2025)</TableCell>
+                          <TableCell>ERC-6551 minting (Q1 2026)</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Phase 2</TableCell>
-                          <TableCell>Expand persona fleet leasing, dynamic research pooling, and partner project integrations. Begin agent development for full Agent Commerce Protocol (ACP) integration. (Q3 2025)</TableCell>
+                          <TableCell>ERC-6551 Persona Marketplace (Q2 2026)</TableCell>
                         </TableRow>
                         <TableRow className="border-gray-700/50">
                           <TableCell className="font-medium">Phase 3</TableCell>
-                          <TableCell>Expand marketplace and research network globally. Focus on revenue growth. (Q4 2025)</TableCell>
+                          <TableCell>Expand persona fleet leasing, dynamic research pooling, and partner project integrations. (Q3 2026)</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
