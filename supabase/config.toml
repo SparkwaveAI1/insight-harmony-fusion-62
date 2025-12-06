@@ -83,3 +83,6 @@ verify_jwt = false
 
 [functions.log-acp-delivery]
 verify_jwt = false
+
+[functions.collection-persona-matcher]
+verify_jwt = true
