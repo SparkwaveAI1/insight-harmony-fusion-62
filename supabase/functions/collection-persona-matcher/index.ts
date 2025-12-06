@@ -385,7 +385,7 @@ serve(async (req) => {
               e.persona_id,
               {
                 score: e.overall_match ?? e.match_score ?? e.score ?? 0,
-                reasons: e.match_reasons ?? e.reasons ?? [],
+                reasons: e.match_reasons ?? e.reasons ?? (e.reason ? [e.reason] : []),
                 confidence: e.confidence ?? (e.overall_match >= 0.8 ? 'high' : e.overall_match >= 0.5 ? 'medium' : 'low'),
               },
             ])
