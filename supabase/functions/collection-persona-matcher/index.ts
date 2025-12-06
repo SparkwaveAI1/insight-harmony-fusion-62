@@ -242,42 +242,228 @@ serve(async (req) => {
       duration_ms: stage2Duration,
     });
 
-    // Format candidates for response (without LLM scoring for now)
-    const formattedPersonas = filteredCandidates.slice(0, config.max_results).map((p: any) => ({
-      persona_id: p.persona_id,
-      name: p.name,
-      match_score: null, // Will be filled by LLM scoring in next step
-      match_reasons: [],
-      confidence: 'pending' as const,
-      demographics: {
+    // ============================================
+    // STAGE 3: LLM Scoring (if not skipped)
+    // ============================================
+    let scoredPersonas: any[] = [];
+
+    if (config.skip_llm_scoring) {
+      console.log('[collection-persona-matcher] Skipping LLM scoring');
+      
+      // Return unscored candidates
+      scoredPersonas = filteredCandidates.slice(0, config.max_results).map((p: any) => ({
+        persona_id: p.persona_id,
+        name: p.name,
+        match_score: null,
+        match_reasons: ['LLM scoring skipped'],
+        confidence: 'pending' as const,
+        demographics: {
+          age: p.age_computed,
+          gender: p.gender_computed,
+          location: [p.city_computed, p.state_region_computed, p.country_computed]
+            .filter(Boolean)
+            .join(', '),
+          occupation: p.occupation_computed,
+        },
+        preview_summary: p.conversation_summary?.personality_summary 
+          ?? p.conversation_summary?.character_description?.slice(0, 200)
+          ?? 'No summary available',
+        profile_image_url: p.profile_image_url,
+      }));
+
+      stages.push({
+        stage: 'llm_scoring',
+        count: 0,
+        duration_ms: 0,
+        skipped: true,
+      });
+    } else {
+      console.log('[collection-persona-matcher] Stage 3: LLM scoring');
+      const stage3Start = Date.now();
+
+      // Prepare candidates for batch scoring (limit to reasonable batch size)
+      const candidatesToScore = filteredCandidates.slice(0, Math.min(config.max_results, 100));
+      
+      // Build compact persona summaries for LLM
+      const personaSummaries = candidatesToScore.map((p: any) => ({
+        persona_id: p.persona_id,
+        name: p.name,
         age: p.age_computed,
         gender: p.gender_computed,
         location: [p.city_computed, p.state_region_computed, p.country_computed]
           .filter(Boolean)
           .join(', '),
         occupation: p.occupation_computed,
-      },
-      preview_summary: p.conversation_summary?.personality_summary 
-        ?? p.conversation_summary?.character_description?.slice(0, 200)
-        ?? 'No summary available',
-      profile_image_url: p.profile_image_url,
-    }));
+        interests: p.interest_tags?.slice(0, 5) ?? [],
+        health: p.health_tags?.slice(0, 3) ?? [],
+        summary: p.conversation_summary?.personality_summary 
+          ?? p.conversation_summary?.motivational_summary
+          ?? '',
+      }));
 
-    // Placeholder response - we'll add LLM scoring in next step
+      // Build the evaluation criteria from parsed criteria and collection info
+      const evaluationCriteria = {
+        description: searchQuery,
+        requirements: {
+          occupation_keywords: parsedCriteria.occupation_keywords ?? [],
+          health_keywords: parsedCriteria.health_keywords ?? [],
+          interest_keywords: parsedCriteria.interest_keywords ?? [],
+          age_range: (parsedCriteria.age_min || parsedCriteria.age_max) 
+            ? { min: parsedCriteria.age_min, max: parsedCriteria.age_max }
+            : null,
+          location: parsedCriteria.location_region || parsedCriteria.location_country || null,
+        },
+        strictness: {
+          hard_match_min: config.score_threshold,
+          soft_match_min: config.score_threshold * 0.6,
+        },
+      };
+
+      console.log('[collection-persona-matcher] Scoring', personaSummaries.length, 'candidates');
+
+      try {
+        const evalResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/evaluate-persona-batch`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': authHeader,
+            },
+            body: JSON.stringify({
+              personas: personaSummaries,
+              criteria: evaluationCriteria,
+              research_query: searchQuery,
+            }),
+          }
+        );
+
+        if (evalResponse.ok) {
+          const evalResult = await evalResponse.json();
+          console.log('[collection-persona-matcher] LLM scoring complete');
+
+          // Map scores back to full persona data
+          const scoreMap = new Map(
+            (evalResult.evaluations ?? evalResult.scored_personas ?? []).map((e: any) => [
+              e.persona_id,
+              {
+                score: e.overall_match ?? e.match_score ?? e.score ?? 0,
+                reasons: e.match_reasons ?? e.reasons ?? [],
+                confidence: e.confidence ?? (e.overall_match >= 0.8 ? 'high' : e.overall_match >= 0.5 ? 'medium' : 'low'),
+              },
+            ])
+          );
+
+          scoredPersonas = candidatesToScore.map((p: any) => {
+            const scoreData = scoreMap.get(p.persona_id) ?? { score: 0.5, reasons: ['No LLM score'], confidence: 'low' };
+            return {
+              persona_id: p.persona_id,
+              name: p.name,
+              match_score: scoreData.score,
+              match_reasons: scoreData.reasons,
+              confidence: scoreData.confidence,
+              demographics: {
+                age: p.age_computed,
+                gender: p.gender_computed,
+                location: [p.city_computed, p.state_region_computed, p.country_computed]
+                  .filter(Boolean)
+                  .join(', '),
+                occupation: p.occupation_computed,
+              },
+              preview_summary: p.conversation_summary?.personality_summary 
+                ?? p.conversation_summary?.character_description?.slice(0, 200)
+                ?? 'No summary available',
+              profile_image_url: p.profile_image_url,
+            };
+          });
+
+          // Sort by score descending
+          scoredPersonas.sort((a, b) => (b.match_score ?? 0) - (a.match_score ?? 0));
+
+          // Filter by score threshold if include_near_matches is false
+          if (!config.include_near_matches) {
+            scoredPersonas = scoredPersonas.filter(p => p.match_score >= config.score_threshold);
+          }
+
+        } else {
+          console.log('[collection-persona-matcher] LLM scoring failed, returning unscored');
+          // Fallback to unscored
+          scoredPersonas = candidatesToScore.map((p: any) => ({
+            persona_id: p.persona_id,
+            name: p.name,
+            match_score: null,
+            match_reasons: ['LLM scoring failed'],
+            confidence: 'pending' as const,
+            demographics: {
+              age: p.age_computed,
+              gender: p.gender_computed,
+              location: [p.city_computed, p.state_region_computed, p.country_computed]
+                .filter(Boolean)
+                .join(', '),
+              occupation: p.occupation_computed,
+            },
+            preview_summary: p.conversation_summary?.personality_summary 
+              ?? p.conversation_summary?.character_description?.slice(0, 200)
+              ?? 'No summary available',
+            profile_image_url: p.profile_image_url,
+          }));
+        }
+      } catch (evalError) {
+        console.error('[collection-persona-matcher] LLM scoring error:', evalError.message);
+        // Fallback to unscored
+        scoredPersonas = candidatesToScore.map((p: any) => ({
+          persona_id: p.persona_id,
+          name: p.name,
+          match_score: null,
+          match_reasons: ['LLM scoring error'],
+          confidence: 'pending' as const,
+          demographics: {
+            age: p.age_computed,
+            gender: p.gender_computed,
+            location: [p.city_computed, p.state_region_computed, p.country_computed]
+              .filter(Boolean)
+              .join(', '),
+            occupation: p.occupation_computed,
+          },
+          preview_summary: p.conversation_summary?.personality_summary 
+            ?? p.conversation_summary?.character_description?.slice(0, 200)
+            ?? 'No summary available',
+          profile_image_url: p.profile_image_url,
+        }));
+      }
+
+      const stage3Duration = Date.now() - stage3Start;
+      console.log('[collection-persona-matcher] Stage 3 complete in', stage3Duration, 'ms');
+
+      stages.push({
+        stage: 'llm_scoring',
+        count: scoredPersonas.length,
+        duration_ms: stage3Duration,
+      });
+    }
+
+    // ============================================
+    // FINAL RESPONSE
+    // ============================================
+    const totalDuration = Date.now() - startTime;
+    console.log('[collection-persona-matcher] Complete in', totalDuration, 'ms');
+
     return new Response(
       JSON.stringify({
         success: true,
-        message: config.skip_llm_scoring 
-          ? 'Search complete (LLM scoring skipped)' 
-          : 'Stage 2 complete - LLM scoring coming next',
-        collection: collection ? { id: collection.id, name: collection.name } : null,
+        message: 'Search complete',
+        collection: collection ? { 
+          id: collection.id, 
+          name: collection.name,
+          description: collection.description,
+        } : null,
         search_query: searchQuery,
         total_candidates: filteredCandidates.length,
         parsed_criteria: parsedCriteria,
-        personas: formattedPersonas,
+        personas: scoredPersonas,
         config,
         stages,
-        duration_ms: Date.now() - startTime,
+        duration_ms: totalDuration,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
