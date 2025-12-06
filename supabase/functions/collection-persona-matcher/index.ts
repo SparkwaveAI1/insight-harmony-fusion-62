@@ -334,22 +334,19 @@ serve(async (req) => {
               candidates: candidatesToScore.map((p: any) => ({
                 persona_id: p.persona_id,
                 name: p.name,
-                computed_attributes: {
-                  age: p.age_computed,
-                  gender: p.gender_computed,
-                  city: p.city_computed,
-                  state_region: p.state_region_computed,
-                  country: p.country_computed,
-                  occupation: p.occupation_computed,
-                  marital_status: p.marital_status_computed,
-                  has_children: p.has_children_computed,
-                },
-                profile_summary: p.conversation_summary?.personality_summary 
-                  ?? p.conversation_summary?.character_description?.slice(0, 500)
-                  ?? '',
+                age_computed: p.age_computed,
+                gender_computed: p.gender_computed,
+                city_computed: p.city_computed,
+                state_region_computed: p.state_region_computed,
+                country_computed: p.country_computed,
+                occupation_computed: p.occupation_computed,
+                marital_status_computed: p.marital_status_computed,
+                has_children_computed: p.has_children_computed,
                 interest_tags: p.interest_tags ?? [],
                 health_tags: p.health_tags ?? [],
                 work_role_tags: p.work_role_tags ?? [],
+                full_profile: p.full_profile,
+                conversation_summary: p.conversation_summary,
               })),
               spec: {
                 demographics: {
