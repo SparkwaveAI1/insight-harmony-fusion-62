@@ -142,7 +142,7 @@ serve(async (req) => {
 
       if (parseResponse.ok) {
         const parseResult = await parseResponse.json();
-        parsedCriteria = parseResult.criteria || parseResult;
+        parsedCriteria = parseResult.parsed || parseResult.criteria || parseResult;
         console.log('[collection-persona-matcher] Parsed criteria:', JSON.stringify(parsedCriteria));
       } else {
         console.log('[collection-persona-matcher] Parse query failed, using fallback');
@@ -194,7 +194,7 @@ serve(async (req) => {
       p_age_max: config.filters.age_max ?? parsedCriteria.age_max ?? null,
       p_gender: config.filters.gender ?? (parsedCriteria.gender ? [parsedCriteria.gender] : null),
       p_country: config.filters.location_country ?? parsedCriteria.location_country ?? null,
-      p_state_region: config.filters.location_region ?? parsedCriteria.location_region ?? null,
+      p_state_region: config.filters.location_region ?? parsedCriteria.location_state ?? null,
       p_occupation_keywords: parsedCriteria.occupation_keywords ?? [],
       p_health_tags: parsedCriteria.health_keywords ?? [],
       p_interest_tags: parsedCriteria.interest_keywords ?? [],
