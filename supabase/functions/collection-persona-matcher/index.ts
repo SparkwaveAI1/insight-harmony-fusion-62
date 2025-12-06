@@ -181,15 +181,100 @@ serve(async (req) => {
       { stage: 'parse_query', count: Object.keys(parsedCriteria).length, duration_ms: stage1Duration }
     ];
 
-    // Placeholder response - we'll add DB search in next step
+    // ============================================
+    // STAGE 2: Database search for candidates
+    // ============================================
+    console.log('[collection-persona-matcher] Stage 2: DB search');
+    const stage2Start = Date.now();
+
+    // Build search parameters from parsed criteria and user filters
+    const searchParams: any = {
+      p_limit: config.max_results * 2, // Get extra candidates for LLM filtering
+      p_age_min: config.filters.age_min ?? parsedCriteria.age_min ?? null,
+      p_age_max: config.filters.age_max ?? parsedCriteria.age_max ?? null,
+      p_gender: config.filters.gender ?? (parsedCriteria.gender ? [parsedCriteria.gender] : null),
+      p_country: config.filters.location_country ?? parsedCriteria.location_country ?? null,
+      p_state_region: config.filters.location_region ?? parsedCriteria.location_region ?? null,
+      p_occupation_keywords: parsedCriteria.occupation_keywords ?? [],
+      p_health_tags: parsedCriteria.health_keywords ?? [],
+      p_interest_tags: parsedCriteria.interest_keywords ?? [],
+    };
+
+    console.log('[collection-persona-matcher] Search params:', JSON.stringify(searchParams));
+
+    const { data: candidates, error: searchError } = await supabase.rpc(
+      'search_personas_stage1',
+      searchParams
+    );
+
+    if (searchError) {
+      console.error('[collection-persona-matcher] DB search error:', searchError.message);
+      throw new Error(`Database search failed: ${searchError.message}`);
+    }
+
+    console.log('[collection-persona-matcher] Raw candidates:', candidates?.length ?? 0);
+
+    // Filter out personas already in the collection
+    let filteredCandidates = candidates ?? [];
+    if (excludePersonaIds.length > 0) {
+      filteredCandidates = filteredCandidates.filter(
+        (p: any) => !excludePersonaIds.includes(p.persona_id)
+      );
+      console.log('[collection-persona-matcher] After exclusion:', filteredCandidates.length);
+    }
+
+    // Filter by created_after if specified (for "new personas only")
+    if (config.created_after) {
+      const afterDate = new Date(config.created_after);
+      filteredCandidates = filteredCandidates.filter((p: any) => {
+        const createdAt = new Date(p.created_at);
+        return createdAt >= afterDate;
+      });
+      console.log('[collection-persona-matcher] After date filter:', filteredCandidates.length);
+    }
+
+    const stage2Duration = Date.now() - stage2Start;
+    console.log('[collection-persona-matcher] Stage 2 complete in', stage2Duration, 'ms');
+
+    stages.push({
+      stage: 'db_search',
+      count: filteredCandidates.length,
+      duration_ms: stage2Duration,
+    });
+
+    // Format candidates for response (without LLM scoring for now)
+    const formattedPersonas = filteredCandidates.slice(0, config.max_results).map((p: any) => ({
+      persona_id: p.persona_id,
+      name: p.name,
+      match_score: null, // Will be filled by LLM scoring in next step
+      match_reasons: [],
+      confidence: 'pending' as const,
+      demographics: {
+        age: p.age_computed,
+        gender: p.gender_computed,
+        location: [p.city_computed, p.state_region_computed, p.country_computed]
+          .filter(Boolean)
+          .join(', '),
+        occupation: p.occupation_computed,
+      },
+      preview_summary: p.conversation_summary?.personality_summary 
+        ?? p.conversation_summary?.character_description?.slice(0, 200)
+        ?? 'No summary available',
+      profile_image_url: p.profile_image_url,
+    }));
+
+    // Placeholder response - we'll add LLM scoring in next step
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Stage 1 complete - DB search coming next',
+        message: config.skip_llm_scoring 
+          ? 'Search complete (LLM scoring skipped)' 
+          : 'Stage 2 complete - LLM scoring coming next',
         collection: collection ? { id: collection.id, name: collection.name } : null,
         search_query: searchQuery,
-        exclude_count: excludePersonaIds.length,
+        total_candidates: filteredCandidates.length,
         parsed_criteria: parsedCriteria,
+        personas: formattedPersonas,
         config,
         stages,
         duration_ms: Date.now() - startTime,
