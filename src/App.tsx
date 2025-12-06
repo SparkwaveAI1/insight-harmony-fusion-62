@@ -31,6 +31,7 @@ import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
+import MatcherTest from "./pages/admin/MatcherTest";
 import PersonaQueue from "./pages/PersonaQueue";
 import ParticipateResearch from "./pages/ParticipateResearch";
 import WhitePaper from "./pages/WhitePaper";
@@ -125,6 +126,7 @@ function App() {
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+                <Route path="/admin/matcher-test" element={<ProtectedRoute><MatcherTest /></ProtectedRoute>} />
                 <Route path="/persona-queue" element={<ProtectedRoute><PersonaQueue /></ProtectedRoute>} />
                 
                 {/* Protected Routes - Require authentication */}
