@@ -331,9 +331,46 @@ serve(async (req) => {
               'Authorization': authHeader,
             },
             body: JSON.stringify({
-              personas: personaSummaries,
-              criteria: evaluationCriteria,
-              research_query: searchQuery,
+              candidates: candidatesToScore.map((p: any) => ({
+                persona_id: p.persona_id,
+                name: p.name,
+                computed_attributes: {
+                  age: p.age_computed,
+                  gender: p.gender_computed,
+                  city: p.city_computed,
+                  state_region: p.state_region_computed,
+                  country: p.country_computed,
+                  occupation: p.occupation_computed,
+                  marital_status: p.marital_status_computed,
+                  has_children: p.has_children_computed,
+                },
+                profile_summary: p.conversation_summary?.personality_summary 
+                  ?? p.conversation_summary?.character_description?.slice(0, 500)
+                  ?? '',
+                interest_tags: p.interest_tags ?? [],
+                health_tags: p.health_tags ?? [],
+                work_role_tags: p.work_role_tags ?? [],
+              })),
+              spec: {
+                demographics: {
+                  age: (parsedCriteria.age_min || parsedCriteria.age_max) 
+                    ? { min: parsedCriteria.age_min, max: parsedCriteria.age_max } 
+                    : undefined,
+                  gender: parsedCriteria.gender ? [parsedCriteria.gender] : undefined,
+                  location: {
+                    country: parsedCriteria.location_country,
+                    state_region: parsedCriteria.location_state,
+                  },
+                },
+                occupation_keywords: parsedCriteria.occupation_keywords ?? [],
+                interests: (parsedCriteria.interest_keywords ?? []).map((k: string) => ({ tag: k, weight: 0.5 })),
+                health: (parsedCriteria.health_keywords ?? []).map((k: string) => ({ tag: k, hard: false })),
+                original_query: searchQuery,
+              },
+              strictness: {
+                hard_match_min: config.score_threshold,
+                soft_match_min: config.score_threshold * 0.6,
+              },
             }),
           }
         );
