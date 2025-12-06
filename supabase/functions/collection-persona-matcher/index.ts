@@ -119,19 +119,80 @@ serve(async (req) => {
       console.log('[collection-persona-matcher] Excluding', excludePersonaIds.length, 'existing personas');
     }
 
-    const duration = Date.now() - startTime;
-    console.log('[collection-persona-matcher] Skeleton complete in', duration, 'ms');
+    // ============================================
+    // STAGE 1: Parse query into structured criteria
+    // ============================================
+    console.log('[collection-persona-matcher] Stage 1: Parsing query');
+    const stage1Start = Date.now();
 
-    // Placeholder response - we'll add search logic in next steps
+    let parsedCriteria: any = null;
+
+    try {
+      const parseResponse = await fetch(
+        `${Deno.env.get('SUPABASE_URL')}/functions/v1/acp-parse-query`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': authHeader,
+          },
+          body: JSON.stringify({ query: searchQuery }),
+        }
+      );
+
+      if (parseResponse.ok) {
+        const parseResult = await parseResponse.json();
+        parsedCriteria = parseResult.criteria || parseResult;
+        console.log('[collection-persona-matcher] Parsed criteria:', JSON.stringify(parsedCriteria));
+      } else {
+        console.log('[collection-persona-matcher] Parse query failed, using fallback');
+      }
+    } catch (parseError) {
+      console.log('[collection-persona-matcher] Parse query error:', parseError.message);
+    }
+
+    // Fallback: extract basic keywords if LLM parsing failed
+    if (!parsedCriteria) {
+      parsedCriteria = {
+        occupation_keywords: [],
+        health_keywords: [],
+        interest_keywords: [],
+        suggested_collections: [],
+      };
+      
+      // Simple keyword extraction from search query
+      const words = searchQuery.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+      parsedCriteria.occupation_keywords = words.slice(0, 5);
+      console.log('[collection-persona-matcher] Using fallback keywords:', parsedCriteria.occupation_keywords);
+    }
+
+    // Merge any user-provided filter keywords
+    if (config.filters.occupation_keywords?.length) {
+      parsedCriteria.occupation_keywords = [
+        ...(parsedCriteria.occupation_keywords || []),
+        ...config.filters.occupation_keywords,
+      ];
+    }
+
+    const stage1Duration = Date.now() - stage1Start;
+    console.log('[collection-persona-matcher] Stage 1 complete in', stage1Duration, 'ms');
+
+    const stages = [
+      { stage: 'parse_query', count: Object.keys(parsedCriteria).length, duration_ms: stage1Duration }
+    ];
+
+    // Placeholder response - we'll add DB search in next step
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Skeleton working - search logic coming next',
+        message: 'Stage 1 complete - DB search coming next',
         collection: collection ? { id: collection.id, name: collection.name } : null,
         search_query: searchQuery,
         exclude_count: excludePersonaIds.length,
+        parsed_criteria: parsedCriteria,
         config,
-        duration_ms: duration,
+        stages,
+        duration_ms: Date.now() - startTime,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
