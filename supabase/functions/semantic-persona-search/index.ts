@@ -81,7 +81,7 @@ serve(async (req) => {
 
     console.log('[semantic-search] Generated query embedding, dims:', queryEmbedding.length);
 
-    // Call semantic search - try direct array first
+    // Call semantic search with full V4Persona data
     const { data: results, error: searchError } = await supabase.rpc(
       'search_personas_semantic',
       {
@@ -100,23 +100,25 @@ serve(async (req) => {
 
     console.log('[semantic-search] Found', results?.length ?? 0, 'results');
 
+    // Format results as V4Persona-compatible objects
     const personas = (results ?? []).map((p: any) => ({
       persona_id: p.persona_id,
       name: p.name,
-      similarity: Math.round(p.similarity * 100) / 100,
-      similarity_percent: Math.round(p.similarity * 100),
-      demographics: {
-        age: p.age_computed,
-        gender: p.gender_computed,
-        occupation: p.occupation_computed,
-        location: [p.city_computed, p.state_region_computed, p.country_computed]
-          .filter(Boolean)
-          .join(', '),
-      },
+      user_id: p.user_id,
+      is_public: p.is_public,
+      created_at: p.created_at,
+      full_profile: p.full_profile,
+      conversation_summary: p.conversation_summary,
       profile_image_url: p.profile_image_url,
-      preview_summary: p.conversation_summary?.personality_summary 
-        ?? p.conversation_summary?.character_description?.slice(0, 200)
-        ?? null,
+      profile_thumbnail_url: p.profile_thumbnail_url,
+      age_computed: p.age_computed,
+      gender_computed: p.gender_computed,
+      occupation_computed: p.occupation_computed,
+      city_computed: p.city_computed,
+      state_region_computed: p.state_region_computed,
+      country_computed: p.country_computed,
+      // Search-specific field
+      similarity: Math.round(p.similarity * 100) / 100,
     }));
 
     const duration = Date.now() - startTime;

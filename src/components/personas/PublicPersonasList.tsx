@@ -5,47 +5,51 @@ import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
 import { getPublicV4PersonasShowAll } from "@/services/persona";
-import { useUnifiedPersonaSearch } from "@/hooks/useUnifiedPersonaSearch";
+import { useSemanticPersonaSearch, SemanticSearchResult } from "@/hooks/useSemanticPersonaSearch";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PublicPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
   searchQuery?: string;
-  selectedTags?: string[];
   selectedAge?: string;
-  selectedRegion?: string;
-  selectedIncome?: string;
-  selectedSourceType?: string;
-  selectedOccupation?: string;
+  onSearchingChange?: (isSearching: boolean) => void;
   className?: string;
 }
 
 const PublicPersonasList = ({
   onPersonasLoad,
   searchQuery = "",
-  selectedTags = [],
   selectedAge = "",
-  selectedRegion = "",
-  selectedIncome = "",
-  selectedSourceType = "",
-  selectedOccupation = "",
+  onSearchingChange,
   className = "grid grid-cols-1 lg:grid-cols-2 gap-6"
 }: PublicPersonasListProps) => {
-  const [personas, setPersonas] = useState<V4Persona[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
-  // Show ALL public personas without any filtering
+  // Fetch all public personas (used when no search query)
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['public-personas-show-all'],
     queryFn: getPublicV4PersonasShowAll,
-    staleTime: 5 * 60 * 1000,  // Cache for 5 minutes
-    refetchOnMount: false,      // Don't refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch when window gets focus
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     retry: 1
   });
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  // Semantic search (used when search query is 2+ characters)
+  const { 
+    results: semanticResults, 
+    isLoading: isSearching 
+  } = useSemanticPersonaSearch(searchQuery, { 
+    enabled: searchQuery.length >= 2,
+    maxResults: 100 
+  });
+
+  // Notify parent of search state
+  useEffect(() => {
+    onSearchingChange?.(isSearching);
+  }, [isSearching, onSearchingChange]);
 
   // Update the parent component with loaded personas
   useEffect(() => {
@@ -54,85 +58,53 @@ const PublicPersonasList = ({
     }
   }, [allPersonas, onPersonasLoad]);
 
-  // Apply advanced filters
-  const applyAdvancedFilters = (personas: V4Persona[]) => {
+  // Apply age filter
+  const applyAgeFilter = (personas: (V4Persona | SemanticSearchResult)[]) => {
+    if (!selectedAge) return personas;
+    
     return personas.filter(persona => {
-      // Tags filter - V4 personas don't have preinterview_tags
-      // This filtering can be implemented when tags are added to V4 schema
-      if (selectedTags.length > 0) {
-        // Skip tag filtering for now since V4 personas don't have this field
-        // TODO: Implement when tags are added to V4 personas
+      // Use age_computed if available, otherwise fallback to conversation_summary
+      const age = 'age_computed' in persona && persona.age_computed 
+        ? persona.age_computed 
+        : persona.conversation_summary?.demographics?.age;
+      
+      if (!age) return false;
+      
+      const ageNum = typeof age === 'string' ? parseInt(age) : age;
+      if (isNaN(ageNum)) return false;
+
+      switch (selectedAge) {
+        case "18-25":
+          return ageNum >= 18 && ageNum <= 25;
+        case "26-35":
+          return ageNum >= 26 && ageNum <= 35;
+        case "36-50":
+          return ageNum >= 36 && ageNum <= 50;
+        case "51-65":
+          return ageNum >= 51 && ageNum <= 65;
+        case "65+":
+          return ageNum >= 65;
+        default:
+          return true;
       }
-
-      // Age filter
-      if (selectedAge) {
-        const age = persona.conversation_summary?.demographics?.age;
-        if (!age) return false;
-        
-        const ageNum = typeof age === 'string' ? parseInt(age) : age;
-        if (isNaN(ageNum)) return false;
-
-        switch (selectedAge) {
-          case "18-25":
-            if (ageNum < 18 || ageNum > 25) return false;
-            break;
-          case "26-35":
-            if (ageNum < 26 || ageNum > 35) return false;
-            break;
-          case "36-50":
-            if (ageNum < 36 || ageNum > 50) return false;
-            break;
-          case "51-65":
-            if (ageNum < 51 || ageNum > 65) return false;
-            break;
-          case "65+":
-            if (ageNum < 65) return false;
-            break;
-        }
-      }
-
-      // Region filter
-      if (selectedRegion) {
-        const location = persona.conversation_summary?.demographics?.location;
-        if (!location || !location.toLowerCase().includes(selectedRegion.toLowerCase())) {
-          return false;
-        }
-      }
-
-      // Occupation filter
-      if (selectedOccupation) {
-        const occupation = persona.conversation_summary?.demographics?.occupation;
-        if (!occupation || !occupation.toLowerCase().includes(selectedOccupation.toLowerCase())) {
-          return false;
-        }
-      }
-
-      return true;
     });
   };
 
-  // Apply filters and search
-  const filteredPersonas = applyAdvancedFilters(allPersonas);
-  const searchedPersonas = useUnifiedPersonaSearch(filteredPersonas, searchQuery, { 
-    context: 'library',
-    maxResults: 50 
-  });
+  // Determine which personas to show
+  const useSemanticSearch = searchQuery.length >= 2;
+  const basePersonas = useSemanticSearch ? semanticResults : allPersonas;
+  const filteredPersonas = applyAgeFilter(basePersonas);
 
   // Pagination
-  const totalPages = Math.ceil(searchedPersonas.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredPersonas.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedPersonas = searchedPersonas.slice(startIndex, endIndex);
-
-  // Update local state
-  useEffect(() => {
-    setPersonas(paginatedPersonas);
-  }, [paginatedPersonas]);
+  const paginatedPersonas = filteredPersonas.slice(startIndex, endIndex);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedTags, selectedAge, selectedRegion, selectedIncome, selectedSourceType, selectedOccupation]);
+  }, [searchQuery, selectedAge]);
 
   if (error) {
     console.error("Error loading public personas:", error);
@@ -143,12 +115,12 @@ const PublicPersonasList = ({
     );
   }
 
-  if (isLoading) {
+  if (isLoading || (useSemanticSearch && isSearching)) {
     return <PersonaLoadingState />;
   }
 
-  if (personas.length === 0) {
-    const hasFilters = searchQuery || selectedTags.length > 0 || selectedAge || selectedRegion || selectedSourceType || selectedOccupation;
+  if (paginatedPersonas.length === 0) {
+    const hasFilters = searchQuery || selectedAge;
     
     if (hasFilters) {
       return (
@@ -162,9 +134,7 @@ const PublicPersonasList = ({
   }
 
   const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
-    // If persona is made private, remove it from the list and refetch
     if (!isPublic) {
-      setPersonas(prev => prev.filter(p => p.persona_id !== personaId));
       refetch();
     }
   };
@@ -172,10 +142,10 @@ const PublicPersonasList = ({
   return (
     <div>
       <div className={className}>
-        {personas.map((persona) => (
+        {paginatedPersonas.map((persona) => (
           <PersonaCard
             key={persona.persona_id}
-            persona={persona}
+            persona={persona as V4Persona}
             onVisibilityChange={handleVisibilityChange}
           />
         ))}
@@ -194,7 +164,7 @@ const PublicPersonasList = ({
           </Button>
           
           <span className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages} ({searchedPersonas.length} personas)
+            Page {currentPage} of {totalPages} ({filteredPersonas.length} personas)
           </span>
           
           <Button

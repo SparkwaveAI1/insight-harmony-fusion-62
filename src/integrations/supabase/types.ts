@@ -1925,13 +1925,18 @@ export type Database = {
           city_computed: string
           conversation_summary: Json
           country_computed: string
+          created_at: string
+          full_profile: Json
           gender_computed: string
+          is_public: boolean
           name: string
           occupation_computed: string
           persona_id: string
           profile_image_url: string
+          profile_thumbnail_url: string
           similarity: number
           state_region_computed: string
+          user_id: string
         }[]
       }
       search_personas_stage1: {
