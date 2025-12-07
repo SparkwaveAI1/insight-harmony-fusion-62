@@ -221,10 +221,10 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
                     } ${isToggling ? "opacity-75" : ""}`}
                     onClick={() => !isToggling && handleToggleCollection(collection.id)}
                   >
-                    <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
                       <span className="font-medium truncate">{collection.name}</span>
                       {collection.description && (
-                        <span className="text-xs text-muted-foreground line-clamp-1">
+                        <span className="text-xs text-muted-foreground truncate">
                           {collection.description}
                         </span>
                       )}
