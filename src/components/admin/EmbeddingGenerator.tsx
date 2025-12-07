@@ -57,7 +57,10 @@ export const EmbeddingGenerator = () => {
       const { data, error: fnError } = await supabase.functions.invoke(
         'generate-persona-embeddings',
         {
-          body: { batch_size: 50 },
+          body: { 
+            batch_size: 50,
+            force_regenerate: true  // TEMPORARY: Regenerate all with new comprehensive text
+          },
         }
       );
 
