@@ -72,6 +72,7 @@ serve(async (req) => {
         state_region_computed,
         country_computed,
         conversation_summary,
+        full_profile,
         interest_tags,
         health_tags,
         work_role_tags
@@ -106,23 +107,72 @@ serve(async (req) => {
 
     console.log('[generate-embeddings] Processing', personas.length, 'personas');
 
-    // Build searchable text for each persona
+    // Build comprehensive searchable text for each persona
     const textsToEmbed = personas.map(p => {
       const summary = p.conversation_summary as Record<string, any> | null;
+      const fp = p.full_profile as Record<string, any> | null;
+      
       const parts = [
+        // Core demographics
         p.name,
         p.age_computed ? `${p.age_computed} years old` : '',
         p.gender_computed,
         p.occupation_computed,
         [p.city_computed, p.state_region_computed, p.country_computed].filter(Boolean).join(', '),
+
+        // Tags (already indexed)
         (p.interest_tags as string[] | null)?.join(', ') ?? '',
         (p.health_tags as string[] | null)?.join(', ') ?? '',
         (p.work_role_tags as string[] | null)?.join(', ') ?? '',
+
+        // From conversation_summary
         summary?.personality_summary ?? '',
         summary?.motivational_summary ?? '',
         summary?.character_description ?? '',
+        summary?.physical_description ?? '',
         summary?.demographics?.background_description ?? '',
+
+        // From full_profile - narratives
+        fp?.attitude_narrative ?? '',
+        fp?.political_narrative ?? '',
+
+        // From full_profile - identity
+        fp?.identity?.ethnicity ?? '',
+        fp?.identity?.education_level ?? '',
+        fp?.identity?.income_bracket ?? '',
+        fp?.identity?.relationship_status ?? '',
+        fp?.identity?.occupation ?? '',
+
+        // From full_profile - health
+        fp?.health_profile?.bmi ? `BMI ${fp.health_profile.bmi}` : '',
+        fp?.health_profile?.bmi_category ?? '',
+        fp?.health_profile?.fitness_level ?? '',
+        fp?.health_profile?.diet_pattern ?? '',
+        Array.isArray(fp?.health_profile?.chronic_conditions) 
+          ? fp.health_profile.chronic_conditions.join(', ') : '',
+        Array.isArray(fp?.health_profile?.mental_health_flags) 
+          ? fp.health_profile.mental_health_flags.join(', ') : '',
+        fp?.health_profile?.substance_use ? JSON.stringify(fp.health_profile.substance_use) : '',
+
+        // From full_profile - physical
+        fp?.physical_profile?.body_type ?? '',
+        fp?.physical_profile?.appearance_description ?? '',
+
+        // From full_profile - relationships
+        fp?.relationships?.household ?? '',
+        Array.isArray(fp?.relationships?.caregiving_roles)
+          ? fp.relationships.caregiving_roles.join(', ') : '',
+
+        // From full_profile - money
+        fp?.money_profile?.income_bracket ?? '',
+        fp?.money_profile?.financial_situation ?? '',
+        fp?.money_profile?.spending_style ?? '',
+
+        // From full_profile - motivation
+        Array.isArray(fp?.motivation_profile?.primary_motivation_labels)
+          ? fp.motivation_profile.primary_motivation_labels.join(', ') : '',
       ];
+      
       return parts.filter(Boolean).join(' ').slice(0, 8000); // OpenAI limit safety
     });
 
