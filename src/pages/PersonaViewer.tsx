@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from "react";
-import { FreshPersonaService } from "@/services/persona/FreshPersonaService";
 import { QueryClientProvider, QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
@@ -22,8 +20,8 @@ import { V4Persona } from "@/types/persona-v4";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1, // Only retry once for failed queries
-      staleTime: 30000, // Consider data fresh for 30 seconds
+      retry: 1,
+      staleTime: 30000,
     },
   },
 });
@@ -35,40 +33,33 @@ const PersonaViewerContent = () => {
   const { personaId } = useParams<{ personaId?: string }>();
   const [myPersonas, setMyPersonas] = useState<V4Persona[]>([]);
   const [publicPersonas, setPublicPersonas] = useState<V4Persona[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   
-  // New filter states
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  // Simplified filter states - only search and age
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedAge, setSelectedAge] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState("");
-  const [selectedIncome, setSelectedIncome] = useState("");
-  const [selectedSourceType, setSelectedSourceType] = useState("");
-  const [selectedOccupation, setSelectedOccupation] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   
   const location = useLocation();
-  const queryClient = useQueryClient();
+  const queryClientInstance = useQueryClient();
   
   // Determine if we're in the public library view
   const isLibraryView = location.pathname.includes('/persona-library');
 
   // Reset the query cache when component mounts to ensure fresh data
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ['personas'] });
-  }, [queryClient]);
+    queryClientInstance.invalidateQueries({ queryKey: ['personas'] });
+  }, [queryClientInstance]);
+
   // If in library view, ensure public personas are freshly fetched
   useEffect(() => {
     if (isLibraryView) {
-      queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
+      queryClientInstance.invalidateQueries({ queryKey: ['public-personas-show-all'] });
     }
-  }, [isLibraryView, queryClient]);
+  }, [isLibraryView, queryClientInstance]);
+
   const handleResetFilters = () => {
     setSearchQuery("");
-    setSelectedTags([]);
     setSelectedAge("");
-    setSelectedRegion("");
-    setSelectedIncome("");
-    setSelectedSourceType("");
-    setSelectedOccupation("");
   };
 
   // If viewing a specific persona, show the detail view
@@ -112,26 +103,17 @@ const PersonaViewerContent = () => {
             <div className="w-32 h-1 bg-accent mb-6"></div>
           </div>
 
-          {/* Filter Section - Enhanced with structured search */}
+          {/* Simplified Filter Section - Search + Age only */}
           <FilterSection 
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onResetFilters={handleResetFilters}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
             selectedAge={selectedAge}
             onAgeChange={(val) => setSelectedAge(val === "any" ? "" : val)}
-            selectedRegion={selectedRegion}
-            onRegionChange={(val) => setSelectedRegion(val === "any" ? "" : val)}
-            selectedIncome={selectedIncome}
-            onIncomeChange={setSelectedIncome}
-            selectedSourceType={selectedSourceType}
-            onSourceTypeChange={setSelectedSourceType}
-            selectedOccupation={selectedOccupation}
-            onOccupationChange={(val) => setSelectedOccupation(val === "any" ? "" : val)}
+            isSearching={isSearching}
           />
 
-          {/* Tabbed View - Always show both tabs */}
+          {/* Tabbed View */}
           <Tabs defaultValue='my-personas' className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="my-personas">My Personas</TabsTrigger>
@@ -142,12 +124,8 @@ const PersonaViewerContent = () => {
               <MyPersonasList
                 onPersonasLoad={setMyPersonas}
                 searchQuery={searchQuery}
-                selectedTags={selectedTags}
                 selectedAge={selectedAge}
-                selectedRegion={selectedRegion}
-                selectedIncome={selectedIncome}
-                selectedSourceType={selectedSourceType}
-                selectedOccupation={selectedOccupation}
+                onSearchingChange={setIsSearching}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
@@ -156,12 +134,8 @@ const PersonaViewerContent = () => {
               <PublicPersonasList 
                 onPersonasLoad={setPublicPersonas}
                 searchQuery={searchQuery}
-                selectedTags={selectedTags}
                 selectedAge={selectedAge}
-                selectedRegion={selectedRegion}
-                selectedIncome={selectedIncome}
-                selectedSourceType={selectedSourceType}
-                selectedOccupation={selectedOccupation}
+                onSearchingChange={setIsSearching}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>

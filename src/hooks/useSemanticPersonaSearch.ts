@@ -2,19 +2,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useDebounce } from '@/hooks/useDebounce';
 
-interface SemanticSearchResult {
+// V4Persona-compatible result with similarity score
+export interface SemanticSearchResult {
   persona_id: string;
   name: string;
-  similarity: number;
-  similarity_percent: number;
-  demographics: {
-    age: number | null;
-    gender: string | null;
-    occupation: string | null;
-    location: string;
-  };
+  user_id: string;
+  is_public: boolean;
+  created_at: string;
+  full_profile: any;
+  conversation_summary: any;
   profile_image_url: string | null;
-  preview_summary: string | null;
+  profile_thumbnail_url: string | null;
+  age_computed: number | null;
+  gender_computed: string | null;
+  occupation_computed: string | null;
+  city_computed: string | null;
+  state_region_computed: string | null;
+  country_computed: string | null;
+  similarity: number;
 }
 
 interface UseSemanticSearchOptions {
