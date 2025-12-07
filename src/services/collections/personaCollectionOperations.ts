@@ -35,28 +35,23 @@ export const addPersonasToCollection = async (
   collectionId: string,
   personaIds: string[]
 ): Promise<boolean> => {
-  try {
-    if (personaIds.length === 0) return true;
-    
-    const insertData = personaIds.map(personaId => ({
-      collection_id: collectionId,
-      persona_id: personaId
-    }));
+  if (personaIds.length === 0) return true;
+  
+  const insertData = personaIds.map(personaId => ({
+    collection_id: collectionId,
+    persona_id: personaId
+  }));
 
-    const { error } = await supabase
-      .from('collection_personas')
-      .insert(insertData);
+  const { error } = await supabase
+    .from('collection_personas')
+    .insert(insertData);
 
-    if (error) {
-      console.error('Error adding personas to collection:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
+  if (error) {
     console.error('Error adding personas to collection:', error);
-    return false;
+    throw new Error(error.message || 'Failed to add personas to collection');
   }
+
+  return true;
 };
 
 /**
