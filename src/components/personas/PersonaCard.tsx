@@ -147,13 +147,14 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
             
             {/* Name section */}
             <div className="flex flex-col space-y-2 flex-1 min-w-0">
-              <div 
-                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors group-hover:text-primary leading-tight" 
-                onClick={handleViewDetails}
+              <Link 
+                to={`/persona-detail/${persona.persona_id}`}
+                className="font-semibold text-lg hover:text-primary cursor-pointer transition-colors group-hover:text-primary leading-tight"
                 title={persona.name}
+                onClick={(e) => e.stopPropagation()}
               >
                 {persona.name}
-              </div>
+              </Link>
               <div className="flex items-center text-xs text-muted-foreground">
                 <Clock className="h-3 w-3 mr-1" />
                 <span>Created {new Date(persona.created_at).toLocaleDateString()}</span>
