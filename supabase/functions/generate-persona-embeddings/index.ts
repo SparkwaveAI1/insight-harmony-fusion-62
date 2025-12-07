@@ -54,7 +54,7 @@ serve(async (req) => {
     }
 
     const body: RequestBody = await req.json();
-    const batchSize = Math.min(body.batch_size ?? 50, 100); // Max 100 at a time
+    const batchSize = Math.min(body.batch_size ?? 20, 50); // Smaller default, max 50 for reliability
     const forceRegenerate = body.force_regenerate ?? false;
 
     console.log('[generate-embeddings] Starting batch of', batchSize);
@@ -157,32 +157,48 @@ serve(async (req) => {
 
     console.log('[generate-embeddings] Got', embeddings.length, 'embeddings');
 
-    // Update personas with embeddings
+    // Update personas with embeddings using parallel updates for speed
     let successCount = 0;
     let errorCount = 0;
     const errors: string[] = [];
+    const CONCURRENT_UPDATES = 5;
 
-    // Update one at a time (Supabase doesn't support bulk upsert with vector type easily)
-    for (let i = 0; i < personas.length; i++) {
-      const persona = personas[i];
-      const embedding = embeddings[i].embedding;
+    console.log('[generate-embeddings] Starting parallel updates, concurrency:', CONCURRENT_UPDATES);
+    const updateStartTime = Date.now();
+
+    for (let i = 0; i < personas.length; i += CONCURRENT_UPDATES) {
+      const batch = personas.slice(i, i + CONCURRENT_UPDATES);
+      const updatePromises = batch.map((persona, idx) => {
+        const embedding = embeddings[i + idx].embedding;
+        return supabase
+          .from('v4_personas')
+          .update({
+            profile_embedding: JSON.stringify(embedding),
+            embedding_updated_at: new Date().toISOString(),
+          })
+          .eq('persona_id', persona.persona_id)
+          .then(({ error }) => ({ persona_id: persona.persona_id, error }));
+      });
+
+      const results = await Promise.allSettled(updatePromises);
       
-      const { error: updateError } = await supabase
-        .from('v4_personas')
-        .update({
-          profile_embedding: JSON.stringify(embedding),
-          embedding_updated_at: new Date().toISOString(),
-        })
-        .eq('persona_id', persona.persona_id);
-
-      if (updateError) {
-        errorCount++;
-        errors.push(`${persona.persona_id}: ${updateError.message}`);
-        console.error('[generate-embeddings] Update error for', persona.persona_id, updateError.message);
-      } else {
-        successCount++;
+      for (const result of results) {
+        if (result.status === 'fulfilled') {
+          if (result.value.error) {
+            errorCount++;
+            errors.push(`${result.value.persona_id}: ${result.value.error.message}`);
+            console.error('[generate-embeddings] Update error:', result.value.persona_id, result.value.error.message);
+          } else {
+            successCount++;
+          }
+        } else {
+          errorCount++;
+          errors.push(`Promise rejected: ${result.reason}`);
+        }
       }
     }
+
+    console.log('[generate-embeddings] Updates completed in', Date.now() - updateStartTime, 'ms');
 
     console.log('[generate-embeddings] Updated', successCount, 'personas, errors:', errorCount);
 
