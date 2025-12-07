@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useHasRole } from "@/hooks/useHasRole";
 import { addPersonasToCollection } from "@/services/collections/personaCollectionOperations";
-import { Loader2, Search, Sparkles, UserPlus } from "lucide-react";
+import { Loader2, Search, Sparkles, UserPlus, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MatchedPersona {
@@ -46,6 +46,7 @@ export function CollectionPersonaMatcher() {
   const [isAdding, setIsAdding] = useState(false);
   const [searchComplete, setSearchComplete] = useState(false);
   const [collectionInfo, setCollectionInfo] = useState<{ name: string; description: string } | null>(null);
+  const [expandedPersonaId, setExpandedPersonaId] = useState<string | null>(null);
 
   // Fetch collections on mount
   useEffect(() => {
@@ -252,38 +253,70 @@ export function CollectionPersonaMatcher() {
             {/* Results List */}
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {results.map(persona => (
-                <div 
-                  key={persona.persona_id}
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    selectedPersonaIds.has(persona.persona_id) 
-                      ? 'bg-primary/10 border-primary/50' 
-                      : 'hover:bg-muted/50 border-border'
-                  }`}
-                  onClick={() => togglePersona(persona.persona_id)}
-                >
-                  <Checkbox 
-                    checked={selectedPersonaIds.has(persona.persona_id)}
-                    onCheckedChange={() => togglePersona(persona.persona_id)}
-                  />
-                  
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={persona.profile_thumbnail_url || persona.profile_image_url || undefined} />
-                    <AvatarFallback>{persona.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{persona.name}</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {persona.similarity_percent}% match
-                      </Badge>
+                <div key={persona.persona_id} className="space-y-0">
+                  <div 
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedPersonaIds.has(persona.persona_id) 
+                        ? 'bg-primary/10 border-primary/50' 
+                        : 'hover:bg-muted/50 border-border'
+                    } ${expandedPersonaId === persona.persona_id ? 'rounded-b-none' : ''}`}
+                    onClick={() => togglePersona(persona.persona_id)}
+                  >
+                    <Checkbox 
+                      checked={selectedPersonaIds.has(persona.persona_id)}
+                      onCheckedChange={() => togglePersona(persona.persona_id)}
+                    />
+                    
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={persona.profile_thumbnail_url || persona.profile_image_url || undefined} />
+                      <AvatarFallback>{persona.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href={`/personas/${persona.persona_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium truncate hover:text-primary hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {persona.name}
+                        </a>
+                        <Badge variant="secondary" className="text-xs">
+                          {persona.similarity_percent}% match
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {[persona.age_computed, persona.occupation_computed, persona.location]
+                          .filter(Boolean)
+                          .join(' • ')}
+                      </div>
+                      {persona.preview_summary && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {persona.preview_summary}
+                        </p>
+                      )}
                     </div>
-                    <div className="text-sm text-muted-foreground truncate">
-                      {[persona.age_computed, persona.occupation_computed, persona.location]
-                        .filter(Boolean)
-                        .join(' • ')}
-                    </div>
+                    
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedPersonaId(expandedPersonaId === persona.persona_id ? null : persona.persona_id);
+                      }}
+                    >
+                      {expandedPersonaId === persona.persona_id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
                   </div>
+                  
+                  {expandedPersonaId === persona.persona_id && (
+                    <div className="pl-16 pr-4 py-3 text-sm text-muted-foreground bg-muted/50 rounded-b-lg border border-t-0 border-border">
+                      {persona.preview_summary || "No summary available"}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
