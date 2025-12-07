@@ -1558,6 +1558,7 @@ export type Database = {
           creation_completed: boolean | null
           creation_stage: string | null
           education_level: string | null
+          embedding_updated_at: string | null
           enhancement_applied_at: string | null
           enrichment_status: string | null
           evidence_notes: string | null
@@ -1574,6 +1575,7 @@ export type Database = {
           name: string
           occupation_computed: string | null
           persona_id: string
+          profile_embedding: string | null
           profile_image_url: string | null
           profile_thumbnail_url: string | null
           schema_version: string
@@ -1595,6 +1597,7 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           education_level?: string | null
+          embedding_updated_at?: string | null
           enhancement_applied_at?: string | null
           enrichment_status?: string | null
           evidence_notes?: string | null
@@ -1611,6 +1614,7 @@ export type Database = {
           name: string
           occupation_computed?: string | null
           persona_id: string
+          profile_embedding?: string | null
           profile_image_url?: string | null
           profile_thumbnail_url?: string | null
           schema_version?: string
@@ -1632,6 +1636,7 @@ export type Database = {
           creation_completed?: boolean | null
           creation_stage?: string | null
           education_level?: string | null
+          embedding_updated_at?: string | null
           enhancement_applied_at?: string | null
           enrichment_status?: string | null
           evidence_notes?: string | null
@@ -1648,6 +1653,7 @@ export type Database = {
           name?: string
           occupation_computed?: string | null
           persona_id?: string
+          profile_embedding?: string | null
           profile_image_url?: string | null
           profile_thumbnail_url?: string | null
           schema_version?: string
@@ -1904,6 +1910,28 @@ export type Database = {
           persona_id: string
           profile_image_url: string
           relevance_score: number
+        }[]
+      }
+      search_personas_semantic: {
+        Args: {
+          exclude_collection_id?: string
+          filter_collection_id?: string
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          age_computed: number
+          city_computed: string
+          conversation_summary: Json
+          country_computed: string
+          gender_computed: string
+          name: string
+          occupation_computed: string
+          persona_id: string
+          profile_image_url: string
+          similarity: number
+          state_region_computed: string
         }[]
       }
       search_personas_stage1: {
