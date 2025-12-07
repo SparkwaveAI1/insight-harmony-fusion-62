@@ -274,8 +274,8 @@ export function CollectionPersonaMatcher() {
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <a 
-                          href={`/personas/${persona.persona_id}`}
+                  <a 
+                    href={`/persona-detail/${persona.persona_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-medium truncate hover:text-primary hover:underline"
