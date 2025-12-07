@@ -26,10 +26,10 @@ serve(async (req) => {
       throw new Error('Missing authorization header');
     }
 
+    // Service role client - bypasses RLS for bulk updates
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Need service role for bulk updates
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     // Verify admin
