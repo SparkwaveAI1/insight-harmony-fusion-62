@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.collection-persona-matcher]
 verify_jwt = true
+
+[functions.generate-persona-embeddings]
+verify_jwt = true
