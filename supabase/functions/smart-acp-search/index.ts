@@ -186,11 +186,16 @@ function filterByBMI(personas: any[], criteria: ParsedCriteria): any[] {
 
 function filterByOccupation(personas: any[], keywords: string[]): any[] {
   if (!keywords || keywords.length === 0) return personas;
-  
-  const lowerKeywords = keywords.map(k => k.toLowerCase());
+
   return personas.filter(p => {
     const occupation = (p.occupation_computed || '').toLowerCase();
-    return lowerKeywords.some(kw => occupation.includes(kw));
+
+    // Match if ANY word from ANY keyword appears in occupation
+    // Lenient filter - semantic ranking handles precision
+    return keywords.some(keyword => {
+      const words = keyword.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      return words.some(word => occupation.includes(word));
+    });
   });
 }
 
