@@ -164,13 +164,24 @@ export const EmbeddingGenerator = () => {
           </Button>
 
           {!autoRunning ? (
-            <Button
-              onClick={runAutomatic}
-              disabled={loading || stats?.remaining === 0}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Run All Automatically
-            </Button>
+            <>
+              <Button
+                onClick={runAutomatic}
+                disabled={loading || stats?.remaining === 0}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Run All Automatically
+              </Button>
+              <Button
+                onClick={runAutomatic}
+                disabled={loading}
+                variant="secondary"
+                title="Regenerate all embeddings even if they already exist (uses force_regenerate: true)"
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Force Regenerate All
+              </Button>
+            </>
           ) : (
             <Button onClick={stopAutomatic} variant="destructive">
               <Square className="mr-2 h-4 w-4" />
