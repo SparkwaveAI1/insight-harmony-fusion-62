@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface ParsedCriteria {
-  state?: string;
+  states?: string[];
   country?: string;
   city?: string;
   age_min?: number;
@@ -44,7 +44,7 @@ async function parseQueryWithGPT(query: string, openaiKey: string): Promise<Pars
           content: `You parse research queries to extract structured filters and semantic meaning.
 
 Extract these hard filters when EXPLICITLY mentioned (null if not specified):
-- state: US state name (e.g., "California", "Texas") 
+- states: Array of US state names. Use array even for single state. Examples: ["California"], ["California", "New York"], ["Texas", "Florida", "Arizona"]. For "California or New York" return ["California", "New York"].
 - country: Country name if specified
 - city: City name if specified
 - age_min, age_max: Age range bounds (e.g., "adults" = 18+, "seniors" = 65+, "young adults" = 18-30)
@@ -56,7 +56,7 @@ Also detect if the query asks for DISTINCT/DIFFERENT types of people. If so, ext
 
 Respond with JSON:
 {
-  "state": string | null,
+  "states": string[] | null,
   "country": string | null,
   "city": string | null,
   "age_min": number | null,
@@ -70,7 +70,8 @@ Respond with JSON:
 }
 
 Examples:
-- "overweight adults from California" → {"state": "California", "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
+- "overweight adults from California" → {"states": ["California"], "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
+- "overweight adults from California or New York" → {"states": ["California", "New York"], "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
 - "3 distinct crypto investors: traders, holders, analysts" → {"semantic_query": "crypto investors", "segments": ["crypto day trader active trading", "crypto long-term holder investor", "crypto market analyst researcher"]}
 - "tech workers in NYC with anxiety" → {"city": "New York", "occupation_keywords": ["tech", "software", "engineer", "developer", "IT"], "semantic_query": "technology worker anxiety mental health stress", "segments": null}
 - "obese women over 50" → {"gender": "female", "age_min": 50, "bmi_min": 30, "semantic_query": "obese older women health weight", "segments": null}`
@@ -104,8 +105,14 @@ function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds
     .eq('creation_completed', true)
     .not('profile_embedding', 'is', null);
 
-  if (criteria.state) {
-    query = query.ilike('state_region_computed', `%${criteria.state}%`);
+  if (criteria.states && criteria.states.length > 0) {
+    if (criteria.states.length === 1) {
+      query = query.ilike('state_region_computed', `%${criteria.states[0]}%`);
+    } else {
+      // Multiple states - build OR filter
+      const stateFilters = criteria.states.map(s => `state_region_computed.ilike.%${s}%`).join(',');
+      query = query.or(stateFilters);
+    }
   }
   if (criteria.country) {
     query = query.ilike('country_computed', `%${criteria.country}%`);
@@ -438,7 +445,7 @@ serve(async (req) => {
       match_score: Math.round((p.similarity || 0.5) * 100) / 100,
       match_reason: `Matched: ${Object.entries(criteria)
         .filter(([k, v]) => v && k !== 'semantic_query' && k !== 'segments')
-        .map(([k, v]) => `${k}=${Array.isArray(v) ? v.join(',') : v}`)
+        .map(([k, v]) => Array.isArray(v) ? `${k}=${v.join(' or ')}` : `${k}=${v}`)
         .join(', ') || 'semantic similarity'}`,
       profile_image_url: p.profile_image_url,
       full_profile: p.full_profile,
