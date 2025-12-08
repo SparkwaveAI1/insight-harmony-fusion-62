@@ -146,6 +146,30 @@ serve(async (req) => {
         fp?.identity?.income_bracket ?? '',
         fp?.identity?.relationship_status ?? '',
         fp?.identity?.occupation ?? '',
+        
+        // Identity - additional fields (dependents, urbanicity)
+        fp?.identity?.dependents ? `${fp.identity.dependents} dependents children` : '',
+        fp?.identity?.location?.urbanicity ?? '',
+
+        // Computed relationship status terms for better semantic matching
+        (() => {
+          const status = fp?.identity?.relationship_status?.toLowerCase();
+          if (!status) return '';
+          if (status.includes('divorced')) return 'divorced separated single parent';
+          if (status.includes('widow')) return 'widowed widow widower single';
+          if (status.includes('married')) return 'married spouse partner';
+          if (status.includes('single')) return 'single unmarried';
+          return status;
+        })(),
+
+        // Computed parenting terms for semantic matching
+        (() => {
+          const deps = fp?.identity?.dependents || fp?.relationships?.household?.dependents;
+          if (deps === undefined || deps === null) return '';
+          if (deps === 0) return 'no children childless';
+          if (deps === 1) return 'parent one child single child';
+          return `parent ${deps} children multiple children`;
+        })(),
 
         // From full_profile - health (with computed weight category for semantic matching)
         fp?.health_profile?.bmi ? `BMI ${fp.health_profile.bmi}` : '',
@@ -172,19 +196,65 @@ serve(async (req) => {
         fp?.physical_profile?.body_type ?? '',
         fp?.physical_profile?.appearance_description ?? '',
 
-        // From full_profile - relationships
-        fp?.relationships?.household ?? '',
+        // From full_profile - relationships (expanded)
+        fp?.relationships?.household?.status ?? '',
+        fp?.relationships?.household?.harmony_level ?? '',
+        fp?.relationships?.household?.dependents ? `${fp.relationships.household.dependents} children dependents` : '',
         Array.isArray(fp?.relationships?.caregiving_roles)
           ? fp.relationships.caregiving_roles.join(', ') : '',
+        Array.isArray(fp?.relationships?.pets) 
+          ? fp.relationships.pets.join(', ') + ' pet owner' : '',
 
-        // From full_profile - money
+        // From full_profile - money (expanded)
         fp?.money_profile?.income_bracket ?? '',
         fp?.money_profile?.financial_situation ?? '',
         fp?.money_profile?.spending_style ?? '',
+        fp?.money_profile?.attitude_toward_money ?? '',
+        fp?.money_profile?.debt_posture ?? '',
+        fp?.money_profile?.earning_context ?? '',
+        Array.isArray(fp?.money_profile?.financial_stressors) 
+          ? 'financial stress: ' + fp.money_profile.financial_stressors.join(', ') : '',
+        fp?.money_profile?.money_conflicts ?? '',
+
+        // From full_profile - daily life (mental preoccupations)
+        Array.isArray(fp?.daily_life?.mental_preoccupations)
+          ? fp.daily_life.mental_preoccupations.join(', ') : '',
+        fp?.daily_life?.time_sentiment ? JSON.stringify(fp.daily_life.time_sentiment) : '',
+
+        // From full_profile - emotional profile
+        Array.isArray(fp?.emotional_profile?.stress_responses)
+          ? 'stress response: ' + fp.emotional_profile.stress_responses.join(', ') : '',
+        Array.isArray(fp?.emotional_profile?.negative_triggers)
+          ? 'triggered by: ' + fp.emotional_profile.negative_triggers.join(', ') : '',
+        Array.isArray(fp?.emotional_profile?.positive_triggers)
+          ? 'enjoys: ' + fp.emotional_profile.positive_triggers.join(', ') : '',
+        fp?.emotional_profile?.emotional_regulation ?? '',
 
         // From full_profile - motivation
         Array.isArray(fp?.motivation_profile?.primary_motivation_labels)
           ? fp.motivation_profile.primary_motivation_labels.join(', ') : '',
+        Array.isArray(fp?.motivation_profile?.deal_breakers)
+          ? 'deal breakers: ' + fp.motivation_profile.deal_breakers.join(', ') : '',
+        Array.isArray(fp?.motivation_profile?.primary_goals)
+          ? 'goals: ' + fp.motivation_profile.primary_goals.join(', ') : '',
+
+        // From full_profile - adoption/risk profile
+        (() => {
+          const risk = fp?.adoption_profile?.risk_tolerance;
+          if (risk === undefined || risk === null) return '';
+          if (risk >= 0.7) return 'risk-taker high risk tolerance adventurous bold';
+          if (risk <= 0.3) return 'risk-averse cautious conservative low risk tolerance';
+          return 'moderate risk tolerance';
+        })(),
+        Array.isArray(fp?.adoption_profile?.expected_objections)
+          ? 'objections: ' + fp.adoption_profile.expected_objections.join(', ') : '',
+
+        // Communication style
+        fp?.communication_style?.voice_foundation?.formality ?? '',
+        fp?.communication_style?.voice_foundation?.directness ?? '',
+        fp?.communication_style?.voice_foundation?.positivity ?? '',
+        Array.isArray(fp?.communication_style?.style_markers?.humor_style)
+          ? fp.communication_style.style_markers.humor_style.join(', ') : '',
       ];
       
       return parts.filter(Boolean).join(' ').slice(0, 8000); // OpenAI limit safety
