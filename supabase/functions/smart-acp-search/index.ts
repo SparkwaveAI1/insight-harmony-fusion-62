@@ -17,6 +17,7 @@ interface ParsedCriteria {
   bmi_min?: number;
   bmi_max?: number;
   occupation_keywords?: string[];
+  require_geographic_diversity?: boolean;
   semantic_query: string;
   segments?: string[];
 }
@@ -45,12 +46,13 @@ async function parseQueryWithGPT(query: string, openaiKey: string): Promise<Pars
 
 Extract these hard filters when EXPLICITLY mentioned (null if not specified):
 - states: Array of US state names. Use array even for single state. Examples: ["California"], ["California", "New York"], ["Texas", "Florida", "Arizona"]. For "California or New York" return ["California", "New York"].
-- country: Country name if specified
+- country: Country name if specified. Use "United States" for queries mentioning US states, "American", or "from different states".
 - city: City name if specified
 - age_min, age_max: Age range bounds (e.g., "adults" = 18+, "seniors" = 65+, "young adults" = 18-30)
 - gender: "male", "female", or null
 - bmi_min, bmi_max: Weight criteria (overweight = bmi_min:25, obese = bmi_min:30, underweight = bmi_max:18.5)
 - occupation_keywords: Array of occupation-related words
+- require_geographic_diversity: Set to true when query asks for people "from different states", "across the country", "geographically diverse", "from various locations", etc.
 
 Also detect if the query asks for DISTINCT/DIFFERENT types of people. If so, extract each type as a separate segment.
 
@@ -65,13 +67,15 @@ Respond with JSON:
   "bmi_min": number | null,
   "bmi_max": number | null,
   "occupation_keywords": string[] | null,
+  "require_geographic_diversity": boolean | null,
   "semantic_query": "full descriptive query for semantic matching",
   "segments": ["segment 1", "segment 2"] | null
 }
 
 Examples:
-- "overweight adults from California" → {"states": ["California"], "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
-- "overweight adults from California or New York" → {"states": ["California", "New York"], "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
+- "overweight adults from California" → {"states": ["California"], "country": "United States", "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
+- "overweight adults from California or New York" → {"states": ["California", "New York"], "country": "United States", "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
+- "crypto investors from different states" → {"country": "United States", "require_geographic_diversity": true, "occupation_keywords": ["crypto", "investor", "cryptocurrency", "bitcoin", "ethereum"], "semantic_query": "crypto investors cryptocurrency bitcoin ethereum blockchain", "segments": null}
 - "3 distinct crypto investors: traders, holders, analysts" → {"semantic_query": "crypto investors", "segments": ["crypto day trader active trading", "crypto long-term holder investor", "crypto market analyst researcher"]}
 - "tech workers in NYC with anxiety" → {"city": "New York", "occupation_keywords": ["tech", "software", "engineer", "developer", "IT"], "semantic_query": "technology worker anxiety mental health stress", "segments": null}
 - "obese women over 50" → {"gender": "female", "age_min": 50, "bmi_min": 30, "semantic_query": "obese older women health weight", "segments": null}`
@@ -231,7 +235,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return denom === 0 ? 0 : dotProduct / denom;
 }
 
-function selectDiverse(personas: any[], count: number): any[] {
+function selectDiverse(personas: any[], count: number, requireGeoDiversity = false): any[] {
   if (personas.length <= count) return personas;
   
   const selected: any[] = [];
@@ -246,7 +250,7 @@ function selectDiverse(personas: any[], count: number): any[] {
     
     for (let i = 0; i < remaining.length; i++) {
       const candidate = remaining[i];
-      const diversityScore = calculateDiversityScore(candidate, selected);
+      const diversityScore = calculateDiversityScore(candidate, selected, requireGeoDiversity);
       // Combined score: semantic relevance + diversity bonus
       const combinedScore = (candidate.similarity || 0.5) + (diversityScore * 0.3);
       
@@ -262,7 +266,7 @@ function selectDiverse(personas: any[], count: number): any[] {
   return selected;
 }
 
-function calculateDiversityScore(candidate: any, selected: any[]): number {
+function calculateDiversityScore(candidate: any, selected: any[], requireGeoDiversity = false): number {
   let diversitySum = 0;
   
   for (const existing of selected) {
@@ -283,14 +287,19 @@ function calculateDiversityScore(candidate: any, selected: any[]): number {
       difference += 0.2;
     }
     
-    // Different city = +0.15
+    // Different city = +0.15 (boost to +0.4 if geographic diversity required)
     if (candidate.city_computed !== existing.city_computed) {
-      difference += 0.15;
+      difference += requireGeoDiversity ? 0.4 : 0.15;
     }
     
-    // Different state = +0.15
+    // Different state = +0.15 (boost to +0.5 if geographic diversity required)
     if (candidate.state_region_computed !== existing.state_region_computed) {
-      difference += 0.15;
+      difference += requireGeoDiversity ? 0.5 : 0.15;
+    }
+    
+    // Different country = +0.3 (boost to +0.6 if geographic diversity required)
+    if (candidate.country_computed !== existing.country_computed) {
+      difference += requireGeoDiversity ? 0.6 : 0.3;
     }
     
     diversitySum += difference;
@@ -436,8 +445,8 @@ serve(async (req) => {
     // Step 7: Rank by semantic similarity
     const ranked = await rankBySemantic(filtered, criteria.semantic_query, openaiKey);
 
-    // Step 8: Select diverse subset
-    const selected = selectDiverse(ranked, personaCount);
+    // Step 8: Select diverse subset (boost geographic diversity if requested)
+    const selected = selectDiverse(ranked, personaCount, criteria.require_geographic_diversity ?? false);
 
     // Step 9: Format response
     const personas = selected.map(p => ({
