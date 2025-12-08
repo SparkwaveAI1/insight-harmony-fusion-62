@@ -61,11 +61,10 @@ async function executeAcpJob(
     // ============= STEP 1: PERSONA SELECTION =============
     await updateProgress('Searching for matching personas...', 10);
     
-    const { data: searchData, error: searchError } = await supabase.functions.invoke('acp-persona-search-v2', {
+    const { data: searchData, error: searchError } = await supabase.functions.invoke('smart-acp-search', {
       body: {
         research_query: effectiveQuery,
-        persona_count: num_personas,
-        min_results: 3
+        persona_count: num_personas
       }
     });
 
@@ -82,7 +81,7 @@ async function executeAcpJob(
       summary: p.demographics?.occupation 
         ? `${p.demographics.occupation}, ${p.demographics.age || 'unknown age'}, ${p.demographics.location || 'unknown location'}`
         : 'No summary available',
-      description: p.summary?.character_description || null,
+      description: p.conversation_summary?.character_description || null,
       full_profile: p.full_profile,
       demographics: p.demographics
     }));
