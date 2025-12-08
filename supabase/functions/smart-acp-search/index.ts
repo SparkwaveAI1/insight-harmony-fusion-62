@@ -227,7 +227,23 @@ async function rankBySemantic(
   const queryEmbedding = embResult.data[0].embedding;
 
   const withScores = personas.map(p => {
-    const similarity = cosineSimilarity(queryEmbedding, p.profile_embedding);
+    // Parse embedding string to array (Supabase returns vector columns as strings)
+    let personaEmbedding = p.profile_embedding;
+    if (typeof personaEmbedding === 'string') {
+      try {
+        personaEmbedding = JSON.parse(personaEmbedding);
+      } catch (e) {
+        console.error(`[smart-acp-search] Failed to parse embedding for ${p.name}: ${e}`);
+        return { ...p, similarity: 0 };
+      }
+    }
+    
+    if (!Array.isArray(personaEmbedding)) {
+      console.error(`[smart-acp-search] Embedding is not an array for ${p.name}`);
+      return { ...p, similarity: 0 };
+    }
+    
+    const similarity = cosineSimilarity(queryEmbedding, personaEmbedding);
     return { ...p, similarity };
   });
 
