@@ -90,53 +90,64 @@ async function validatePersonaSelection(
           role: 'system',
           content: `You validate whether personas are suitable for a market research study.
 
-YOUR TASK: Determine if each persona is a reasonable match for the research query. Think like a market researcher selecting participants.
+YOUR TASK: Determine if each persona is a REASONABLE match for the research intent. Think like a market researcher selecting participants who would provide valuable insights.
 
-VALIDATION APPROACH:
-1. UNDERSTAND THE INTENT - What type of person is the researcher looking for? Don't be overly literal.
-   - "people with anxiety" = anyone who experiences anxiety (mild, occasional, chronic - all count)
-   - "overweight people" = BMI >= 25
-   - "financially stressed" = anyone with money worries, debt issues, financial stressors
-   - "parents with children" = anyone with dependents/children
+VALIDATION PHILOSOPHY - BE INCLUSIVE, NOT LITERAL:
+The goal is to find people who can speak authentically to the research topic. Accept anyone who has relevant experience or perspective, even if their exact title doesn't match the query words.
 
-2. LOCATION REQUIREMENTS - These must be exact:
-   - If a specific state is required, the persona must be from that state
-   - "California" must be California (not Georgia, not Texas)
-   - For "different states" requirements, no two personas can share a state
+PROFESSIONAL/INDUSTRY MATCHING - USE BROAD CATEGORIES:
+- "crypto trader" = anyone actively involved in cryptocurrency (traders, investors, entrepreneurs, enthusiasts, day traders, HODLers, etc.)
+- "DeFi investor" = anyone involved in DeFi, crypto investing, blockchain finance, yield farming, liquidity providers
+- "tech worker" = software engineers, developers, IT staff, tech entrepreneurs, tech founders, data scientists
+- "healthcare professional" = doctors, nurses, therapists, pharmacists, healthcare administrators, medical researchers
+- A "crypto entrepreneur" IS a crypto person. An "NFT investor" IS a crypto person. Accept them.
 
-3. DIVERSITY CHECK - For research quality:
-   - Reject if two personas are nearly identical (same occupation + same age range + same location)
-   - Different perspectives make better research
+HEALTH/CONDITION MATCHING - BE GENEROUS:
+- "people with anxiety" = anyone with anxiety symptoms, mental health flags mentioning anxiety, stress, or worry
+- "overweight people" = BMI >= 25 or bmi_category containing "overweight" or "obese"
+- "financially stressed" = anyone with financial stressors, debt, money worries
 
-4. USE COMMON SENSE:
-   - A persona with "mild anxiety" IS a person with anxiety
-   - A persona with "financial stressors: [mortgage, medical bills]" IS financially stressed
-   - A persona who is a "single mother with 2 kids" IS a parent with children
-   - Don't reject based on technicalities - reject based on whether they fit the research intent
+LOCATION REQUIREMENTS - THESE ARE STRICT:
+- Specific state/city requirements must match exactly
+- "From California" must be California
+- "Different states" = no duplicate states allowed
+
+DIVERSITY CHECK:
+- Only reject if two personas are NEARLY IDENTICAL (same job + same age + same city)
+- Different perspectives within a category are GOOD (e.g., crypto trader vs crypto entrepreneur = diversity!)
 
 RESPOND WITH JSON:
 {
   "compliant_personas": ["persona_id1", "persona_id2"],
   "rejected_personas": [
-    {"persona_id": "xxx", "name": "Name", "reason": "Clear reason - e.g., 'From Texas, not California as required'"}
+    {"persona_id": "xxx", "name": "Name", "reason": "Clear reason - must be a hard mismatch like wrong location"}
   ]
 }
 
-Only reject personas for clear mismatches, not technicalities.`
+ONLY REJECT FOR:
+1. Wrong location when location was specified
+2. Duplicate state when unique states required
+3. Nearly identical to an already-accepted persona
+4. Completely unrelated to research topic (e.g., "crypto trader" query but persona is a teacher with no crypto involvement)
+
+DO NOT REJECT FOR:
+- Different job titles within the same industry/field
+- Slight variations in how they engage with the topic
+- Technicalities about exact wording`
         },
         {
           role: 'user',
-          content: `ORIGINAL QUERY: "${originalQuery}"
+          content: `RESEARCH QUERY: "${originalQuery}"
 PERSONAS NEEDED: ${neededCount} more
-${requiresUniqueStates ? `REQUIRES UNIQUE STATES - States already used (must NOT repeat): ${excludedStates.length > 0 ? excludedStates.join(', ') : 'None yet'}` : ''}
+${requiresUniqueStates ? `REQUIRES UNIQUE STATES - Already used (cannot repeat): ${excludedStates.length > 0 ? excludedStates.join(', ') : 'None yet'}` : ''}
 
-ALREADY ACCEPTED PERSONAS (for diversity check):
+ALREADY ACCEPTED (check diversity):
 ${existingSummaries}
 
-NEW PERSONAS TO VALIDATE:
+CANDIDATES TO EVALUATE:
 ${JSON.stringify(personaSummaries, null, 2)}
 
-For each persona, validate against ALL criteria in the original query. Be strict.`
+Remember: Accept anyone with relevant experience. Only reject for hard mismatches.`
         }
       ],
     }),
