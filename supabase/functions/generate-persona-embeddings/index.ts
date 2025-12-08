@@ -56,8 +56,9 @@ serve(async (req) => {
     const body: RequestBody = await req.json();
     const batchSize = Math.min(body.batch_size ?? 20, 50); // Smaller default, max 50 for reliability
     const forceRegenerate = body.force_regenerate ?? false;
+    const batchStartTime = new Date().toISOString(); // Track when this batch started for force-regenerate
 
-    console.log('[generate-embeddings] Starting batch of', batchSize);
+    console.log('[generate-embeddings] Starting batch of', batchSize, 'force_regenerate:', forceRegenerate);
 
     // Fetch personas that need embeddings
     let query = supabase
@@ -266,11 +267,25 @@ serve(async (req) => {
     console.log('[generate-embeddings] Updated', successCount, 'personas, errors:', errorCount);
 
     // Check how many still need embeddings
-    const { count: remainingCount } = await supabase
-      .from('v4_personas')
-      .select('persona_id', { count: 'exact', head: true })
-      .eq('creation_completed', true)
-      .is('profile_embedding', null);
+    let remainingCount = 0;
+    
+    if (forceRegenerate) {
+      // When force regenerating, count personas with old embeddings (from before this batch started)
+      const { count } = await supabase
+        .from('v4_personas')
+        .select('persona_id', { count: 'exact', head: true })
+        .eq('creation_completed', true)
+        .lt('embedding_updated_at', batchStartTime);
+      remainingCount = count ?? 0;
+    } else {
+      // Normal mode: count personas without any embedding
+      const { count } = await supabase
+        .from('v4_personas')
+        .select('persona_id', { count: 'exact', head: true })
+        .eq('creation_completed', true)
+        .is('profile_embedding', null);
+      remainingCount = count ?? 0;
+    }
 
     return new Response(
       JSON.stringify({

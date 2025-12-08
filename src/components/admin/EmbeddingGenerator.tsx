@@ -49,7 +49,7 @@ export const EmbeddingGenerator = () => {
     }
   }, [isAdmin]);
 
-  const runBatch = async (): Promise<boolean> => {
+  const runBatch = async (forceRegenerate: boolean = false): Promise<boolean> => {
     setLoading(true);
     setError(null);
 
@@ -59,7 +59,7 @@ export const EmbeddingGenerator = () => {
         {
           body: { 
             batch_size: 50,
-            force_regenerate: true  // TEMPORARY: Regenerate all with new comprehensive text
+            force_regenerate: forceRegenerate
           },
         }
       );
@@ -83,13 +83,13 @@ export const EmbeddingGenerator = () => {
     }
   };
 
-  const runAutomatic = async () => {
+  const runAutomatic = async (forceRegenerate: boolean = false) => {
     setAutoRunning(true);
     let hasMore = true;
     let batchCount = 0;
 
     while (hasMore && batchCount < 100) { // Safety limit
-      hasMore = await runBatch();
+      hasMore = await runBatch(forceRegenerate);
       batchCount++;
       
       if (hasMore) {
@@ -152,7 +152,7 @@ export const EmbeddingGenerator = () => {
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
           <Button
-            onClick={runBatch}
+            onClick={() => runBatch(false)}
             disabled={loading || autoRunning || stats?.remaining === 0}
             variant="outline"
           >
@@ -166,17 +166,17 @@ export const EmbeddingGenerator = () => {
           {!autoRunning ? (
             <>
               <Button
-                onClick={runAutomatic}
+                onClick={() => runAutomatic(false)}
                 disabled={loading || stats?.remaining === 0}
               >
                 <Play className="mr-2 h-4 w-4" />
                 Run All Automatically
               </Button>
               <Button
-                onClick={runAutomatic}
+                onClick={() => runAutomatic(true)}
                 disabled={loading}
                 variant="secondary"
-                title="Regenerate all embeddings even if they already exist (uses force_regenerate: true)"
+                title="Regenerate all embeddings even if they already exist"
               >
                 <Play className="mr-2 h-4 w-4" />
                 Force Regenerate All
