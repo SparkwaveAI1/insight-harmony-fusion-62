@@ -101,6 +101,45 @@ export type Database = {
         }
         Relationships: []
       }
+      acp_search_logs: {
+        Row: {
+          attempts: Json
+          created_at: string | null
+          final_success: boolean
+          id: string
+          job_id: string
+          original_query: string
+          personas_selected: number
+          rejection_reason: string | null
+          requested_count: number
+          total_duration_ms: number | null
+        }
+        Insert: {
+          attempts: Json
+          created_at?: string | null
+          final_success: boolean
+          id?: string
+          job_id: string
+          original_query: string
+          personas_selected: number
+          rejection_reason?: string | null
+          requested_count: number
+          total_duration_ms?: number | null
+        }
+        Update: {
+          attempts?: Json
+          created_at?: string | null
+          final_success?: boolean
+          id?: string
+          job_id?: string
+          original_query?: string
+          personas_selected?: number
+          rejection_reason?: string | null
+          requested_count?: number
+          total_duration_ms?: number | null
+        }
+        Relationships: []
+      }
       admin_alerts: {
         Row: {
           created_at: string
