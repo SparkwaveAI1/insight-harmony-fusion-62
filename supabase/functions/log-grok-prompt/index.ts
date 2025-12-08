@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,17 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.error("Missing SUPABASE envs");
-      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const body = await req.json();
     const {
       source = "unknown",
@@ -44,40 +32,19 @@ serve(async (req) => {
       });
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
     const metadata = {
       source,
       persona_id,
       persona_name,
-      user_message,
-      system_instructions,
+      user_message: user_message.substring(0, 200), // Truncate for logging
+      system_instructions: system_instructions ? system_instructions.substring(0, 100) + '...' : null,
       conversation_id,
-      conversation_history: Array.isArray(conversation_history)
-        ? conversation_history.slice(-5)
-        : [],
+      conversation_history_count: Array.isArray(conversation_history) ? conversation_history.length : 0,
       ...extra,
     };
 
-    const insertPayload = {
-      type: "grok_prompt",
-      message: "Grok prompt sent",
-      severity: "low",
-      status: "active",
-      metadata,
-    } as const;
-
-    const { error } = await supabaseAdmin
-      .from("admin_alerts")
-      .insert(insertPayload);
-
-    if (error) {
-      console.error("Failed to insert grok prompt log", error);
-      return new Response(JSON.stringify({ success: false, error: error.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    // Log to console instead of database to avoid spam
+    console.log('[GROK-PROMPT]', JSON.stringify(metadata));
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
