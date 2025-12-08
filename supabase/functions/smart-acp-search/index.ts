@@ -362,10 +362,45 @@ serve(async (req) => {
     const criteria = await parseQueryWithGPT(body.research_query, openaiKey);
     console.log(`[smart-acp-search] Parsed criteria:`, JSON.stringify(criteria));
 
-    // Step 2: Check for multi-segment query
+    // Step 2: Check for multi-segment query - use inline semantic search (not recursive calls)
     if (criteria.segments && criteria.segments.length > 1) {
+      console.log(`[smart-acp-search] Multi-segment query: ${criteria.segments.length} segments`);
+      
+      // First, get all candidates using hard filters (same pool for all segments)
+      const segmentDbQuery = buildDatabaseFilter(supabase, criteria, excludeIds, excludeStates);
+      const { data: segmentDbResults, error: segmentDbError } = await segmentDbQuery.limit(500);
+      
+      if (segmentDbError) {
+        throw new Error(`Database query failed: ${segmentDbError.message}`);
+      }
+      
+      let candidatePool = segmentDbResults || [];
+      if (criteria.bmi_min || criteria.bmi_max) {
+        candidatePool = filterByBMI(candidatePool, criteria);
+      }
+      
+      console.log(`[smart-acp-search] Candidate pool: ${candidatePool.length} personas for segment matching`);
+      
+      if (candidatePool.length === 0) {
+        const duration = Date.now() - startTime;
+        return new Response(
+          JSON.stringify({
+            success: false,
+            status: 'NO_MATCH',
+            request_id: requestId,
+            query: body.research_query,
+            parsed_criteria: criteria,
+            personas: [],
+            duration_ms: duration,
+            reason: `No personas match base criteria for multi-segment query`,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Search each segment separately using rankBySemantic
       const allPersonas: any[] = [];
-      const allExcludeIds = [...excludeIds];
+      const selectedIds = new Set<string>();
       const perSegment = Math.ceil(personaCount / criteria.segments.length);
       
       for (const segment of criteria.segments) {
@@ -374,26 +409,30 @@ serve(async (req) => {
         const needed = Math.min(perSegment, personaCount - allPersonas.length);
         console.log(`[smart-acp-search] Segment: "${segment}", need: ${needed}`);
         
-        // Recursive call for each segment
-        const { data: segmentData, error: segmentError } = await supabase.functions.invoke('smart-acp-search', {
-          body: {
-            research_query: segment,
-            persona_count: needed,
-            exclude_persona_ids: allExcludeIds,
-          },
-        });
+        // Rank ALL candidates for THIS specific segment
+        const segmentRanked = await rankBySemantic(candidatePool, segment, openaiKey);
         
-        if (segmentError) {
-          console.error(`[smart-acp-search] Segment error:`, segmentError);
-          continue;
+        // Log top 3 matches for this segment
+        const top3 = segmentRanked.slice(0, 3);
+        console.log(`[smart-acp-search] Top matches for "${segment}":`, 
+          top3.map(p => `${p.name} (${p.similarity?.toFixed(3)})`).join(', '));
+        
+        // Take top N that aren't already selected
+        let addedForSegment = 0;
+        for (const persona of segmentRanked) {
+          if (addedForSegment >= needed) break;
+          if (selectedIds.has(persona.persona_id)) continue;
+          
+          selectedIds.add(persona.persona_id);
+          allPersonas.push({ 
+            ...persona, 
+            segment_query: segment,
+            match_reason: `Matched for: ${segment} (score: ${persona.similarity?.toFixed(3)})`
+          });
+          addedForSegment++;
         }
         
-        if (segmentData?.personas) {
-          for (const p of segmentData.personas) {
-            allPersonas.push({ ...p, segment_query: segment });
-            allExcludeIds.push(p.persona_id);
-          }
-        }
+        console.log(`[smart-acp-search] Added ${addedForSegment} personas for segment "${segment}"`);
       }
       
       const duration = Date.now() - startTime;
@@ -406,7 +445,7 @@ serve(async (req) => {
           parsed_criteria: criteria,
           personas: allPersonas,
           duration_ms: duration,
-          reason: `Found ${allPersonas.length} personas across ${criteria.segments.length} segments`,
+          reason: `Found ${allPersonas.length} personas across ${criteria.segments.length} segments (inline search)`,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
