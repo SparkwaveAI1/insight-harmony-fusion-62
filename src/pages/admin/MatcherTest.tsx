@@ -1,6 +1,7 @@
 import { CollectionMatcherTest } from "@/components/admin/CollectionMatcherTest";
 import { EmbeddingGenerator } from "@/components/admin/EmbeddingGenerator";
 import { SemanticSearchTest } from "@/components/admin/SemanticSearchTest";
+import { ACPSemanticSearchTest } from "@/components/admin/ACPSemanticSearchTest";
 import { CollectionPersonaMatcher } from "@/components/collections/CollectionPersonaMatcher";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
@@ -22,6 +23,7 @@ const MatcherTest = () => {
                   <SidebarTrigger className="hidden md:flex" />
                   <h1 className="text-3xl font-bold">Collection Matcher Test</h1>
                 </div>
+                <ACPSemanticSearchTest />
                 <CollectionPersonaMatcher />
                 <SemanticSearchTest />
                 <EmbeddingGenerator />
