@@ -109,8 +109,9 @@ function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds
     if (criteria.states.length === 1) {
       query = query.ilike('state_region_computed', `%${criteria.states[0]}%`);
     } else {
-      // Multiple states - build OR filter
-      const stateFilters = criteria.states.map(s => `state_region_computed.ilike.%${s}%`).join(',');
+      // Multiple states - build OR filter using PostgREST syntax
+      // Format: state_region_computed.ilike.*California*,state_region_computed.ilike.*New York*
+      const stateFilters = criteria.states.map(s => `state_region_computed.ilike.*${s}*`).join(',');
       query = query.or(stateFilters);
     }
   }
