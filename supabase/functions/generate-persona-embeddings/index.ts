@@ -85,6 +85,9 @@ serve(async (req) => {
       query = query.is('profile_embedding', null);
     }
 
+    // Order by embedding age: nulls first (new personas), then oldest embeddings
+    // This ensures each batch progresses through all personas deterministically
+    query = query.order('embedding_updated_at', { ascending: true, nullsFirst: true });
     query = query.limit(batchSize);
 
     const { data: personas, error: fetchError } = await query;
