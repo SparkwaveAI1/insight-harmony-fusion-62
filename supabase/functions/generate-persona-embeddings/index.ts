@@ -216,6 +216,25 @@ serve(async (req) => {
           ? 'financial stress: ' + fp.money_profile.financial_stressors.join(', ') : '',
         fp?.money_profile?.money_conflicts ?? '',
 
+        // Investment style - CRITICAL for finding investors by behavior
+        fp?.money_profile?.savings_investing_habits?.investing_style ?? '',
+
+        // Social circles - CRITICAL for finding community involvement
+        Array.isArray(fp?.relationships?.friend_network?.anchor_contexts)
+          ? 'social circles: ' + fp.relationships.friend_network.anchor_contexts.join(', ') 
+          : '',
+
+        // Attitude narrative - rich text about persona's mindset
+        fp?.attitude_narrative ?? '',
+
+        // Political narrative - political leanings in natural language  
+        fp?.political_narrative ?? '',
+
+        // Proof points - what convinces this persona to act
+        Array.isArray(fp?.adoption_profile?.proof_points_needed)
+          ? 'convinced by: ' + fp.adoption_profile.proof_points_needed.join(', ') 
+          : '',
+
         // From full_profile - daily life (mental preoccupations)
         Array.isArray(fp?.daily_life?.mental_preoccupations)
           ? fp.daily_life.mental_preoccupations.join(', ') : '',
