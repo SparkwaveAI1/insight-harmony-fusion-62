@@ -26,6 +26,8 @@ interface SmartSearchRequest {
   research_query: string;
   persona_count?: number;
   exclude_persona_ids?: string[];
+  exclude_states?: string[];  // For "different states" queries - exclude already-selected states
+  additional_context?: string;  // Context for retry searches
 }
 
 async function parseQueryWithGPT(query: string, openaiKey: string): Promise<ParsedCriteria> {
@@ -95,7 +97,7 @@ Examples:
   return JSON.parse(result.choices[0].message.content);
 }
 
-function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds: string[]) {
+function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds: string[], excludeStates?: string[]) {
   let query = supabase
     .from('v4_personas')
     .select(`
@@ -137,6 +139,13 @@ function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds
   
   if (excludeIds.length > 0) {
     query = query.not('persona_id', 'in', `(${excludeIds.join(',')})`);
+  }
+
+  // Exclude specific states (for diversity in retry searches)
+  if (excludeStates && excludeStates.length > 0) {
+    for (const state of excludeStates) {
+      query = query.not('state_region_computed', 'ilike', `%${state}%`);
+    }
   }
 
   return query;
@@ -340,8 +349,9 @@ serve(async (req) => {
 
     const personaCount = body.persona_count ?? 5;
     const excludeIds = body.exclude_persona_ids ?? [];
+    const excludeStates = body.exclude_states ?? [];
 
-    console.log(`[smart-acp-search] Request ${requestId}: "${body.research_query}", count: ${personaCount}`);
+    console.log(`[smart-acp-search] Request ${requestId}: "${body.research_query}", count: ${personaCount}, excludeStates: ${excludeStates.length > 0 ? excludeStates.join(', ') : 'none'}`);
 
     // Step 1: Parse query with GPT
     const criteria = await parseQueryWithGPT(body.research_query, openaiKey);
@@ -398,7 +408,7 @@ serve(async (req) => {
     }
 
     // Step 3: Build and execute database query with hard filters
-    const dbQuery = buildDatabaseFilter(supabase, criteria, excludeIds);
+    const dbQuery = buildDatabaseFilter(supabase, criteria, excludeIds, excludeStates);
     const { data: dbResults, error: dbError } = await dbQuery.limit(500);
 
     if (dbError) {
