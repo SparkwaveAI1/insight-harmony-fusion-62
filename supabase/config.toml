@@ -95,3 +95,6 @@ verify_jwt = true
 
 [functions.acp-semantic-search]
 verify_jwt = false
+
+[functions.smart-acp-search]
+verify_jwt = true
