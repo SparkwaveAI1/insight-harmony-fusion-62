@@ -429,11 +429,9 @@ serve(async (req) => {
       console.log(`[smart-acp-search] After BMI filter: ${filtered.length} candidates`);
     }
 
-    // Step 5: Apply occupation keyword filter
-    if (criteria.occupation_keywords) {
-      filtered = filterByOccupation(filtered, criteria.occupation_keywords);
-      console.log(`[smart-acp-search] After occupation filter: ${filtered.length} candidates`);
-    }
+    // Step 5: Occupation filter REMOVED - semantic search handles this better
+    // The filterByOccupation function is kept for potential future soft-scoring use
+    console.log(`[smart-acp-search] Skipping occupation filter, semantic ranking will handle relevance`);
 
     // Step 6: Check if we have enough results
     if (filtered.length === 0) {
