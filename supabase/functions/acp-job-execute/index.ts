@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { searchWithValidationAndRetry } from './searchWithRetry.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -58,26 +59,49 @@ async function executeAcpJob(
       effectiveQuery = `Find personas relevant to: ${questions.join(' ')}`;
     }
 
-    // ============= STEP 1: PERSONA SELECTION =============
+    // ============= STEP 1: PERSONA SELECTION WITH VALIDATION =============
     await updateProgress('Searching for matching personas...', 10);
     
-    const { data: searchData, error: searchError } = await supabase.functions.invoke('smart-acp-search', {
-      body: {
-        research_query: effectiveQuery,
-        persona_count: num_personas
-      }
-    });
-
-    if (searchError || !searchData?.success) {
-      const errorMsg = searchError?.message || searchData?.reason || 'Persona search failed';
-      throw new Error(`persona_search_failed: ${errorMsg}`);
+    // Get OpenAI key for validation
+    const openaiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiKey) {
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
-    const selectedPersonas = (searchData.personas || []).map((p: any) => ({
+    // Search with validation and retry
+    const searchResult = await searchWithValidationAndRetry(
+      effectiveQuery,
+      num_personas,
+      String(job_id),
+      supabase,
+      openaiKey,
+      2 // max retries
+    );
+
+    if (!searchResult.success) {
+      // Update job status to failed with search log
+      await supabase
+        .from('acp_jobs')
+        .update({ 
+          status: 'failed', 
+          error_message: searchResult.rejection_reason,
+          progress_data: { 
+            message: 'Persona search failed',
+            percent: 15,
+            search_log: searchResult.log 
+          }
+        })
+        .eq('id', internalJobId);
+      
+      throw new Error(`persona_search_failed: ${searchResult.rejection_reason}`);
+    }
+
+    // Use the validated personas
+    const selectedPersonas = searchResult.personas.map((p: any) => ({
       persona_id: p.persona_id,
       name: p.name,
       match_score: p.match_score || 0.5,
-      match_reason: p.match_reason || 'No evaluation',
+      match_reason: p.match_reason || 'Validated by LLM',
       summary: p.demographics?.occupation 
         ? `${p.demographics.occupation}, ${p.demographics.age || 'unknown age'}, ${p.demographics.location || 'unknown location'}`
         : 'No summary available',
@@ -86,19 +110,15 @@ async function executeAcpJob(
       demographics: p.demographics
     }));
 
-    if (selectedPersonas.length === 0) {
-      throw new Error(`no_matching_personas: No personas found for "${effectiveQuery}"`);
-    }
+    console.log(`✅ [ACP-JOB] Selected ${selectedPersonas.length} validated personas after ${searchResult.log.attempts.length} attempt(s)`);
 
     const searchMetadata = {
-      parsed_criteria: searchData.parsed_criteria,
-      matched_collections: searchData.matched_collections,
-      decision_summary: searchData.decision_summary,
-      stages: searchData.stages || []
+      validation_log: searchResult.log,
+      attempts: searchResult.log.attempts.length,
+      total_duration_ms: searchResult.log.total_duration_ms
     };
 
-    console.log(`✅ [ACP-JOB] Found ${selectedPersonas.length} personas`);
-    await updateProgress(`Found ${selectedPersonas.length} personas, starting interviews...`, 20);
+    await updateProgress(`Found ${selectedPersonas.length} validated personas, starting interviews...`, 20);
 
     // ============= STEP 2: RUN STUDY (PARALLELIZED) =============
     const personaIds = selectedPersonas.map((p: any) => p.persona_id);
