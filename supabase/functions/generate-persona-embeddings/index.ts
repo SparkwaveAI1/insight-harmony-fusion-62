@@ -143,9 +143,19 @@ serve(async (req) => {
         fp?.identity?.relationship_status ?? '',
         fp?.identity?.occupation ?? '',
 
-        // From full_profile - health
+        // From full_profile - health (with computed weight category for semantic matching)
         fp?.health_profile?.bmi ? `BMI ${fp.health_profile.bmi}` : '',
         fp?.health_profile?.bmi_category ?? '',
+        // Computed weight category for natural language matching
+        (() => {
+          const bmi = parseFloat(fp?.health_profile?.bmi);
+          if (isNaN(bmi)) return '';
+          if (bmi >= 35) return 'severely obese morbidly obese very overweight extremely heavy';
+          if (bmi >= 30) return 'obese obesity overweight heavy high body weight';
+          if (bmi >= 25) return 'overweight heavier above average weight';
+          if (bmi < 18.5) return 'underweight thin skinny low body weight';
+          return 'normal weight healthy weight average build';
+        })(),
         fp?.health_profile?.fitness_level ?? '',
         fp?.health_profile?.diet_pattern ?? '',
         Array.isArray(fp?.health_profile?.chronic_conditions) 
