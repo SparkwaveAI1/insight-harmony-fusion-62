@@ -49,9 +49,10 @@ export async function getMyV4PersonasShowAll(userId: string): Promise<V4Persona[
   console.log("Current session:", session?.user?.id);
   console.log("Session access token present:", !!session?.access_token);
   
+  // Fetch lightweight columns only - full_profile fetched on-demand for single persona views
   const { data, error } = await supabase
     .from('v4_personas')
-    .select('persona_id, name, schema_version, full_profile, created_at, is_public, user_id, profile_image_url, conversation_summary')
+    .select('persona_id, name, schema_version, created_at, is_public, user_id, profile_image_url, profile_thumbnail_url, conversation_summary, age_computed, gender_computed, occupation_computed, city_computed, state_region_computed, country_computed')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
