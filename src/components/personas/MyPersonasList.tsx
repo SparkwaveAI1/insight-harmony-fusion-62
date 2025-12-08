@@ -101,9 +101,18 @@ const MyPersonasList = ({
     });
   };
 
-  // Determine which personas to show
-  const useSemanticSearch = searchQuery.length >= 2;
-  const basePersonas = useSemanticSearch ? userSemanticResults : allPersonas;
+  // Simple local name filter - check before using semantic search
+  const nameMatches = searchQuery.trim()
+    ? allPersonas.filter(p => 
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  // Priority: 1) Name matches, 2) Semantic search, 3) All personas
+  const useSemanticSearch = searchQuery.length >= 2 && nameMatches.length === 0;
+  const basePersonas = nameMatches.length > 0
+    ? nameMatches
+    : (useSemanticSearch ? userSemanticResults : allPersonas);
   const filteredPersonas = applyAgeFilter(basePersonas);
 
   // Pagination
