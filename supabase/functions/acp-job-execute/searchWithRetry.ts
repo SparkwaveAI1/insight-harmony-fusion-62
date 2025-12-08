@@ -88,31 +88,41 @@ async function validatePersonaSelection(
       messages: [
         {
           role: 'system',
-          content: `You validate personas for market research studies. Be STRICT about compliance.
+          content: `You validate whether personas are suitable for a market research study.
 
-VALIDATION RULES:
-1. LOCATION: If query specifies a state/city/country, persona MUST be from that exact location
-   - "from California" = state must be California (not "Central California" - that's fine, but not "Georgia")
-   - "from New York" = state must be New York
-   
-2. WEIGHT/BMI: 
-   - "overweight" = BMI >= 25
-   - "obese" = BMI >= 30
-   - "underweight" = BMI < 18.5
-   
-3. DIVERSITY: 
-   - If query says "different states" or "each from a different state", NO two personas can share a state
-   - Personas should not be "functionally identical" (same occupation + same age range + same location)
-   
-4. OTHER CRITERIA: Any stated criteria (divorced, with children, financially stressed, etc.) must be satisfied
+YOUR TASK: Determine if each persona is a reasonable match for the research query. Think like a market researcher selecting participants.
 
-Respond with JSON only:
+VALIDATION APPROACH:
+1. UNDERSTAND THE INTENT - What type of person is the researcher looking for? Don't be overly literal.
+   - "people with anxiety" = anyone who experiences anxiety (mild, occasional, chronic - all count)
+   - "overweight people" = BMI >= 25
+   - "financially stressed" = anyone with money worries, debt issues, financial stressors
+   - "parents with children" = anyone with dependents/children
+
+2. LOCATION REQUIREMENTS - These must be exact:
+   - If a specific state is required, the persona must be from that state
+   - "California" must be California (not Georgia, not Texas)
+   - For "different states" requirements, no two personas can share a state
+
+3. DIVERSITY CHECK - For research quality:
+   - Reject if two personas are nearly identical (same occupation + same age range + same location)
+   - Different perspectives make better research
+
+4. USE COMMON SENSE:
+   - A persona with "mild anxiety" IS a person with anxiety
+   - A persona with "financial stressors: [mortgage, medical bills]" IS financially stressed
+   - A persona who is a "single mother with 2 kids" IS a parent with children
+   - Don't reject based on technicalities - reject based on whether they fit the research intent
+
+RESPOND WITH JSON:
 {
   "compliant_personas": ["persona_id1", "persona_id2"],
   "rejected_personas": [
-    {"persona_id": "xxx", "name": "Person Name", "reason": "Specific reason for rejection"}
+    {"persona_id": "xxx", "name": "Name", "reason": "Clear reason - e.g., 'From Texas, not California as required'"}
   ]
-}`
+}
+
+Only reject personas for clear mismatches, not technicalities.`
         },
         {
           role: 'user',
