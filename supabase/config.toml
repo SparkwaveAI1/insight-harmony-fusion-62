@@ -92,3 +92,6 @@ verify_jwt = true
 
 [functions.semantic-persona-search]
 verify_jwt = true
+
+[functions.acp-semantic-search]
+verify_jwt = false
