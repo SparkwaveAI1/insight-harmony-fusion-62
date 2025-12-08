@@ -15,6 +15,7 @@ interface ACPJobResults {
       persona_id: string;
       persona_name: string;
       persona_summary?: string;
+      persona_description?: string;
       responses: Array<{
         question: string;
         response: string;
@@ -138,6 +139,7 @@ export const ACPSurveyResults: React.FC<ACPSurveyResultsProps> = ({ job }) => {
         return response ? {
           personaId: persona.persona_id,
           personaName: persona.persona_name,
+          personaDescription: persona.persona_description,
           responseText: response.response
         } : null;
       })
@@ -155,6 +157,7 @@ export const ACPSurveyResults: React.FC<ACPSurveyResultsProps> = ({ job }) => {
     personaId: persona.persona_id,
     personaName: persona.persona_name,
     personaSummary: persona.persona_summary,
+    personaDescription: persona.persona_description,
     responses: persona.responses.map((r, idx) => ({
       questionIndex: idx,
       questionText: r.question,
@@ -286,6 +289,11 @@ export const ACPSurveyResults: React.FC<ACPSurveyResultsProps> = ({ job }) => {
                   questionData.responses.map((personaResponse: any) => (
                     <div key={`q${questionData.questionIndex}-p${personaResponse.personaId}`} className="p-3 border rounded-lg">
                       <div className="font-medium mb-1">{personaResponse.personaName}</div>
+                      {personaResponse.personaDescription && (
+                        <p className="text-sm text-muted-foreground mb-2 p-2 bg-muted/50 rounded italic">
+                          {personaResponse.personaDescription}
+                        </p>
+                      )}
                       <p className="text-sm whitespace-pre-wrap">{personaResponse.responseText}</p>
                     </div>
                   ))
@@ -308,10 +316,10 @@ export const ACPSurveyResults: React.FC<ACPSurveyResultsProps> = ({ job }) => {
                   <CardTitle className="text-lg">
                     {personaData.personaName}
                   </CardTitle>
-                  {personaData.personaSummary && (
-                    <CardDescription className="whitespace-pre-wrap">
-                      {personaData.personaSummary}
-                    </CardDescription>
+                  {personaData.personaDescription && (
+                    <div className="mt-2 p-3 bg-muted/30 rounded-lg border-l-2 border-primary">
+                      <p className="text-sm italic text-muted-foreground">{personaData.personaDescription}</p>
+                    </div>
                   )}
                   <CardDescription>
                     {personaData.responses.length} of {questions.length} questions answered

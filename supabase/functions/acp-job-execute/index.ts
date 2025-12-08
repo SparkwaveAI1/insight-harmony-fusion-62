@@ -82,6 +82,7 @@ async function executeAcpJob(
       summary: p.demographics?.occupation 
         ? `${p.demographics.occupation}, ${p.demographics.age || 'unknown age'}, ${p.demographics.location || 'unknown location'}`
         : 'No summary available',
+      description: p.summary?.character_description || null,
       full_profile: p.full_profile,
       demographics: p.demographics
     }));
@@ -176,6 +177,7 @@ async function executeAcpJob(
       persona_id: persona.persona_id,
       persona_name: persona.name,
       persona_summary: persona.summary,
+      persona_description: persona.description,
       responses: allResults[persona.persona_id] || []
     }));
 
