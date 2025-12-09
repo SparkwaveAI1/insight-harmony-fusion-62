@@ -9,7 +9,7 @@ interface PersonaStats {
   briefDescriptions: number;
 }
 
-export function usePersonaStats() {
+export function usePersonaStats(allUsers: boolean = false) {
   const [stats, setStats] = useState<PersonaStats>({
     totalPersonas: 0,
     missingDemographics: 0,
@@ -23,17 +23,21 @@ export function usePersonaStats() {
     try {
       setLoading(true);
       
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('Error getting user:', userError);
-        return;
+      let query = supabase
+        .from('v4_personas')
+        .select('persona_id, full_profile');
+      
+      // Only filter by user_id if not counting all users
+      if (!allUsers) {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('Error getting user:', userError);
+          return;
+        }
+        query = query.eq('user_id', user.id);
       }
 
-      const { data: personas, error } = await supabase
-        .from('v4_personas')
-        .select('persona_id, full_profile')
-        .eq('user_id', user.id);
+      const { data: personas, error } = await query;
 
       if (error) {
         console.error('Error fetching personas:', error);
