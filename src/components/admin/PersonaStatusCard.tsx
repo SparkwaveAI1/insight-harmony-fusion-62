@@ -3,7 +3,7 @@ import { BarChart3, Users, Database, GraduationCap, FileText } from "lucide-reac
 import { usePersonaStats } from "@/hooks/usePersonaStats";
 
 export function PersonaStatusCard() {
-  const { stats, loading } = usePersonaStats();
+  const { stats, loading } = usePersonaStats(true); // true = count all users' personas
 
   if (loading) {
     return (
