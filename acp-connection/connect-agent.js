@@ -92,6 +92,52 @@ async function logDeliveryAttempt(jobId, deliverable, attemptType, deliverError 
   }
 }
 
+/**
+ * PRECHECK: Fast check if we can fulfill a job BEFORE accepting it
+ * This prevents accepting jobs we can't complete (user won't be charged)
+ */
+async function precheckJob(job) {
+  console.log(`🔍 [PRECHECK] Checking if we can fulfill job ${job.id}...`);
+  
+  try {
+    const payload = {
+      action: 'precheck',
+      job_id: job.id,
+      ...job.serviceRequirement
+    };
+    
+    const response = await fetch(config.jobExecutionWebhook, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-ACP-Job-ID': job.id
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`⚠️ [PRECHECK] Webhook error: ${response.status} - ${errorText}`);
+      // On error, be conservative and reject
+      return { can_fulfill: false, reason: `Precheck failed: ${errorText}` };
+    }
+
+    const result = await response.json();
+    console.log(`🔍 [PRECHECK] Result:`, JSON.stringify(result, null, 2));
+    
+    return {
+      can_fulfill: result.can_fulfill === true,
+      reason: result.reason || 'Unknown',
+      match_count: result.match_count || 0,
+      requested_count: result.requested_count || 0
+    };
+  } catch (error) {
+    console.log(`⚠️ [PRECHECK] Error: ${error.message}`);
+    // On error, be conservative and reject
+    return { can_fulfill: false, reason: `Precheck error: ${error.message}` };
+  }
+}
+
 async function executeJob(job) {
   console.log(`\n📋 Job Details:`);
   console.log(`   ID: ${job.id}`);
@@ -155,6 +201,14 @@ async function executeJob(job) {
           return result; // Return the full results object (contains study_results)
         }
         
+        // Check for should_reject flag (job failed during execution)
+        if (result.status === 'rejected' || result.should_reject === true) {
+          const error = new Error(result.rejection_reason || result.error || 'Job rejected during execution');
+          error.should_reject = true;
+          error.rejection_reason = result.rejection_reason || result.error;
+          throw error;
+        }
+        
         if (result.status === 'failed') {
           throw new Error(result.error || 'Job failed');
         }
@@ -199,19 +253,41 @@ async function main() {
         activeJobs.set(job.id, { status: 'received', receivedAt: new Date() });
         
         try {
-          // Accept the job
-          console.log(`   Accepting job...`);
+          // ============= PRECHECK BEFORE ACCEPTING =============
+          // This is critical: we check if we can fulfill the job BEFORE accepting
+          // If we can't fulfill, we reject immediately (user won't be charged)
+          console.log(`\n🔍 Step 1: PRECHECK - Can we fulfill this job?`);
+          const precheckResult = await precheckJob(job);
+          
+          if (!precheckResult.can_fulfill) {
+            console.log(`❌ PRECHECK FAILED: ${precheckResult.reason}`);
+            console.log(`   Rejecting job BEFORE acceptance (user won't be charged)`);
+            
+            // REJECT the job - this is the proper ACP protocol
+            await acpClient.respondJob(job.id, job.memoId, false, precheckResult.reason);
+            activeJobs.get(job.id).status = 'rejected_precheck';
+            activeJobs.get(job.id).rejection_reason = precheckResult.reason;
+            
+            console.log(`✅ Job ${job.id} properly REJECTED via ACP protocol`);
+            return; // Stop processing this job
+          }
+          
+          console.log(`✅ PRECHECK PASSED: ${precheckResult.reason}`);
+          console.log(`   Found ${precheckResult.match_count} potential personas (need ${precheckResult.requested_count})`);
+          
+          // ============= ACCEPT THE JOB =============
+          console.log(`\n📋 Step 2: ACCEPT - Accepting job...`);
           await acpClient.respondJob(job.id, job.memoId, true, 'PersonaAI ready to process');
           activeJobs.get(job.id).status = 'accepted';
+          console.log(`✅ Job ${job.id} accepted`);
           
-          // Execute the job
-          console.log(`   Executing job...`);
+          // ============= EXECUTE THE JOB =============
+          console.log(`\n⚙️ Step 3: EXECUTE - Running research...`);
           const result = await executeJob(job);
           activeJobs.get(job.id).status = 'executed';
           
-          // Deliver the result - send small JSON with results URL instead of full payload
-          // This avoids ACP payload size limits
-          console.log(`   Delivering result...`);
+          // ============= DELIVER THE RESULT =============
+          console.log(`\n📦 Step 4: DELIVER - Sending results...`);
           
           const studyResults = result.study_results || result.deliverable?.study_results || {};
           const deliverableData = {
@@ -230,6 +306,7 @@ async function main() {
           console.log(`   Deliverable type: ${deliverablePayload.type}`);
           console.log(`   Deliverable size: ${deliverablePayload.value.length} bytes`);
           console.log(`   Results URL: ${deliverableData.results_url}`);
+          
           // Log BEFORE delivery attempt
           await logDeliveryAttempt(job.id, deliverablePayload, 'before_deliver');
           
@@ -237,29 +314,34 @@ async function main() {
             await acpClient.deliverJob(job.id, deliverablePayload);
             await logDeliveryAttempt(job.id, deliverablePayload, 'success');
             activeJobs.get(job.id).status = 'delivered';
-            console.log(`✅ Job ${job.id} completed and delivered`);
+            console.log(`\n✅✅✅ Job ${job.id} COMPLETED SUCCESSFULLY ✅✅✅`);
           } catch (deliverError) {
             await logDeliveryAttempt(job.id, deliverablePayload, 'failed', deliverError.message);
             throw deliverError; // Re-throw to hit outer catch
           }
           
         } catch (error) {
-          console.error(`❌ Error processing job ${job.id}:`, error.message);
+          console.error(`\n❌ Error processing job ${job.id}:`, error.message);
           activeJobs.get(job.id).status = 'failed';
           activeJobs.get(job.id).error = error.message;
           
-          // Log the error delivery attempt
+          // Log the error
           const errorDeliverable = { 
             type: "text", 
             value: `Research execution failed: ${error.message}` 
           };
           await logDeliveryAttempt(job.id, errorDeliverable, 'error_fallback', error.message);
           
-          // Try to respond with rejection if we haven't accepted yet
-          try {
-            await acpClient.respondJob(job.id, job.memoId, false, `Error: ${error.message}`);
-          } catch (rejectError) {
-            console.error(`   Could not reject job:`, rejectError.message);
+          // Note: If we already accepted the job, we can't reject it anymore
+          // The job will fail and the user may still be charged
+          // This is why PRECHECK is so important - reject BEFORE accepting
+          console.log(`⚠️ Job ${job.id} failed after acceptance - user may be charged`);
+          console.log(`   Error: ${error.message}`);
+          
+          // If the error has should_reject flag, log it
+          if (error.should_reject) {
+            console.log(`   This error indicates the job should have been rejected`);
+            console.log(`   Rejection reason: ${error.rejection_reason}`);
           }
         }
       },
@@ -292,6 +374,12 @@ async function main() {
     console.log('💚 Listening for job requests...');
     console.log('   Press Ctrl+C to disconnect');
     console.log('');
+    console.log('📋 Job Flow:');
+    console.log('   1. PRECHECK - Check if we can fulfill before accepting');
+    console.log('   2. ACCEPT   - Accept job (only if precheck passes)');
+    console.log('   3. EXECUTE  - Run the research');
+    console.log('   4. DELIVER  - Send results to buyer');
+    console.log('');
     
     // Keep the process alive
     process.on('SIGINT', async () => {
@@ -302,7 +390,7 @@ async function main() {
       if (activeJobs.size > 0) {
         console.log('\n📊 Job Summary:');
         for (const [jobId, info] of activeJobs) {
-          console.log(`   ${jobId}: ${info.status}`);
+          console.log(`   ${jobId}: ${info.status}${info.rejection_reason ? ` (${info.rejection_reason})` : ''}`);
         }
       }
       
@@ -314,7 +402,14 @@ async function main() {
     // Periodic status report
     setInterval(() => {
       const now = new Date();
-      console.log(`\n💓 [${now.toISOString()}] PersonaAI heartbeat - Active jobs: ${activeJobs.size}`);
+      const jobStats = {
+        total: activeJobs.size,
+        rejected: [...activeJobs.values()].filter(j => j.status === 'rejected_precheck').length,
+        delivered: [...activeJobs.values()].filter(j => j.status === 'delivered').length,
+        failed: [...activeJobs.values()].filter(j => j.status === 'failed').length
+      };
+      console.log(`\n💓 [${now.toISOString()}] PersonaAI heartbeat`);
+      console.log(`   Jobs: ${jobStats.total} total, ${jobStats.delivered} delivered, ${jobStats.rejected} rejected, ${jobStats.failed} failed`);
     }, 60000); // Every minute
     
   } catch (error) {
