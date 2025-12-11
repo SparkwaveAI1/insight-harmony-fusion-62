@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface JobRequest {
-  action?: 'execute' | 'status';
+  action?: 'execute' | 'status' | 'precheck';
   job_id: string;
   client_address?: string;
   research_query?: string;
@@ -354,6 +354,80 @@ serve(async (req) => {
 
     console.log(`🔔 [ACP-JOB] ${action.toUpperCase()} request for job_id: ${jobRequest.job_id}`);
 
+    // ============= PRECHECK ACTION =============
+    // Fast check to see if we can fulfill the job BEFORE accepting it
+    if (action === 'precheck') {
+      const { persona_criteria, research_query, questions = [], num_personas = 5 } = jobRequest;
+      
+      // Determine effective query
+      let effectiveQuery = persona_criteria || research_query || '';
+      if (!effectiveQuery || effectiveQuery.length < 10) {
+        effectiveQuery = `Find personas relevant to: ${questions.join(' ')}`;
+      }
+
+      console.log(`🔍 [ACP-PRECHECK] Checking if we can fulfill: "${effectiveQuery}" (need ${num_personas} personas)`);
+
+      // Extract keywords from query for matching
+      const queryLower = effectiveQuery.toLowerCase();
+      const keywords = queryLower.split(/\s+/).filter((w: string) => w.length > 3);
+      
+      // Build ILIKE conditions for occupation search
+      const keywordConditions = keywords.slice(0, 10).map((kw: string) => 
+        `occupation_computed ILIKE '%${kw.replace(/'/g, "''")}%'`
+      ).join(' OR ');
+
+      // Fast count query - just check if enough personas exist with matching occupations
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM v4_personas 
+        WHERE is_public = true 
+        AND (${keywordConditions || 'true'})
+      `;
+
+      const { data: countResult, error: countError } = await supabase
+        .rpc('exec_sql', { sql: countQuery })
+        .single();
+
+      // Fallback: if RPC doesn't exist, do a simple select count
+      let matchCount = 0;
+      if (countError) {
+        // Fallback using standard query
+        const { count, error: fallbackError } = await supabase
+          .from('v4_personas')
+          .select('persona_id', { count: 'exact', head: true })
+          .eq('is_public', true);
+        
+        if (!fallbackError) {
+          matchCount = count || 0;
+        }
+        console.log(`🔍 [ACP-PRECHECK] Fallback count (all public): ${matchCount}`);
+      } else {
+        matchCount = parseInt(countResult?.total || '0');
+        console.log(`🔍 [ACP-PRECHECK] Keyword match count: ${matchCount}`);
+      }
+
+      // Check if we have enough potential matches
+      const canFulfill = matchCount >= num_personas;
+      const reason = canFulfill 
+        ? `Found ${matchCount} potential matches for ${num_personas} requested`
+        : `Insufficient personas: found ${matchCount}, need ${num_personas}. Query: "${effectiveQuery}"`;
+
+      console.log(`${canFulfill ? '✅' : '❌'} [ACP-PRECHECK] ${reason}`);
+
+      return new Response(
+        JSON.stringify({
+          job_id: jobRequest.job_id,
+          can_fulfill: canFulfill,
+          reason,
+          match_count: matchCount,
+          requested_count: num_personas,
+          query_analyzed: effectiveQuery,
+          acp_action: canFulfill ? 'respondJob(accept=true)' : 'respondJob(accept=false)'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+
     // ============= STATUS ACTION =============
     if (action === 'status') {
       const { data: job, error: fetchError } = await supabase
@@ -379,14 +453,17 @@ serve(async (req) => {
         );
       }
 
-      // If failed, return error
+      // If failed, return error with rejection flag for external agent
       if (job.status === 'failed') {
         return new Response(
           JSON.stringify({ 
             job_id: job.external_job_id,
-            status: 'failed',
+            status: 'rejected',
+            should_reject: true,
+            rejection_reason: job.error_message,
             error: job.error_message,
-            cost: '$0.00'
+            cost: '$0.00',
+            acp_action: 'respondJob(accept=false)'
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
