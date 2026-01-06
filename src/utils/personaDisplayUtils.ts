@@ -38,9 +38,28 @@ export function getPersonaAge(persona: V4Persona): number | undefined {
 
 /**
  * Safely extract occupation from V4 persona
+ * Checks multiple sources: full_profile (detailed views), occupation_computed (list views), 
+ * and conversation_summary (fallback)
  */
 export function getPersonaOccupation(persona: V4Persona): string | undefined {
-  return persona.full_profile?.identity?.occupation;
+  // 1. Check full_profile (for detailed views where it's loaded)
+  if (persona.full_profile?.identity?.occupation) {
+    return persona.full_profile.identity.occupation;
+  }
+  
+  // 2. Check occupation_computed (for lightweight list views)
+  const computed = (persona as any).occupation_computed;
+  if (computed) {
+    return computed;
+  }
+  
+  // 3. Fallback to conversation_summary demographics
+  const summaryOccupation = persona.conversation_summary?.demographics?.occupation;
+  if (summaryOccupation) {
+    return summaryOccupation;
+  }
+  
+  return undefined;
 }
 
 /**
