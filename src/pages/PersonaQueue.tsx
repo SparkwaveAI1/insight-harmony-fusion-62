@@ -228,7 +228,8 @@ const PersonaQueue = () => {
 
     try {
       // Check if this is bulk input (contains numbered entries with names)
-      const hasBulkFormat = /\n\d+\.\s+[A-Z]/.test(textareaContent);
+      // Match either start of string or newline followed by numbered entry
+      const hasBulkFormat = /(?:^|\n)\d+\.\s+[A-Z]/.test(textareaContent.trim());
       
       if (hasBulkFormat) {
         // Parse multiple personas
