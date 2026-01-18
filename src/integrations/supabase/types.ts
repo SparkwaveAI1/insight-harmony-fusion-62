@@ -484,6 +484,47 @@ export type Database = {
           },
         ]
       }
+      collection_population_stats: {
+        Row: {
+          collection_id: string | null
+          collection_name: string
+          current_count: number | null
+          gap_count: number | null
+          last_calculated: string | null
+          max_target: number | null
+          min_target: number | null
+          needs_fill: boolean | null
+        }
+        Insert: {
+          collection_id?: string | null
+          collection_name: string
+          current_count?: number | null
+          gap_count?: number | null
+          last_calculated?: string | null
+          max_target?: number | null
+          min_target?: number | null
+          needs_fill?: boolean | null
+        }
+        Update: {
+          collection_id?: string | null
+          collection_name?: string
+          current_count?: number | null
+          gap_count?: number | null
+          last_calculated?: string | null
+          max_target?: number | null
+          min_target?: number | null
+          needs_fill?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collection_population_stats_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collections: {
         Row: {
           created_at: string
@@ -1001,6 +1042,153 @@ export type Database = {
         }
         Relationships: []
       }
+      persona_generation_batches: {
+        Row: {
+          anti_sanitization_scores: Json | null
+          completed_at: string | null
+          completed_count: number | null
+          created_at: string | null
+          created_by: string | null
+          custom_prompt: string | null
+          demographic_distribution: Json | null
+          error_message: string | null
+          failed_count: number | null
+          generated_count: number | null
+          generation_params: Json | null
+          id: string
+          mode: string
+          queued_count: number | null
+          requested_count: number
+          started_at: string | null
+          status: string | null
+          target_collection: string | null
+          validation_notes: Json | null
+          validation_passed: boolean | null
+        }
+        Insert: {
+          anti_sanitization_scores?: Json | null
+          completed_at?: string | null
+          completed_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_prompt?: string | null
+          demographic_distribution?: Json | null
+          error_message?: string | null
+          failed_count?: number | null
+          generated_count?: number | null
+          generation_params?: Json | null
+          id: string
+          mode: string
+          queued_count?: number | null
+          requested_count: number
+          started_at?: string | null
+          status?: string | null
+          target_collection?: string | null
+          validation_notes?: Json | null
+          validation_passed?: boolean | null
+        }
+        Update: {
+          anti_sanitization_scores?: Json | null
+          completed_at?: string | null
+          completed_count?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          custom_prompt?: string | null
+          demographic_distribution?: Json | null
+          error_message?: string | null
+          failed_count?: number | null
+          generated_count?: number | null
+          generation_params?: Json | null
+          id?: string
+          mode?: string
+          queued_count?: number | null
+          requested_count?: number
+          started_at?: string | null
+          status?: string | null
+          target_collection?: string | null
+          validation_notes?: Json | null
+          validation_passed?: boolean | null
+        }
+        Relationships: []
+      }
+      persona_generation_items: {
+        Row: {
+          anti_sanitization_flags: Json | null
+          batch_id: string
+          completed_at: string | null
+          created_at: string | null
+          description: string
+          error_message: string | null
+          extracted_traits: Json | null
+          has_contradiction: boolean | null
+          id: string
+          name: string
+          persona_id: string | null
+          queue_id: string | null
+          queued_at: string | null
+          status: string | null
+          target_collections: string[] | null
+          validated_at: string | null
+          validation_errors: string[] | null
+          word_count: number | null
+        }
+        Insert: {
+          anti_sanitization_flags?: Json | null
+          batch_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          description: string
+          error_message?: string | null
+          extracted_traits?: Json | null
+          has_contradiction?: boolean | null
+          id?: string
+          name: string
+          persona_id?: string | null
+          queue_id?: string | null
+          queued_at?: string | null
+          status?: string | null
+          target_collections?: string[] | null
+          validated_at?: string | null
+          validation_errors?: string[] | null
+          word_count?: number | null
+        }
+        Update: {
+          anti_sanitization_flags?: Json | null
+          batch_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          description?: string
+          error_message?: string | null
+          extracted_traits?: Json | null
+          has_contradiction?: boolean | null
+          id?: string
+          name?: string
+          persona_id?: string | null
+          queue_id?: string | null
+          queued_at?: string | null
+          status?: string | null
+          target_collections?: string[] | null
+          validated_at?: string | null
+          validation_errors?: string[] | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_generation_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "persona_generation_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "persona_generation_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "v_recent_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       persona_memories: {
         Row: {
           content: Json
@@ -1034,6 +1222,114 @@ export type Database = {
           tags?: string[] | null
           title?: string | null
           type?: string
+        }
+        Relationships: []
+      }
+      persona_name_registry: {
+        Row: {
+          current_uses: number | null
+          ethnicity_group: string | null
+          frequency_tier: string
+          id: number
+          max_uses: number
+          name_type: string
+          name_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          current_uses?: number | null
+          ethnicity_group?: string | null
+          frequency_tier: string
+          id?: number
+          max_uses: number
+          name_type: string
+          name_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          current_uses?: number | null
+          ethnicity_group?: string | null
+          frequency_tier?: string
+          id?: number
+          max_uses?: number
+          name_type?: string
+          name_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      persona_trait_index: {
+        Row: {
+          batch_id: string | null
+          category: string
+          created_at: string | null
+          persona_id: string
+          tier: string
+          trait_value: string
+        }
+        Insert: {
+          batch_id?: string | null
+          category: string
+          created_at?: string | null
+          persona_id: string
+          tier: string
+          trait_value: string
+        }
+        Update: {
+          batch_id?: string | null
+          category?: string
+          created_at?: string | null
+          persona_id?: string
+          tier?: string
+          trait_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "persona_trait_index_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "persona_generation_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "persona_trait_index_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "v_recent_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      persona_trait_registry: {
+        Row: {
+          category: string
+          current_count: number | null
+          id: number
+          source_citation: string | null
+          target_pct: number | null
+          tier: string
+          trait_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          current_count?: number | null
+          id?: number
+          source_citation?: string | null
+          target_pct?: number | null
+          tier: string
+          trait_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          current_count?: number | null
+          id?: number
+          source_citation?: string | null
+          target_pct?: number | null
+          tier?: string
+          trait_value?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1721,6 +2017,196 @@ export type Database = {
         }
         Relationships: []
       }
+      v_anti_sanitization_compliance: {
+        Row: {
+          avg_achieved_pct: number | null
+          batches_compliant: number | null
+          target_pct: number | null
+          total_batches: number | null
+          trait: string | null
+        }
+        Relationships: []
+      }
+      v_collection_gaps: {
+        Row: {
+          collection_name: string | null
+          current_count: number | null
+          fill_pct: number | null
+          gap_count: number | null
+          min_target: number | null
+        }
+        Insert: {
+          collection_name?: string | null
+          current_count?: number | null
+          fill_pct?: never
+          gap_count?: number | null
+          min_target?: number | null
+        }
+        Update: {
+          collection_name?: string | null
+          current_count?: number | null
+          fill_pct?: never
+          gap_count?: number | null
+          min_target?: number | null
+        }
+        Relationships: []
+      }
+      v_name_exhaustion: {
+        Row: {
+          available: number | null
+          avg_usage_pct: number | null
+          ethnicity_group: string | null
+          exhausted: number | null
+          frequency_tier: string | null
+          name_type: string | null
+          total_names: number | null
+        }
+        Relationships: []
+      }
+      v_name_usage_status: {
+        Row: {
+          ethnicity_group: string | null
+          exhausted_count: number | null
+          frequency_tier: string | null
+          name_type: string | null
+          total_capacity: number | null
+          total_names: number | null
+          total_uses: number | null
+          usage_pct: number | null
+        }
+        Relationships: []
+      }
+      v_overused_names: {
+        Row: {
+          current_uses: number | null
+          ethnicity_group: string | null
+          frequency_tier: string | null
+          max_uses: number | null
+          name_type: string | null
+          name_value: string | null
+          status: string | null
+          usage_pct: number | null
+        }
+        Insert: {
+          current_uses?: number | null
+          ethnicity_group?: string | null
+          frequency_tier?: string | null
+          max_uses?: number | null
+          name_type?: string | null
+          name_value?: string | null
+          status?: never
+          usage_pct?: never
+        }
+        Update: {
+          current_uses?: number | null
+          ethnicity_group?: string | null
+          frequency_tier?: string | null
+          max_uses?: number | null
+          name_type?: string | null
+          name_value?: string | null
+          status?: never
+          usage_pct?: never
+        }
+        Relationships: []
+      }
+      v_persona_trait_analytics: {
+        Row: {
+          age_bracket: string | null
+          bmi_category: string | null
+          education: string | null
+          ethnicity: string | null
+          gender: string | null
+          generation_date: string | null
+          income_bracket: string | null
+          marital_status: string | null
+          mental_health: string | null
+          name: string | null
+          party: string | null
+          region: string | null
+          religion: string | null
+        }
+        Insert: {
+          age_bracket?: never
+          bmi_category?: never
+          education?: never
+          ethnicity?: never
+          gender?: never
+          generation_date?: never
+          income_bracket?: never
+          marital_status?: never
+          mental_health?: never
+          name?: string | null
+          party?: never
+          region?: never
+          religion?: never
+        }
+        Update: {
+          age_bracket?: never
+          bmi_category?: never
+          education?: never
+          ethnicity?: never
+          gender?: never
+          generation_date?: never
+          income_bracket?: never
+          marital_status?: never
+          mental_health?: never
+          name?: string | null
+          party?: never
+          region?: never
+          religion?: never
+        }
+        Relationships: []
+      }
+      v_recent_batches: {
+        Row: {
+          anti_sanitization_scores: Json | null
+          completed_count: number | null
+          created_at: string | null
+          failed_count: number | null
+          generated_count: number | null
+          id: string | null
+          mode: string | null
+          requested_count: number | null
+          status: string | null
+          success_rate: number | null
+          target_collection: string | null
+          validation_passed: boolean | null
+        }
+        Relationships: []
+      }
+      v_trait_distribution_status: {
+        Row: {
+          category: string | null
+          current_count: number | null
+          current_pct: number | null
+          source_citation: string | null
+          target_pct: number | null
+          tier: string | null
+          trait_value: string | null
+          variance: number | null
+        }
+        Insert: {
+          category?: string | null
+          current_count?: number | null
+          current_pct?: never
+          source_citation?: string | null
+          target_pct?: number | null
+          tier?: string | null
+          trait_value?: string | null
+          variance?: never
+        }
+        Update: {
+          category?: string | null
+          current_count?: number | null
+          current_pct?: never
+          source_citation?: string | null
+          target_pct?: number | null
+          tier?: string | null
+          trait_value?: string | null
+          variance?: never
+        }
+        Relationships: []
+      }
       v4_personas_public_safe: {
         Row: {
           age: string | null
@@ -1827,6 +2313,29 @@ export type Database = {
       fix_orphaned_persona_queue_items: { Args: never; Returns: undefined }
       generate_participant_identifier: { Args: never; Returns: string }
       get_current_user_id: { Args: never; Returns: string }
+      get_distribution_report: {
+        Args: never
+        Returns: {
+          actual_count: number
+          actual_pct: number
+          category: string
+          status: string
+          target_pct: number
+          tier: string
+          total_count: number
+          trait_value: string
+          variance: number
+        }[]
+      }
+      get_name_duplicates: {
+        Args: { p_days_back?: number }
+        Returns: {
+          name_part: string
+          name_type: string
+          occurrences: number
+        }[]
+      }
+      get_next_batch_id: { Args: never; Returns: string }
       get_queue_health_status: {
         Args: never
         Returns: {
@@ -1835,6 +2344,24 @@ export type Database = {
           total_pending: number
           total_processing: number
           total_stuck: number
+        }[]
+      }
+      get_recent_names: {
+        Args: { p_limit?: number }
+        Returns: {
+          created_at: string
+          first_name: string
+          name: string
+          surname: string
+        }[]
+      }
+      get_trait_distribution: {
+        Args: { p_days_back?: number; p_limit?: number }
+        Returns: {
+          count: number
+          percentage: number
+          trait_category: string
+          trait_value: string
         }[]
       }
       get_user_projects_with_counts: {
@@ -1869,6 +2396,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_name_usage: { Args: { name_id: number }; Returns: undefined }
+      is_admin: { Args: never; Returns: boolean }
       is_researcher_or_admin: { Args: { _user_id: string }; Returns: boolean }
       manual_clear_queue_item: {
         Args: { clear_reason?: string; item_id: string }
@@ -1925,6 +2454,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      refresh_collection_stats: { Args: never; Returns: undefined }
+      refresh_trait_registry_counts: { Args: never; Returns: undefined }
       search_personas_advanced: {
         Args: {
           p_age_max?: number
