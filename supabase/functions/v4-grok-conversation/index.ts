@@ -7,26 +7,92 @@ const corsHeaders = {
 }
 
 const grokApiKey = Deno.env.get('GROK_API_KEY')
-const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
+const openaiKey = Deno.env.get('OPENAI_API_KEY')
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const GROK_MODEL = Deno.env.get("GROK_MODEL") ?? "grok-2-latest"
-const GROK_VISION_MODEL = Deno.env.get("GROK_VISION_MODEL") ?? "grok-2-vision-1212"
+const GROK_MODEL = Deno.env.get("GROK_MODEL") ?? "grok-3-latest"
 
-// Helper to normalize image data URLs and prevent double-prefixing
-function normalizeImageUrl(imageData: string): string {
-  if (!imageData) return imageData;
-  
-  // If already a data URL, return as-is
-  if (imageData.startsWith('data:image/')) {
-    return imageData;
-  }
-  
-  // If it's raw base64, add the prefix
-  return `data:image/jpeg;base64,${imageData}`;
+// Detail policy keywords for high-res images
+const HIGH_DETAIL_KEYWORDS = [
+  'what does this say', 'read the text', 'what button', 'terms', 'price',
+  'chart', 'graph', 'table', 'screenshot', 'ui', 'interface', 'form',
+  'menu', 'code', 'terminal', 'console', 'spreadsheet'
+];
+
+interface NormalizedImage {
+  data_base64: string;
+  mime_type: string;
+  filename: string;
 }
 
-console.log(`🔥 DEPLOYMENT TEST - Edge function is live and updated!`)
+// Detect MIME type from base64 magic bytes
+function detectMimeType(base64: string): string {
+  try {
+    const decoded = atob(base64.slice(0, 20));
+    const bytes = new Uint8Array(decoded.length);
+    for (let i = 0; i < decoded.length; i++) {
+      bytes[i] = decoded.charCodeAt(i);
+    }
+    if (bytes[0] === 0xFF && bytes[1] === 0xD8) return 'image/jpeg';
+    if (bytes[0] === 0x89 && bytes[1] === 0x50) return 'image/png';
+    if (bytes[0] === 0x52 && bytes[1] === 0x49) return 'image/webp';
+    if (bytes[0] === 0x47 && bytes[1] === 0x49) return 'image/gif';
+  } catch { /* ignore */ }
+  return 'image/jpeg';
+}
+
+// Extract base64 from data URL
+function extractBase64(input: string): { data: string; mimeType: string } {
+  if (input.startsWith('data:')) {
+    const match = input.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      return { mimeType: match[1], data: match[2] };
+    }
+  }
+  return { data: input, mimeType: detectMimeType(input) };
+}
+
+// Normalize images from input - handles both string arrays and object arrays
+function normalizeImages(imageData: any): NormalizedImage[] {
+  if (!imageData) return [];
+  const images = Array.isArray(imageData) ? imageData : [imageData];
+
+  return images.map((img, index) => {
+    // Handle object format: { data_base64, mime_type }
+    if (typeof img === 'object' && img !== null && img.data_base64) {
+      const base64Data = extractBase64(img.data_base64);
+      return {
+        data_base64: base64Data.data,
+        mime_type: img.mime_type || base64Data.mimeType,
+        filename: img.filename || `image_${index + 1}`,
+      };
+    }
+
+    // Handle string format (legacy)
+    if (typeof img === 'string') {
+      const { data, mimeType } = extractBase64(img);
+      return {
+        data_base64: data,
+        mime_type: mimeType,
+        filename: `image_${index + 1}`,
+      };
+    }
+
+    // Skip invalid inputs
+    return null;
+  }).filter((img): img is NormalizedImage => img !== null);
+}
+
+// Decide detail policy based on prompt keywords
+function decideDetailPolicy(prompt: string): 'high' | 'auto' {
+  const lower = prompt.toLowerCase();
+  for (const keyword of HIGH_DETAIL_KEYWORDS) {
+    if (lower.includes(keyword)) return 'high';
+  }
+  return 'auto';
+}
+
+console.log(`🔥 v4-grok-conversation - Edge function is live!`)
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -34,96 +100,167 @@ serve(async (req) => {
   }
 
   try {
-    const { persona_id, user_message, imageData, conversation_history } = await req.json()
-    
+    const { persona_id, user_message, imageData, images, conversation_history } = await req.json()
+
     console.log(`1. FUNCTION START - persona_id: ${persona_id}`)
 
     if (!persona_id || !user_message) {
       throw new Error('Missing required parameters: persona_id and user_message')
     }
 
-    // Initialize Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    console.log(`2. CALLING OPENAI TRAIT ANALYZER`)
+    // Normalize images from either imageData (legacy) or images (new array)
+    const normalizedImages = normalizeImages(images || imageData);
+    const hasImages = normalizedImages.length > 0;
+    const detailPolicy = hasImages ? decideDetailPolicy(user_message) : 'auto';
 
-    // Step 1: Get OpenAI trait analysis and system prompt
+    console.log(`📸 Image data present: ${hasImages} (${normalizedImages.length} images)`)
+    if (hasImages) {
+      console.log(`📐 Detail policy: ${detailPolicy}`)
+      console.log(`📁 MIME types: ${normalizedImages.map(i => i.mime_type).join(', ')}`)
+    }
+
+    // Step 1: If images present, call image-interpreter first
+    let imageReadoutJson: object | null = null;
+    let interpreterProvider: string | null = null;
+    let interpreterModel: string | null = null;
+
+    if (hasImages) {
+      console.log(`2. CALLING IMAGE INTERPRETER`)
+
+      try {
+        const { data: interpreterData, error: interpreterError } = await supabase.functions.invoke('image-interpreter', {
+          body: {
+            images: normalizedImages,
+            question_text: user_message,
+            mode: 'detailed',
+          }
+        });
+
+        if (interpreterError) {
+          console.warn('⚠️ Image interpreter error:', interpreterError);
+        } else if (interpreterData?.success && interpreterData?.image_readout_json) {
+          imageReadoutJson = interpreterData.image_readout_json;
+          interpreterProvider = interpreterData.provider;
+          interpreterModel = interpreterData.model;
+          console.log(`✅ Image interpreter: ${interpreterProvider}/${interpreterModel}, JSON: ${!!imageReadoutJson}`);
+        }
+      } catch (err) {
+        console.warn('⚠️ Image interpreter call failed:', err);
+      }
+    }
+
+    console.log(`3. CALLING OPENAI TRAIT ANALYZER`)
+
+    // Step 2: Get trait analysis with image context
     const { data: analysisData, error: analysisError } = await supabase.functions.invoke('v4-openai-trait-analyzer', {
       body: {
         persona_id,
         user_message,
-        conversation_history
+        conversation_history,
+        hasImages,
+        imageCount: normalizedImages.length,
+        imageReadoutJson,
       }
     })
 
     if (analysisError) {
-      console.error('❌ Error calling OpenAI trait analyzer:', analysisError)
+      console.error('❌ Trait analyzer error:', analysisError)
       throw new Error(`Trait analysis failed: ${analysisError.message}`)
     }
 
     if (!analysisData?.success || !analysisData?.system_prompt) {
-      console.error('❌ No system prompt generated')
       throw new Error('Failed to generate system prompt')
     }
 
-    console.log(`3. OPENAI ANALYSIS COMPLETE - Generated system prompt`)
-    console.log(`4. CALLING GROK WITH OPENAI-GENERATED PROMPT`)
+    console.log(`4. TRAIT ANALYSIS COMPLETE`)
 
-    // Step 2: Call Grok with the OpenAI-generated system prompt
-    const grokMessages = [
-      {
-        role: "system",
-        content: analysisData.system_prompt
+    let responseMessage: string
+    let providerUsed: string
+    let modelUsed: string
+
+    // Step 3: Generate response
+    if (hasImages && openaiKey) {
+      // Use OpenAI Vision directly for image responses
+      console.log(`5. USING OPENAI VISION for ${normalizedImages.length} image(s)`)
+
+      // Build prompt with persona context and image readout
+      let fullPrompt = `PERSONA CONTEXT:\n${analysisData.system_prompt}\n\n`;
+
+      if (imageReadoutJson) {
+        fullPrompt += `IMAGE ANALYSIS:\n${JSON.stringify(imageReadoutJson, null, 2)}\n\n`;
       }
-    ]
 
-    // Add conversation history
-    if (conversation_history && conversation_history.length > 0) {
-      grokMessages.push(...conversation_history)
-    }
-
-    // Normalize image data and add current user message (with image support)
-    const normalizedImageData = imageData ? normalizeImageUrl(imageData) : null
-    
-    const userMessage: any = {
-      role: "user",
-      content: normalizedImageData ? [
-        {
-          type: "text",
-          text: user_message
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: normalizedImageData
-          }
+      if (conversation_history?.length > 0) {
+        fullPrompt += `CONVERSATION HISTORY:\n`;
+        for (const msg of conversation_history) {
+          const content = typeof msg.content === 'string' ? msg.content : '[message]';
+          fullPrompt += `${msg.role}: ${content}\n`;
         }
-      ] : user_message
-    }
-    
-    // Avoid duplicate current user message if the history already ends with the same user content
-    const lastMsg = Array.isArray(conversation_history) && conversation_history.length > 0
-      ? conversation_history[conversation_history.length - 1]
-      : null;
-    const isDuplicateLastUser = !!(lastMsg && lastMsg.role === 'user' && typeof lastMsg.content === 'string' &&
-      lastMsg.content.trim() === (typeof user_message === 'string' ? user_message.trim() : ''));
-    if (!isDuplicateLastUser) {
-      grokMessages.push(userMessage)
+        fullPrompt += '\n';
+      }
+
+      fullPrompt += `USER MESSAGE: ${user_message}\n\nRespond as the persona, considering the images. Keep response to 2-4 sentences.`;
+
+      // Build OpenAI content array
+      const content: any[] = [{ type: 'text', text: fullPrompt }];
+
+      for (const img of normalizedImages) {
+        content.push({
+          type: 'image_url',
+          image_url: {
+            url: `data:${img.mime_type};base64,${img.data_base64}`,
+            detail: detailPolicy,
+          }
+        });
+      }
+
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{ role: 'user', content }],
+          max_tokens: 2000,
+          temperature: 0.8,
+        }),
+      });
+
+      if (!openaiResponse.ok) {
+        const errData = await openaiResponse.json().catch(() => ({}));
+        throw new Error(`OpenAI error: ${errData.error?.message || openaiResponse.statusText}`);
+      }
+
+      const openaiData = await openaiResponse.json();
+      responseMessage = openaiData.choices?.[0]?.message?.content || '';
+      providerUsed = 'openai';
+      modelUsed = 'gpt-4o';
+
+      console.log(`6. OPENAI VISION RESPONSE RECEIVED`);
+
     } else {
-      console.log('🛡️ Skipping duplicate user message appended from conversation_history')
-    }
+      // Text-only: use Grok
+      console.log(`5. USING GROK for text-only response`)
 
-    // Select model based on whether we have image data
-    const modelToUse = normalizedImageData ? GROK_VISION_MODEL : GROK_MODEL
-    
-    console.log(`📸 Image data present: ${!!normalizedImageData}`)
-    console.log(`🤖 Using model: ${modelToUse}`)
+      const grokMessages: any[] = [
+        { role: "system", content: analysisData.system_prompt }
+      ];
 
-    let grokMessage: string
-    let providerUsed = 'xai'
+      if (conversation_history?.length > 0) {
+        grokMessages.push(...conversation_history);
+      }
 
-    // Try xAI Grok first
-    try {
+      // Avoid duplicate messages
+      const lastMsg = conversation_history?.[conversation_history.length - 1];
+      const isDupe = lastMsg?.role === 'user' && lastMsg?.content?.trim() === user_message?.trim();
+      if (!isDupe) {
+        grokMessages.push({ role: "user", content: user_message });
+      }
+
       const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -131,109 +268,33 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: modelToUse,
+          model: GROK_MODEL,
           messages: grokMessages,
           temperature: 0.8,
           max_tokens: 2000
         }),
-      })
+      });
 
       if (!grokResponse.ok) {
-        const errorData = await grokResponse.json()
-        console.error('❌ Grok API error:', errorData)
-        throw new Error(`Grok API error: ${errorData.error?.message || grokResponse.statusText}`)
+        const errData = await grokResponse.json().catch(() => ({}));
+        throw new Error(`Grok error: ${errData.error?.message || grokResponse.statusText}`);
       }
 
-      const grokData = await grokResponse.json()
-      grokMessage = grokData.choices[0]?.message?.content
+      const grokData = await grokResponse.json();
+      responseMessage = grokData.choices?.[0]?.message?.content || '';
+      providerUsed = 'grok';
+      modelUsed = GROK_MODEL;
 
-      if (!grokMessage) {
-        throw new Error('No response generated by Grok')
-      }
-
-      console.log(`5. GROK RESPONSE RECEIVED`)
-      console.log(`✅ PIPELINE COMPLETE - OpenAI→Grok successful`)
-      
-    } catch (grokError) {
-      console.error('⚠️ Grok failed, attempting Gemini fallback:', grokError)
-      
-      // Fallback to Gemini if Grok fails and we have the API key
-      if (!geminiApiKey) {
-        const errorMessage = grokError instanceof Error ? grokError.message : String(grokError)
-        throw new Error(`Grok failed and no Gemini API key available: ${errorMessage}`)
-      }
-
-      providerUsed = 'gemini'
-      console.log(`🔄 Falling back to Gemini Vision API`)
-
-      // Build Gemini request format
-      const geminiContents = []
-      
-      for (const msg of grokMessages) {
-        if (msg.role === 'system') {
-          // Gemini doesn't have system role, prepend to first user message
-          continue
-        }
-        
-        const parts = []
-        
-        if (typeof msg.content === 'string') {
-          parts.push({ text: msg.content })
-        } else if (Array.isArray(msg.content)) {
-          for (const item of msg.content) {
-            if (item.type === 'text') {
-              parts.push({ text: item.text })
-            } else if (item.type === 'image_url') {
-              // Extract base64 data from data URL
-              const base64Data = item.image_url.url.split(',')[1] || item.image_url.url
-              parts.push({
-                inlineData: {
-                  mimeType: 'image/jpeg',
-                  data: base64Data
-                }
-              })
-            }
-          }
-        }
-        
-        geminiContents.push({
-          role: msg.role === 'assistant' ? 'model' : 'user',
-          parts
-        })
-      }
-
-      // Prepend system prompt as first user message
-      const systemPrompt = grokMessages.find(m => m.role === 'system')?.content
-      if (systemPrompt && geminiContents.length > 0) {
-        geminiContents[0].parts.unshift({ text: `System instructions: ${systemPrompt}\n\n` })
-      }
-
-      const geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: geminiContents })
-        }
-      )
-
-      if (!geminiResponse.ok) {
-        const errorText = await geminiResponse.text()
-        throw new Error(`Gemini fallback also failed: ${errorText}`)
-      }
-
-      const geminiData = await geminiResponse.json()
-      grokMessage = geminiData.candidates?.[0]?.content?.parts?.[0]?.text
-
-      if (!grokMessage) {
-        throw new Error('No response from Gemini fallback')
-      }
-
-      console.log(`5. GEMINI FALLBACK RESPONSE RECEIVED`)
-      console.log(`✅ PIPELINE COMPLETE - OpenAI→Gemini successful`)
+      console.log(`6. GROK RESPONSE RECEIVED`);
     }
 
-    // Log the Grok prompt for monitoring
+    if (!responseMessage) {
+      throw new Error('No response generated');
+    }
+
+    console.log(`✅ PIPELINE COMPLETE - ${providerUsed}`)
+
+    // Log for monitoring (no base64)
     try {
       await supabase.functions.invoke('log-grok-prompt', {
         body: {
@@ -241,35 +302,34 @@ serve(async (req) => {
           persona_id,
           persona_name: analysisData.persona_name,
           user_message,
-          system_instructions: analysisData.system_prompt,
-          conversation_history,
           extra: {
-            grok_model: GROK_MODEL,
-            analysis_model: analysisData.model_used,
-            traits_selected: analysisData.traits_selected
+            model_used: modelUsed,
+            provider_used: providerUsed,
+            image_count: normalizedImages.length,
+            detail_mode: hasImages ? detailPolicy : null,
+            interpreter_used: !!imageReadoutJson,
           }
         }
-      })
-    } catch (logError) {
-      console.error('Failed to log Grok prompt:', logError)
-      // Don't fail the main request if logging fails
-    }
+      });
+    } catch { /* ignore logging errors */ }
 
-    // Return the response (from Grok or Gemini)
     return new Response(JSON.stringify({
       success: true,
-      response: grokMessage,
+      response: responseMessage,
       persona_name: analysisData.persona_name,
-      model_used: modelToUse,
+      model_used: modelUsed,
       provider_used: providerUsed,
-      had_image: !!normalizedImageData,
-      analysis_model: analysisData.model_used
+      had_image: hasImages,
+      image_count: normalizedImages.length,
+      detail_mode: hasImages ? detailPolicy : null,
+      interpreter_used: !!imageReadoutJson,
+      analysis_model: analysisData.model_used,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error) {
-    console.error('❌ Error in v4-grok-conversation:', error)
+    console.error('❌ Error:', error)
     return new Response(JSON.stringify({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

@@ -172,19 +172,46 @@ export const parsePersonaDescription = (text: string) => {
   };
 };
 
-// Parse bulk persona descriptions (multiple numbered entries)
+// Parse bulk persona descriptions (multiple entries)
 export const parseBulkPersonaDescriptions = (text: string) => {
   const trimmedText = text.trim();
-  
-  // Split by numbered entries (e.g., "6. ", "7. ", etc.)
-  // Regex: Look for line starting with number followed by dot and uppercase letter
-  const chunks = trimmedText.split(/\n(?=\d+\.\s+[A-Z])/);
-  
-  // Parse each chunk as a separate persona
-  const personas = chunks
-    .map(chunk => chunk.trim())
-    .filter(chunk => chunk.length > 0)
-    .map(chunk => parsePersonaDescription(chunk));
-  
-  return personas;
+
+  // Method 1: Split by "---" separator (3+ dashes on their own line)
+  const dashChunks = trimmedText
+    .split(/^-{3,}$/m)
+    .map(c => c.trim())
+    .filter(c => c.length > 50);
+
+  if (dashChunks.length > 1) {
+    console.log(`parseBulkPersonaDescriptions: Found ${dashChunks.length} personas using --- separator`);
+    return dashChunks.map(chunk => parsePersonaDescription(chunk));
+  }
+
+  // Method 2: Split by bold numbered entries (e.g., "**71. Name**")
+  const boldNumberedChunks = trimmedText.split(/\n(?=\*\*\d+\.\s+[A-Z])/);
+
+  if (boldNumberedChunks.length > 1) {
+    const personas = boldNumberedChunks
+      .map(chunk => chunk.trim())
+      .filter(chunk => chunk.length > 0)
+      .map(chunk => parsePersonaDescription(chunk));
+    console.log(`parseBulkPersonaDescriptions: Found ${personas.length} personas using **N. format`);
+    return personas;
+  }
+
+  // Method 3: Split by plain numbered entries (e.g., "71. Name")
+  const numberedChunks = trimmedText.split(/\n(?=\d+\.\s+[A-Z])/);
+
+  if (numberedChunks.length > 1) {
+    const personas = numberedChunks
+      .map(chunk => chunk.trim())
+      .filter(chunk => chunk.length > 0)
+      .map(chunk => parsePersonaDescription(chunk));
+    console.log(`parseBulkPersonaDescriptions: Found ${personas.length} personas using N. format`);
+    return personas;
+  }
+
+  // Fallback: treat as single persona
+  console.log('parseBulkPersonaDescriptions: No separators found, treating as single persona');
+  return [parsePersonaDescription(trimmedText)];
 };

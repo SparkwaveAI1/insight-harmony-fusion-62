@@ -582,7 +582,62 @@ Ensure all traits are coherent with the background story and character essence. 
 
     // Extract name from the generated profile
     const personaName = fullProfile.identity?.name || 'Generated Persona'
-    
+
+    // Build motivation summary from primary_drivers
+    const buildMotivationSummary = () => {
+      const drivers = fullProfile.motivation_profile?.primary_drivers;
+      if (!drivers) return 'Motivation profile not generated';
+
+      // Sort drivers by value to find top ones
+      const sortedDrivers = Object.entries(drivers)
+        .filter(([_, value]) => typeof value === 'number')
+        .sort(([_, a], [__, b]) => (b as number) - (a as number));
+
+      const topDrivers = sortedDrivers.slice(0, 3);
+      const labels = fullProfile.motivation_profile?.primary_motivation_labels || [];
+
+      if (topDrivers.length === 0) return labels.join(', ') || 'No primary drivers identified';
+
+      const driverDescriptions = topDrivers.map(([name, value]) => {
+        const intensity = (value as number) >= 0.7 ? 'strongly' : (value as number) >= 0.4 ? 'moderately' : 'somewhat';
+        const readable = name.replace(/_/g, ' ');
+        return `${intensity} driven by ${readable} (${((value as number) * 100).toFixed(0)}%)`;
+      });
+
+      return driverDescriptions.join('; ');
+    };
+
+    // Build goal priorities summary
+    const buildGoalPriorities = () => {
+      const goals = fullProfile.motivation_profile?.goal_orientation?.primary_goals;
+      if (!goals || goals.length === 0) return 'No specific goals identified';
+
+      return goals.map(g => {
+        const intensity = g.intensity >= 80 ? 'high priority' : g.intensity >= 50 ? 'moderate priority' : 'low priority';
+        return `${g.goal} (${intensity}, ${g.timeframe || 'ongoing'})`;
+      }).join('; ');
+    };
+
+    // Build want vs should pattern summary
+    const buildWantVsShouldPattern = () => {
+      const tension = fullProfile.motivation_profile?.want_vs_should_tension;
+      if (!tension) return 'No internal tensions identified';
+
+      const defaultRes = tension.default_resolution || 'context_dependent';
+      const conflicts = tension.major_conflicts || [];
+
+      let summary = `Default resolution: ${defaultRes.replace(/_/g, ' ')}.`;
+
+      if (conflicts.length > 0) {
+        const conflictSummaries = conflicts.slice(0, 2).map(c =>
+          `WANT: "${c.want}" vs SHOULD: "${c.should}"`
+        );
+        summary += ` Key tensions: ${conflictSummaries.join('; ')}`;
+      }
+
+      return summary;
+    };
+
     // Create conversation summary from the generated content
     const conversationSummary = {
       demographics: {
@@ -598,7 +653,9 @@ Ensure all traits are coherent with the background story and character essence. 
         formality: fullProfile.communication_style?.voice_foundation?.formality || '',
         response_patterns: fullProfile.communication_style?.style_markers?.storytelling_vs_bullets || 0
       },
-      motivational_summary: fullProfile.motivation_profile?.primary_motivation_labels?.join(', ') || '',
+      motivation_summary: buildMotivationSummary(),
+      goal_priorities: buildGoalPriorities(),
+      want_vs_should_pattern: buildWantVsShouldPattern(),
       personality_summary: characterDescription,
       physical_description: physicalDescription
     }
@@ -626,7 +683,7 @@ Ensure all traits are coherent with the background story and character essence. 
 
     if (insertError) {
       console.error('❌ Database insertion failed:', insertError)
-      throw insertError
+      throw new Error(`Database insertion failed: ${insertError.message || JSON.stringify(insertError)}`)
     }
 
     console.log('✅ V4 Unified Persona Generation Complete!')
@@ -649,12 +706,24 @@ Ensure all traits are coherent with the background story and character essence. 
       },
     )
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error in v4-persona-unified:', error)
+
+    // Handle different error types properly
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'object' && error !== null) {
+      // Handle Supabase errors and other object errors
+      errorMessage = error.message || error.error || JSON.stringify(error);
+    } else {
+      errorMessage = String(error);
+    }
+
     return new Response(
       JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: errorMessage,
         message: 'Persona generation failed'
       }),
       {
