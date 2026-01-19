@@ -174,7 +174,8 @@ export const parsePersonaDescription = (text: string) => {
 
 // Parse bulk persona descriptions (multiple entries)
 export const parseBulkPersonaDescriptions = (text: string) => {
-  const trimmedText = text.trim();
+  // Normalize line endings (Windows \r\n and old Mac \r to Unix \n) before processing
+  const trimmedText = text.replace(/\r\n?/g, '\n').trim();
 
   // Method 1: Split by "---" separator (3+ dashes on their own line)
   const dashChunks = trimmedText
