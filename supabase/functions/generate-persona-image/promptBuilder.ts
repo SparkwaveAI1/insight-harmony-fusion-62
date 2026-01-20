@@ -66,20 +66,53 @@ function getBMIDescription(bmi: number): string {
   return 'very heavy build, substantial frame';
 }
 
+// Fallback extraction from physical_description when identity fields are "unknown"
+function extractFromPhysicalDescription(description: string): { gender: string; ethnicity: string } {
+  if (!description) return { gender: "unknown", ethnicity: "" };
+  
+  // Gender extraction - match patterns like "62-year-old white woman" or "41-year-old man"
+  let gender = "unknown";
+  if (/-year-old\s+[\w\s]+\s+woman\b/i.test(description) || /\bwoman\b/i.test(description)) {
+    gender = "female";
+  } else if (/-year-old\s+[\w\s]+\s+man\b/i.test(description) || /\bman\b/i.test(description)) {
+    gender = "male";
+  }
+  
+  // Ethnicity extraction - common terms
+  let ethnicity = "";
+  const ethnicityMatch = description.match(/\b(white|black|latina|latino|asian|hispanic|african[- ]american|caucasian|european|middle[- ]eastern|south[- ]asian|east[- ]asian)\b/i);
+  if (ethnicityMatch) {
+    ethnicity = ethnicityMatch[1].toLowerCase();
+  }
+  
+  return { gender, ethnicity };
+}
+
 function buildV4ImagePrompt(personaData: any): string {
   const identity = personaData.full_profile?.identity || {};
   const healthProfile = personaData.full_profile?.health_profile || {};
   const conversationSummary = personaData.conversation_summary || {};
   const demographics = conversationSummary.demographics || {};
+  const physicalDescription = conversationSummary.physical_description || "";
 
   // Extract key fields (keep them non-identifying / non-PII)
   const ageRaw = identity.age ?? demographics.age;
   const ageNum = typeof ageRaw === "number" ? ageRaw : parseInt(String(ageRaw || ""), 10);
   const age = Number.isFinite(ageNum) ? ageNum : 30;
 
-  const genderRaw = (demographics.gender || identity.gender || "").toString().trim();
-  const ethnicityRaw = (demographics.ethnicity || identity.ethnicity || "").toString().trim();
+  let genderRaw = (demographics.gender || identity.gender || "").toString().trim();
+  let ethnicityRaw = (demographics.ethnicity || identity.ethnicity || "").toString().trim();
   const bmi = healthProfile.bmi;
+
+  // Fallback: extract from physical_description if gender/ethnicity are unknown
+  if (!genderRaw || genderRaw.toLowerCase() === "unknown") {
+    const extracted = extractFromPhysicalDescription(physicalDescription);
+    genderRaw = extracted.gender;
+    if (!ethnicityRaw || ethnicityRaw.toLowerCase() === "unknown") {
+      ethnicityRaw = extracted.ethnicity;
+    }
+    console.log("Extracted from physical_description:", extracted);
+  }
 
   // Map to safer, non-identifying descriptors
   const ageGroup = age < 25 ? "young adult" : age < 45 ? "adult" : age < 65 ? "middle-aged" : "older adult";
