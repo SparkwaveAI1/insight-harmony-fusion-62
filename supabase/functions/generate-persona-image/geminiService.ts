@@ -1,8 +1,8 @@
 export async function generateImageWithGemini(prompt: string, apiKey: string): Promise<string> {
-  console.log("Calling Gemini API for image generation...");
+  console.log("Calling Gemini 2.0 Flash for image generation...");
   
   const imageResponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: {
