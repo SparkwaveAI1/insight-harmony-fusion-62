@@ -71,97 +71,49 @@ function buildV4ImagePrompt(personaData: any): string {
   const healthProfile = personaData.full_profile?.health_profile || {};
   const conversationSummary = personaData.conversation_summary || {};
   const demographics = conversationSummary.demographics || {};
-  
-  // Extract the four required categories
-  const age = identity.age || demographics.age;
-  const gender = demographics.gender || identity.gender;
-  const ethnicity = demographics.ethnicity || identity.ethnicity;
+
+  // Extract key fields (keep them non-identifying / non-PII)
+  const ageRaw = identity.age ?? demographics.age;
+  const ageNum = typeof ageRaw === "number" ? ageRaw : parseInt(String(ageRaw || ""), 10);
+  const age = Number.isFinite(ageNum) ? ageNum : 30;
+
+  const genderRaw = (demographics.gender || identity.gender || "").toString().trim();
+  const ethnicityRaw = (demographics.ethnicity || identity.ethnicity || "").toString().trim();
   const bmi = healthProfile.bmi;
-  let physicalDescription = conversationSummary.physical_description;
-  
-  // Clean up attractiveness rating pattern from description
-  if (physicalDescription) {
-    physicalDescription = physicalDescription.replace(/\(Attractiveness:.*?\)/g, '').trim();
-  }
-  
-  // Enhance physical description with specific physical traits from health_profile
-  const physicalEnhancements = [];
-  
-  // Add facial hair details (men)
-  if (gender?.toLowerCase() === 'male' && healthProfile.facial_hair) {
-    const facialHairMap = {
-      'full_beard': 'full thick beard',
-      'goatee': 'goatee facial hair',
-      'mustache_only': 'mustache without beard',
-      'stubble': 'stubble facial hair',
-      'van_dyke': 'van dyke beard style',
-      'no_facial_hair': 'clean shaven'
-    };
-    physicalEnhancements.push(facialHairMap[healthProfile.facial_hair as keyof typeof facialHairMap] || healthProfile.facial_hair);
-  }
-  
-  // Add hair loss patterns
-  if (healthProfile.hair_loss_pattern) {
-    const hairLossMap: Record<string, string> = {
-      'significant_balding': 'significantly bald, male pattern baldness',
-      'moderate_balding': 'balding, thinning hair on top',
-      'receding_hairline': 'receding hairline, widow\'s peak'
-    };
-    physicalEnhancements.push(hairLossMap[healthProfile.hair_loss_pattern] || healthProfile.hair_loss_pattern);
-  }
-  
-  // Add distinctive features
-  if (healthProfile.distinctive_features && healthProfile.distinctive_features.length > 0) {
-    const featureMap: Record<string, string> = {
-      'large_nose': 'large prominent nose',
-      'prominent_nose': 'distinctive prominent nose',
-      'prominent_ears': 'ears that stick out',
-      'strong_jaw': 'strong prominent jaw',
-      'deep_set_eyes': 'deep-set eyes',
-      'thin_lips': 'thin lips',
-      'high_cheekbones': 'high prominent cheekbones'
-    };
-    
-    healthProfile.distinctive_features.forEach((feature: string) => {
-      if (featureMap[feature]) {
-        physicalEnhancements.push(featureMap[feature]);
-      }
-    });
-  }
-  
-  // Add attractiveness context (avoid making everyone attractive)
-  if (healthProfile.attractiveness_level && healthProfile.attractiveness_level <= 4) {
-    physicalEnhancements.push('average everyday appearance, not conventionally attractive');
-  } else if (healthProfile.attractiveness_level && healthProfile.attractiveness_level >= 8) {
-    physicalEnhancements.push('attractive appearance');
-  }
-  
-  // Combine original description with enhancements
-  if (physicalEnhancements.length > 0) {
-    const enhancementText = physicalEnhancements.join(', ');
-    if (physicalDescription) {
-      physicalDescription = `${physicalDescription}, ${enhancementText}`;
-    } else {
-      physicalDescription = enhancementText;
-    }
-  }
-  
-  // Physical description is already comprehensive from the persona generation process
-  
-  console.log("V4 persona details:", { age, gender, ethnicity, bmi });
-  console.log("Physical description:", physicalDescription);
-  
-  // Build prompt using exact user specification with BMI description
-  let prompt = `Film still photograph of [ Age ${age}, "gender": "${gender}", "ethnicity": "${ethnicity}"`;
-  
-  // Add BMI description if available
-  if (bmi && typeof bmi === 'number') {
-    const bmiDescription = getBMIDescription(bmi);
-    prompt += `, "body_type": "${bmiDescription}"`;
-  }
-  
-  prompt += `, "physical_description": "${physicalDescription}" ] in 2024, sigma 85mm f/1.4`;
-  
+
+  // Map to safer, non-identifying descriptors
+  const ageGroup = age < 25 ? "young adult" : age < 45 ? "adult" : age < 65 ? "middle-aged" : "older adult";
+
+  const genderLower = genderRaw.toLowerCase();
+  const genderLabel =
+    !genderLower || genderLower === "unknown" ? "person" :
+    genderLower === "male" || genderLower === "man" ? "man" :
+    genderLower === "female" || genderLower === "woman" ? "woman" :
+    "person";
+
+  const ethnicityLower = ethnicityRaw.toLowerCase();
+  const ethnicityLabel = !ethnicityLower || ethnicityLower === "unknown" ? "" : ethnicityRaw;
+
+  const bodyType = (bmi && typeof bmi === "number") ? getBMIDescription(bmi) : "average build";
+  const ageAppearance = getAgeAppearanceFromAge(age);
+
+  console.log("V4 persona details:", { age, gender: genderRaw, ethnicity: ethnicityRaw, bmi });
+
+  // IMPORTANT: Avoid including specific age numbers, height/weight/BMI numbers, names, medical conditions,
+  // or overly-detailed physical descriptions. Gemini may treat that as PII.
+  const promptParts: string[] = [];
+  promptParts.push(`Professional headshot portrait photograph of a fictional, non-identifiable ${ageGroup} ${genderLabel}`);
+  if (ethnicityLabel) promptParts.push(`of ${ethnicityLabel} ethnicity`);
+  promptParts.push(`with a ${bodyType}`);
+  promptParts.push(`${ageAppearance}`);
+  promptParts.push(
+    "Natural skin texture, realistic everyday features, friendly neutral expression. " +
+      "Neutral studio background, soft studio lighting, 85mm lens, shallow depth of field, photorealistic. " +
+      "Do not depict or resemble a real identifiable person; avoid unique scars/moles/tattoos and avoid medical/health details. " +
+      "No text, no watermark, no logo."
+  );
+
+  const prompt = promptParts.join(", ");
   console.log("Generated V4 image prompt:", prompt);
   return prompt;
 }

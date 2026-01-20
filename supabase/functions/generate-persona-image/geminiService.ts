@@ -10,8 +10,12 @@ export async function generateImageWithGemini(prompt: string, apiKey: string): P
       },
       body: JSON.stringify({
         contents: [{
-          parts: [{ text: prompt }]  // Critical: parts array wrapper
-        }]
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          // Explicitly request image output; without this, Gemini often returns text-only.
+          responseModalities: ["IMAGE", "TEXT"]
+        }
       })
     }
   );
@@ -24,12 +28,23 @@ export async function generateImageWithGemini(prompt: string, apiKey: string): P
   
   const result = await imageResponse.json();
   console.log("Gemini API response structure:", JSON.stringify(result, null, 2));
-  
+
   const generatedImage = result.candidates?.[0]?.content?.parts?.find(
     (part: any) => part.inlineData
   )?.inlineData;
 
   if (!generatedImage?.data) {
+    const textResponse = result.candidates?.[0]?.content?.parts
+      ?.map((p: any) => p?.text)
+      ?.filter(Boolean)
+      ?.join("\n")
+      ?.trim();
+
+    if (textResponse) {
+      console.error("Gemini returned no image; text response:", textResponse);
+      throw new Error(`Gemini returned no image: ${textResponse}`);
+    }
+
     console.error("No image data in Gemini response:", result);
     throw new Error("No image data in Gemini response");
   }
