@@ -16,10 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    if (!GEMINI_API_KEY) {
-      throw new Error("GEMINI_API_KEY is not configured in environment variables");
-    }
-
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Supabase configuration is missing");
     }
@@ -30,11 +26,17 @@ serve(async (req) => {
       throw new Error("Invalid personaData provided");
     }
 
+    if (!personaData.persona_id) {
+      throw new Error("personaData.persona_id is required");
+    }
+
+    console.log(`[generate-persona-image] Starting for persona: ${personaData.persona_id}`);
+
     // Build the image prompt
     const imagePrompt = buildImagePrompt(personaData);
     
-    // Generate image with Gemini
-    const base64Image = await generateImageWithGemini(imagePrompt, GEMINI_API_KEY);
+    // Generate image with Gemini (uses LOVABLE_API_KEY internally)
+    const base64Image = await generateImageWithGemini(imagePrompt, GEMINI_API_KEY || "");
     
     // Upload image to Supabase storage (both full and thumbnail)
     const { fullUrl, thumbnailUrl } = await uploadImageWithThumbnail(
@@ -43,6 +45,17 @@ serve(async (req) => {
       SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY
     );
+
+    // Update persona record with new image URLs
+    console.log(`[generate-persona-image] Updating persona ${personaData.persona_id} with image URLs`);
+    await updatePersonaWithImageUrl(
+      personaData.persona_id,
+      fullUrl,
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY,
+      thumbnailUrl
+    );
+    console.log(`[generate-persona-image] Successfully updated persona ${personaData.persona_id}`);
     
     return new Response(
       JSON.stringify({
