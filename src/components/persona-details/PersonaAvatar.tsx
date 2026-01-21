@@ -44,7 +44,7 @@ export default function PersonaAvatar({
             src={imageUrl} 
             alt={persona.name} 
             onError={handleImageError}
-            className="object-cover rounded-lg"
+            className="object-cover object-top rounded-lg"
           />
         ) : (
           <AvatarFallback className="rounded-lg">{persona.name.charAt(0).toUpperCase()}</AvatarFallback>

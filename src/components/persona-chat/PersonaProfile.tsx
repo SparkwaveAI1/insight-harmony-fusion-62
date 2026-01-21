@@ -58,7 +58,7 @@ const PersonaProfile = () => {
       <div className="flex flex-col">
         <div className="text-center mb-6">
           <Avatar className="w-24 h-24 mb-4 mx-auto">
-            <AvatarImage src={persona.profile_image_url || "/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png"} />
+            <AvatarImage src={persona.profile_image_url || "/lovable-uploads/723fa150-405c-4fa6-aa1f-33398c934182.png"} className="object-top" />
             <AvatarFallback>AI</AvatarFallback>
           </Avatar>
           <h2 className="text-2xl font-bold mb-2">{persona.name || "Persona"}</h2>
