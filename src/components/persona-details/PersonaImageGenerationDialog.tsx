@@ -84,7 +84,7 @@ const PersonaImageGenerationDialog = ({
                   <img 
                     src={persona.profile_image_url} 
                     alt="Current profile image"
-                    className="w-24 h-24 rounded-lg object-cover border-2 border-primary/20"
+                    className="w-24 h-24 rounded-lg object-cover object-top border-2 border-primary/20"
                   />
                 </div>
               )}
