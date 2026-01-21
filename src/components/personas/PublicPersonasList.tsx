@@ -6,6 +6,9 @@ import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
 import { getPublicV4PersonasShowAll } from "@/services/persona";
 import { useSemanticPersonaSearch, SemanticSearchResult } from "@/hooks/useSemanticPersonaSearch";
+import { useFilteredPersonaSearch, FilteredSearchResult } from "@/hooks/useFilteredPersonaSearch";
+import { PersonaFilterPanel } from "./PersonaFilterPanel";
+import { DEFAULT_FILTERS } from "@/types/personaFilters";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -28,7 +31,7 @@ const PublicPersonasList = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
 
-  // Fetch all public personas (used when no search query)
+  // Fetch all public personas (used when no search query and no filters)
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
     queryKey: ['public-personas-show-all'],
     queryFn: getPublicV4PersonasShowAll,
@@ -39,13 +42,28 @@ const PublicPersonasList = ({
   });
 
   // Semantic search (used when search query is 2+ characters)
-  const { 
-    results: semanticResults, 
-    isLoading: isSearching 
-  } = useSemanticPersonaSearch(searchQuery, { 
+  const {
+    results: semanticResults,
+    isLoading: isSearching
+  } = useSemanticPersonaSearch(searchQuery, {
     enabled: searchQuery.length >= 2,
-    maxResults: 100 
+    maxResults: 100
   });
+
+  // Advanced filtered search using RPC
+  const {
+    results: filteredResults,
+    totalCount: filteredTotalCount,
+    isLoading: isFilterLoading,
+    filters,
+    setFilters,
+    resetFilters,
+    search: executeFilteredSearch,
+    hasActiveFilters,
+    currentPage: filterPage,
+    setCurrentPage: setFilterPage,
+    totalPages: filterTotalPages,
+  } = useFilteredPersonaSearch(DEFAULT_FILTERS, { publicOnly: true, limit: itemsPerPage });
 
   // Notify parent of search state
   useEffect(() => {
@@ -140,67 +158,134 @@ const PublicPersonasList = ({
     }
   };
 
+  // Convert filtered results to V4Persona-like objects for display
+  const filteredPersonasForDisplay = filteredResults.map((result: FilteredSearchResult) => ({
+    persona_id: result.persona_id,
+    name: result.name,
+    age_computed: result.age,
+    gender_computed: result.gender,
+    occupation_computed: result.occupation,
+    city_computed: result.city,
+    state_region_computed: result.state_region,
+    profile_image_url: result.profile_image_url,
+    conversation_summary: {
+      demographics: {
+        age: result.age,
+        gender: result.gender,
+        occupation: result.occupation,
+        location: result.city ? `${result.city}, ${result.state_region}` : result.state_region,
+      }
+    }
+  })) as unknown as V4Persona[];
+
+  // Determine which personas to display
+  const displayPersonas = hasActiveFilters
+    ? filteredPersonasForDisplay
+    : paginatedPersonas;
+
+  const displayTotalPages = hasActiveFilters ? filterTotalPages : totalPages;
+  const displayCurrentPage = hasActiveFilters ? filterPage : currentPage;
+  const displayTotalCount = hasActiveFilters ? filteredTotalCount : filteredPersonas.length;
+
+  const handlePageChange = (newPage: number) => {
+    if (hasActiveFilters) {
+      setFilterPage(newPage);
+      executeFilteredSearch();
+    } else {
+      setCurrentPage(newPage);
+    }
+  };
+
   return (
     <div>
-      <div className={className}>
-        {paginatedPersonas.map((persona) => (
-          <PersonaCard
-            key={persona.persona_id}
-            persona={persona as V4Persona}
-            onVisibilityChange={handleVisibilityChange}
-          />
-        ))}
-      </div>
-      
-      <div className="flex justify-center items-center gap-4 mt-8 pb-8 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show:</span>
-          <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
-            <SelectTrigger className="w-20 h-8">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Advanced Filter Panel */}
+      <PersonaFilterPanel
+        filters={filters}
+        onChange={setFilters}
+        onApply={executeFilteredSearch}
+        onClear={resetFilters}
+        isLoading={isFilterLoading}
+        resultCount={hasActiveFilters ? filteredTotalCount : undefined}
+      />
+
+      {/* Loading state for filtered search */}
+      {hasActiveFilters && isFilterLoading && <PersonaLoadingState />}
+
+      {/* Results grid */}
+      {(!hasActiveFilters || !isFilterLoading) && displayPersonas.length > 0 && (
+        <div className={className}>
+          {displayPersonas.map((persona) => (
+            <PersonaCard
+              key={persona.persona_id}
+              persona={persona as V4Persona}
+              onVisibilityChange={handleVisibilityChange}
+            />
+          ))}
         </div>
+      )}
 
-        {totalPages > 1 && (
-          <>
-            <Button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              variant="outline"
-              size="sm"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
+      {/* Empty state for filtered results */}
+      {hasActiveFilters && !isFilterLoading && filteredResults.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No personas match your filter criteria.</p>
+          <Button variant="link" onClick={resetFilters} className="mt-2">
+            Clear all filters
+          </Button>
+        </div>
+      )}
 
+      {/* Pagination */}
+      {displayPersonas.length > 0 && (
+        <div className="flex justify-center items-center gap-4 mt-8 pb-8 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Show:</span>
+            <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {displayTotalPages > 1 && (
+            <>
+              <Button
+                onClick={() => handlePageChange(Math.max(1, displayCurrentPage - 1))}
+                disabled={displayCurrentPage === 1}
+                variant="outline"
+                size="sm"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+
+              <span className="text-sm text-muted-foreground">
+                Page {displayCurrentPage} of {displayTotalPages} ({displayTotalCount.toLocaleString()} personas)
+              </span>
+
+              <Button
+                onClick={() => handlePageChange(Math.min(displayTotalPages, displayCurrentPage + 1))}
+                disabled={displayCurrentPage === displayTotalPages}
+                variant="outline"
+                size="sm"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+
+          {displayTotalPages <= 1 && (
             <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} ({filteredPersonas.length} personas)
+              {displayTotalCount.toLocaleString()} personas
             </span>
-
-            <Button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              variant="outline"
-              size="sm"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-
-        {totalPages <= 1 && (
-          <span className="text-sm text-muted-foreground">
-            {filteredPersonas.length} personas
-          </span>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
