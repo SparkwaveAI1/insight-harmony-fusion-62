@@ -83,7 +83,7 @@ export function BatchImageGenerator() {
           });
           setState(prev => ({ ...prev, failures: [...failures] }));
         }
-        // Note: The edge function already updates the database with URLs
+        // Edge function updates the database with profile_image_url and profile_thumbnail_url
       } catch (err) {
         failures.push({ 
           id: persona.persona_id, 
