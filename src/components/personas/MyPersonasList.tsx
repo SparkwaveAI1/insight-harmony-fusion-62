@@ -9,6 +9,7 @@ import { useSemanticPersonaSearch, SemanticSearchResult } from "@/hooks/useSeman
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona/operations/updatePersona";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MyPersonasListProps {
@@ -29,7 +30,7 @@ const MyPersonasList = ({
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   
   // Fetch all user's personas (used when no search query)
   const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
@@ -107,15 +108,15 @@ const MyPersonasList = ({
   const filteredPersonas = applyAgeFilter(basePersonas);
 
   // Pagination
-  const totalPages = Math.ceil(filteredPersonas.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const totalPages = Math.ceil(filteredPersonas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
   const paginatedPersonas = filteredPersonas.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
+  // Reset to page 1 when filters or page size change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedAge]);
+  }, [searchQuery, selectedAge, itemsPerPage]);
 
   // Handle visibility changes
   const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
@@ -186,33 +187,55 @@ const MyPersonasList = ({
         ))}
       </div>
       
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-8 pb-8">
-          <Button
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-            variant="outline"
-            size="sm"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          
-          <span className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages} ({filteredPersonas.length} personas)
-          </span>
-          
-          <Button
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage === totalPages}
-            variant="outline"
-            size="sm"
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+      <div className="flex justify-center items-center gap-4 mt-8 pb-8 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Show:</span>
+          <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
+            <SelectTrigger className="w-20 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      )}
+
+        {totalPages > 1 && (
+          <>
+            <Button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              variant="outline"
+              size="sm"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </Button>
+
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages} ({filteredPersonas.length} personas)
+            </span>
+
+            <Button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+
+        {totalPages <= 1 && (
+          <span className="text-sm text-muted-foreground">
+            {filteredPersonas.length} personas
+          </span>
+        )}
+      </div>
     </div>
   );
 };
