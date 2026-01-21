@@ -26,7 +26,7 @@ export const PersonaSelector: React.FC<PersonaSelectorProps> = ({
           <div className="flex items-start gap-3 w-full">
             {/* Avatar/Thumbnail */}
             <Avatar className="h-10 w-10 flex-shrink-0">
-              <AvatarImage src={persona.profile_thumbnail_url || persona.profile_image_url} />
+              <AvatarImage src={persona.profile_thumbnail_url || persona.profile_image_url} className="object-top" />
               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                 {persona.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
