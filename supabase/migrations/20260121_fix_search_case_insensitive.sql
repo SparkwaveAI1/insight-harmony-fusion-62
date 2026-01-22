@@ -73,8 +73,12 @@ RETURNS TABLE (
   dependents integer,
   political_lean text,
   profile_image_url text,
+  profile_thumbnail_url text,
   interest_tags text[],
   health_tags text[],
+  created_at timestamptz,
+  background text,
+  is_public boolean,
   semantic_score float,
   total_count bigint
 )
@@ -199,8 +203,12 @@ BEGIN
     p.dependents_computed AS dependents,
     p.political_lean_computed AS political_lean,
     p.profile_image_url,
+    p.profile_thumbnail_url,
     p.interest_tags,
     p.health_tags,
+    p.created_at,
+    p.background,
+    p.is_public,
     CASE
       WHEN p_semantic_embedding IS NOT NULL
       THEN (1 - (p.profile_embedding <=> p_semantic_embedding))::float
