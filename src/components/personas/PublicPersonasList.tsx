@@ -168,13 +168,18 @@ const PublicPersonasList = ({
     city_computed: result.city,
     state_region_computed: result.state_region,
     profile_image_url: result.profile_image_url,
+    profile_thumbnail_url: result.profile_thumbnail_url,
+    created_at: result.created_at,
+    is_public: result.is_public,
     conversation_summary: {
       demographics: {
         age: result.age,
         gender: result.gender,
         occupation: result.occupation,
         location: result.city ? `${result.city}, ${result.state_region}` : result.state_region,
-      }
+      },
+      // Use background as character description if available
+      character_description: result.background || `${result.age}-year-old ${result.gender} ${result.occupation || 'individual'} from ${result.city || result.state_region || 'the United States'}.`
     }
   })) as unknown as V4Persona[];
 

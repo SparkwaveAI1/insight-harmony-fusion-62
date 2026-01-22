@@ -19,8 +19,12 @@ export interface FilteredSearchResult {
   dependents: number;
   political_lean: string;
   profile_image_url: string;
+  profile_thumbnail_url: string;
   interest_tags: string[];
   health_tags: string[];
+  created_at: string;
+  background: string;
+  is_public: boolean;
   semantic_score: number | null;
   total_count: number;
 }
