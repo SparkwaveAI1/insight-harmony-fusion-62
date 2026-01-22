@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getPublicV4PersonasShowAll } from "@/services/persona";
+import { getPublicV4PersonasShowAll, getPublicPersonasByIds } from "@/services/persona";
 import { useSemanticPersonaSearch, SemanticSearchResult } from "@/hooks/useSemanticPersonaSearch";
-import { useFilteredPersonaSearch, FilteredSearchResult } from "@/hooks/useFilteredPersonaSearch";
+import { useFilteredPersonaSearch } from "@/hooks/useFilteredPersonaSearch";
 import { PersonaFilterPanel } from "./PersonaFilterPanel";
 import { DEFAULT_FILTERS } from "@/types/personaFilters";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,29 @@ const PublicPersonasList = ({
     setCurrentPage: setFilterPage,
     totalPages: filterTotalPages,
   } = useFilteredPersonaSearch(DEFAULT_FILTERS, { publicOnly: true, limit: itemsPerPage });
+
+  // Get the persona IDs from filtered results to fetch full data
+  const filteredPersonaIds = useMemo(
+    () => filteredResults.map(r => r.persona_id),
+    [filteredResults]
+  );
+
+  // Fetch full persona data for filtered results (same source as main library)
+  const { data: filteredFullPersonas = [], isLoading: isLoadingFilteredPersonas } = useQuery({
+    queryKey: ['filtered-personas-full', filteredPersonaIds],
+    queryFn: () => getPublicPersonasByIds(filteredPersonaIds),
+    enabled: hasActiveFilters && filteredPersonaIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Maintain the order from search results when displaying filtered personas
+  const orderedFilteredPersonas = useMemo(() => {
+    if (!filteredFullPersonas.length) return [];
+    const personaMap = new Map(filteredFullPersonas.map(p => [p.persona_id, p]));
+    return filteredPersonaIds
+      .map(id => personaMap.get(id))
+      .filter((p): p is V4Persona => p !== undefined);
+  }, [filteredFullPersonas, filteredPersonaIds]);
 
   // Notify parent of search state
   useEffect(() => {
@@ -158,34 +181,9 @@ const PublicPersonasList = ({
     }
   };
 
-  // Convert filtered results to V4Persona-like objects for display
-  const filteredPersonasForDisplay = filteredResults.map((result: FilteredSearchResult) => ({
-    persona_id: result.persona_id,
-    name: result.name,
-    age_computed: result.age,
-    gender_computed: result.gender,
-    occupation_computed: result.occupation,
-    city_computed: result.city,
-    state_region_computed: result.state_region,
-    profile_image_url: result.profile_image_url,
-    profile_thumbnail_url: result.profile_thumbnail_url,
-    created_at: result.created_at,
-    is_public: result.is_public,
-    conversation_summary: {
-      demographics: {
-        age: result.age,
-        gender: result.gender,
-        occupation: result.occupation,
-        location: result.city ? `${result.city}, ${result.state_region}` : result.state_region,
-      },
-      // Use background as character description if available
-      character_description: result.background || `${result.age}-year-old ${result.gender} ${result.occupation || 'individual'} from ${result.city || result.state_region || 'the United States'}.`
-    }
-  })) as unknown as V4Persona[];
-
-  // Determine which personas to display
+  // Determine which personas to display - use full persona data for filtered results
   const displayPersonas = hasActiveFilters
-    ? filteredPersonasForDisplay
+    ? orderedFilteredPersonas
     : paginatedPersonas;
 
   const displayTotalPages = hasActiveFilters ? filterTotalPages : totalPages;
@@ -214,10 +212,10 @@ const PublicPersonasList = ({
       />
 
       {/* Loading state for filtered search */}
-      {hasActiveFilters && isFilterLoading && <PersonaLoadingState />}
+      {hasActiveFilters && (isFilterLoading || isLoadingFilteredPersonas) && <PersonaLoadingState />}
 
       {/* Results grid */}
-      {(!hasActiveFilters || !isFilterLoading) && displayPersonas.length > 0 && (
+      {(!hasActiveFilters || (!isFilterLoading && !isLoadingFilteredPersonas)) && displayPersonas.length > 0 && (
         <div className={className}>
           {displayPersonas.map((persona) => (
             <PersonaCard

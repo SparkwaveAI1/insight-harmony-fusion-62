@@ -35,6 +35,22 @@ export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
 }
 
 /**
+ * Fetches public personas by their IDs from v4_personas_public_safe
+ * Used to get full persona data after filtered search returns IDs
+ */
+export async function getPublicPersonasByIds(personaIds: string[]): Promise<V4Persona[]> {
+  if (!personaIds.length) return [];
+
+  const { data, error } = await supabase
+    .from('v4_personas_public_safe')
+    .select('*')
+    .in('persona_id', personaIds);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as V4Persona[];
+}
+
+/**
  * Fetches ALL personas owned by a user from v4_personas (no validation filtering)
  * Used for "My Personas" view to show everything the user owns
  */
