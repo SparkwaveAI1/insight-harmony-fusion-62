@@ -22,6 +22,44 @@ import {
 import { PersonaFilters } from '@/types/personaFilters';
 import { usePersonaFilterOptions, formatOptionLabel } from '@/hooks/usePersonaFilterOptions';
 
+// Ethnicities to exclude from the filter (duplicates/variants)
+const EXCLUDED_ETHNICITIES = [
+  'white jewish',
+  'white (irish american)',
+  'white (german and english descent)',
+  'white (polish american)',
+  'caucasian',
+  'black',
+  'black/african american',
+];
+
+// Standard income brackets (in order from lowest to highest)
+const INCOME_BRACKETS = [
+  'Under $25,000',
+  '$25,000 - $50,000',
+  '$50,000 - $75,000',
+  '$75,000 - $100,000',
+  '$100,000 - $150,000',
+  '$150,000 - $200,000',
+  '$200,000 - $350,000',
+  '$350,000 - $500,000',
+  'Over $500,000',
+];
+
+// 50 US States for State/Region filter
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California',
+  'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
+  'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
+  'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri',
+  'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+  'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
+  'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
+  'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
+];
+
 interface PersonaFilterPanelProps {
   filters: PersonaFilters;
   onChange: (filters: PersonaFilters) => void;
@@ -288,14 +326,16 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Ethnicity"
-                options={filterOptions.ethnicities}
+                options={filterOptions.ethnicities.filter(
+                  (e) => !EXCLUDED_ETHNICITIES.includes(e.toLowerCase())
+                )}
                 selected={filters.ethnicities}
                 onChange={(ethnicities) => onChange({ ...filters, ethnicities })}
               />
 
               <MultiSelect
-                label="State/Region"
-                options={filterOptions.states}
+                label="State"
+                options={US_STATES}
                 selected={filters.states}
                 onChange={(states) => onChange({ ...filters, states })}
               />
@@ -367,7 +407,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Income Bracket"
-                options={filterOptions.income_brackets}
+                options={INCOME_BRACKETS}
                 selected={filters.incomeBrackets}
                 onChange={(incomeBrackets) =>
                   onChange({ ...filters, incomeBrackets })
