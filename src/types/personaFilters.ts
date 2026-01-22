@@ -54,12 +54,15 @@ export const DEFAULT_FILTERS: PersonaFilters = {
 };
 
 // Filter options for dropdowns
+// Note: These use lowercase values for case-insensitive matching in the database
 export const GENDER_OPTIONS = ['male', 'female', 'non-binary'];
 
+// Ethnicity options - case-insensitive matching in RPC
 export const ETHNICITY_OPTIONS = [
-  'White', 'white', 'Black', 'African-American', 'Latino', 'Latina', 'Hispanic',
-  'Asian', 'Indian-American', 'Chinese-American', 'Korean-American', 'Vietnamese-American',
-  'Native American', 'Pacific Islander', 'Mixed', 'Other'
+  'white', 'black', 'african-american', 'latino', 'latina', 'hispanic',
+  'asian', 'indian-american', 'chinese-american', 'korean-american', 'vietnamese-american',
+  'mexican-american', 'japanese-american', 'pakistani-american', 'puerto rican',
+  'native american', 'pacific islander', 'mixed', 'caucasian'
 ];
 
 export const US_STATE_OPTIONS = [
@@ -75,18 +78,20 @@ export const US_STATE_OPTIONS = [
   'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia'
 ];
 
+// Marital status - lowercase for case-insensitive matching
 export const MARITAL_STATUS_OPTIONS = [
-  'Single', 'Married', 'Divorced', 'Widowed', 'Separated', 'Partnered'
+  'single', 'married', 'divorced', 'widowed', 'separated', 'partnered', 'engaged'
 ];
 
+// Education options - uses partial LIKE matching, so "bachelor" matches "bachelor's degree", "Bachelor's in Nursing", etc.
 export const EDUCATION_OPTIONS = [
-  'High School', 'Some College', 'Associate Degree',
-  "Bachelor's Degree", "Master's Degree", 'Doctorate', 'Professional Degree'
+  'high school', 'some college', 'associate', 'bachelor', 'master', 'doctorate', 'phd', 'mba', 'jd'
 ];
 
+// Income brackets - match actual database values
 export const INCOME_BRACKET_OPTIONS = [
-  '0-25000', '25000-50000', '50000-75000', '75000-100000',
-  '100000-150000', '150000-200000', '200000-350000', '350000-500000', '500000+'
+  '0-25000', '25000-35000', '35000-50000', '50000-75000', '75000-100000',
+  '100000-150000', '150000-200000', '200000-250000', '250000+'
 ];
 
 export const INTEREST_TAG_OPTIONS = [
