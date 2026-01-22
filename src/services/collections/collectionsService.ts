@@ -2,7 +2,7 @@
 // This file re-exports everything from the other files for backward compatibility
 // It can be deprecated once all imports are updated to use the new structure
 
-import { 
+import {
   getCollectionById,
   getUserCollections,
   getPublicCollections,
@@ -10,7 +10,8 @@ import {
   getPublicCollectionsWithCount,
   createCollection,
   updateCollection,
-  deleteCollection
+  deleteCollection,
+  getAllAccessibleCollections
 } from './collectionOperations';
 import {
   addPersonaToCollection,
@@ -34,6 +35,7 @@ export {
   createCollection,
   updateCollection,
   deleteCollection,
+  getAllAccessibleCollections,
   addPersonaToCollection,
   removePersonaFromCollection,
   getPersonasInCollection,

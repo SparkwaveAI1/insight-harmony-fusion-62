@@ -12,7 +12,7 @@ import { Plus, Check, Search } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Collection,
-  getUserCollections,
+  getAllAccessibleCollections,
   addPersonaToCollection,
   removePersonaFromCollection,
   createCollection,
@@ -45,7 +45,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
     try {
       setLoading(true);
       const [collectionsData, membershipIds] = await Promise.all([
-        getUserCollections(user.id),
+        getAllAccessibleCollections(user.id),
         getCollectionsForPersona(personaId),
       ]);
 
@@ -143,25 +143,26 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Add to Collection</DialogTitle>
         </DialogHeader>
-        
-        <div className="py-4">
+
+        <div className="py-4 overflow-hidden">
           {/* Create new collection input */}
           <div className="flex items-center gap-2 mb-4">
             <Input
               placeholder="New collection name"
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
-              className="flex-1"
+              className="flex-1 min-w-0"
             />
-            <Button 
+            <Button
               size="sm"
               onClick={handleCreateCollection}
               disabled={!newCollectionName.trim() || creatingCollection}
               isLoading={creatingCollection}
+              className="shrink-0"
             >
               <Plus className="h-4 w-4 mr-1" />
               Create
@@ -175,7 +176,7 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
               placeholder="Search collections..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
 
@@ -206,30 +207,37 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
               )}
             </div>
           ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+            <div className="space-y-2 max-h-[300px] overflow-y-auto overflow-x-hidden">
               {filteredCollections.map((collection) => {
                 const isSelected = selectedCollections.has(collection.id);
                 const isToggling = toggleLoadingId === collection.id;
-                
+                const isPublic = collection.is_public;
+                const isOwnCollection = collection.user_id === user?.id;
+
                 return (
                   <div
                     key={collection.id}
-                    className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-all duration-200 ${
+                    className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-all duration-200 ${
                       isSelected
                         ? "bg-primary/10 border-primary/30 border"
                         : "bg-muted/20 hover:bg-muted/30"
                     } ${isToggling ? "opacity-75" : ""}`}
                     onClick={() => !isToggling && handleToggleCollection(collection.id)}
                   >
-                    <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                      <span className="font-medium truncate">{collection.name}</span>
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-medium truncate">{collection.name}</span>
+                        {isPublic && !isOwnCollection && (
+                          <span className="shrink-0 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Shared</span>
+                        )}
+                      </div>
                       {collection.description && (
-                        <span className="text-xs text-muted-foreground truncate">
+                        <span className="text-xs text-muted-foreground truncate block">
                           {collection.description}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center ml-3">
+                    <div className="flex items-center shrink-0">
                       {isToggling ? (
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-r-transparent" />
                       ) : isSelected ? (
@@ -241,48 +249,17 @@ const AddToCollectionDialog: React.FC<AddToCollectionDialogProps> = ({
               })}
             </div>
           )}
-          
-          {/* ORIGINAL CONDITIONAL LOGIC (commented out for debugging) */}
-          {/*
-          {authLoading || loading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-10 rounded-md bg-muted/30 animate-pulse"></div>
-              ))}
-            </div>
-          ) : collections.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">No collections found</p>
-              <p className="text-sm">Create your first collection above</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-              {collections.map((collection) => (
-                <div
-                  key={collection.id}
-                  className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition-colors ${
-                    selectedCollections.has(collection.id)
-                      ? "bg-primary/10 border-primary/30 border"
-                      : "bg-muted/20 hover:bg-muted/30"
-                  }`}
-                  onClick={() => handleToggleCollection(collection.id)}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium">{collection.name}</span>
-                    {collection.description && (
-                      <span className="text-xs text-muted-foreground line-clamp-1">
-                        {collection.description}
-                      </span>
-                    )}
-                  </div>
-                  {selectedCollections.has(collection.id) && (
-                    <Check className="h-4 w-4 text-primary" />
-                  )}
-                </div>
-              ))}
+
+          {/* Collection count indicator */}
+          {!loading && !authLoading && collections.length > 0 && (
+            <div className="text-xs text-muted-foreground mt-3 pt-3 border-t">
+              {searchTerm ? (
+                <span>Showing {filteredCollections.length} of {collections.length} collections</span>
+              ) : (
+                <span>{collections.length} collections available</span>
+              )}
             </div>
           )}
-          */}
         </div>
         
         <DialogFooter>

@@ -254,3 +254,36 @@ export const deleteCollection = async (id: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Fetches all collections accessible to the current user (their own + all public collections)
+ * This is useful for "Add to Collection" dialogs where users might want to add to shared collections
+ */
+export const getAllAccessibleCollections = async (userIdParam?: string): Promise<Collection[]> => {
+  try {
+    const userId = userIdParam ?? (await supabase.auth.getUser()).data.user?.id;
+
+    // Fetch all collections in a single query using OR condition
+    // This gets: collections owned by the user OR public collections
+    const { data, error } = await supabase
+      .from("collections")
+      .select("*")
+      .or(`user_id.eq.${userId},is_public.eq.true`)
+      .order("updated_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Deduplicate in case a user's own collection is also public
+    const uniqueCollections = data?.reduce((acc: Collection[], collection) => {
+      if (!acc.find(c => c.id === collection.id)) {
+        acc.push(collection);
+      }
+      return acc;
+    }, []) || [];
+
+    return uniqueCollections;
+  } catch (error) {
+    console.error("Error fetching accessible collections:", error);
+    return [];
+  }
+};
