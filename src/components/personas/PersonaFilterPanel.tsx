@@ -103,6 +103,34 @@ const EDUCATION_LABELS: Record<string, string> = {
   'doctorate': 'Doctorate',
 };
 
+// Political lean options in spectrum order (left to right)
+const POLITICAL_LEANS = [
+  'far_left',
+  'progressive',
+  'liberal',
+  'center_left',
+  'moderate',
+  'center_right',
+  'conservative',
+  'far_right',
+  'libertarian',
+  'apolitical',
+];
+
+// Custom labels for political leans
+const POLITICAL_LEAN_LABELS: Record<string, string> = {
+  'far_left': 'Far Left',
+  'progressive': 'Progressive',
+  'liberal': 'Liberal',
+  'center_left': 'Center Left',
+  'moderate': 'Moderate',
+  'center_right': 'Center Right',
+  'conservative': 'Conservative',
+  'far_right': 'Far Right',
+  'libertarian': 'Libertarian',
+  'apolitical': 'Apolitical',
+};
+
 interface PersonaFilterPanelProps {
   filters: PersonaFilters;
   onChange: (filters: PersonaFilters) => void;
@@ -498,11 +526,12 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Political Leaning"
-                options={filterOptions.political_leans}
+                options={POLITICAL_LEANS}
                 selected={filters.politicalLeans}
                 onChange={(politicalLeans) =>
                   onChange({ ...filters, politicalLeans })
                 }
+                labelFormatter={(v) => POLITICAL_LEAN_LABELS[v] || formatOptionLabel(v)}
               />
             </div>
           </div>
