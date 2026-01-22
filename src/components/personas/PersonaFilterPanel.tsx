@@ -1,7 +1,7 @@
 // src/components/personas/PersonaFilterPanel.tsx
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, X, Filter } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, Filter, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,19 +19,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import {
-  PersonaFilters,
-  GENDER_OPTIONS,
-  ETHNICITY_OPTIONS,
-  US_STATE_OPTIONS,
-  MARITAL_STATUS_OPTIONS,
-  EDUCATION_OPTIONS,
-  INCOME_BRACKET_OPTIONS,
-  INTEREST_TAG_OPTIONS,
-  HEALTH_TAG_OPTIONS,
-  WORK_ROLE_TAG_OPTIONS,
-  POLITICAL_LEAN_OPTIONS,
-} from '@/types/personaFilters';
+import { PersonaFilters } from '@/types/personaFilters';
+import { usePersonaFilterOptions, formatOptionLabel } from '@/hooks/usePersonaFilterOptions';
 
 interface PersonaFilterPanelProps {
   filters: PersonaFilters;
@@ -103,8 +92,8 @@ function MultiSelect({
                   onChange={() => toggleOption(option)}
                   className="rounded"
                 />
-                <span className="text-sm capitalize">
-                  {option.replace(/_/g, ' ')}
+                <span className="text-sm">
+                  {formatOptionLabel(option)}
                 </span>
               </label>
             ))}
@@ -120,7 +109,7 @@ function MultiSelect({
               className="text-xs cursor-pointer"
               onClick={() => toggleOption(s)}
             >
-              {s.replace(/_/g, ' ')}
+              {formatOptionLabel(s)}
               <X className="h-3 w-3 ml-1" />
             </Badge>
           ))}
@@ -144,6 +133,7 @@ export function PersonaFilterPanel({
   resultCount,
 }: PersonaFilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { options: filterOptions, isLoading: optionsLoading } = usePersonaFilterOptions();
 
   const activeFilterCount = [
     filters.ageMin !== null || filters.ageMax !== null,
@@ -207,6 +197,16 @@ export function PersonaFilterPanel({
       {/* Expanded filter content */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t pt-4">
+          {/* Loading state for options */}
+          {optionsLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Loading filter options...</span>
+            </div>
+          )}
+
+          {!optionsLoading && (
+            <>
           {/* Quick search row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
@@ -281,21 +281,21 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Gender"
-                options={GENDER_OPTIONS}
+                options={filterOptions.genders}
                 selected={filters.genders}
                 onChange={(genders) => onChange({ ...filters, genders })}
               />
 
               <MultiSelect
                 label="Ethnicity"
-                options={ETHNICITY_OPTIONS}
+                options={filterOptions.ethnicities}
                 selected={filters.ethnicities}
                 onChange={(ethnicities) => onChange({ ...filters, ethnicities })}
               />
 
               <MultiSelect
                 label="State/Region"
-                options={US_STATE_OPTIONS}
+                options={filterOptions.states}
                 selected={filters.states}
                 onChange={(states) => onChange({ ...filters, states })}
               />
@@ -330,7 +330,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Marital Status"
-                options={MARITAL_STATUS_OPTIONS}
+                options={filterOptions.marital_statuses}
                 selected={filters.maritalStatuses}
                 onChange={(maritalStatuses) =>
                   onChange({ ...filters, maritalStatuses })
@@ -358,7 +358,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Work Role"
-                options={WORK_ROLE_TAG_OPTIONS}
+                options={filterOptions.work_role_tags}
                 selected={filters.workRoleTagsAny}
                 onChange={(workRoleTagsAny) =>
                   onChange({ ...filters, workRoleTagsAny })
@@ -367,7 +367,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Income Bracket"
-                options={INCOME_BRACKET_OPTIONS}
+                options={filterOptions.income_brackets}
                 selected={filters.incomeBrackets}
                 onChange={(incomeBrackets) =>
                   onChange({ ...filters, incomeBrackets })
@@ -376,7 +376,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Education"
-                options={EDUCATION_OPTIONS}
+                options={filterOptions.education_levels}
                 selected={filters.educationLevels}
                 onChange={(educationLevels) =>
                   onChange({ ...filters, educationLevels })
@@ -393,7 +393,7 @@ export function PersonaFilterPanel({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <MultiSelect
                 label="Interests"
-                options={INTEREST_TAG_OPTIONS}
+                options={filterOptions.interest_tags}
                 selected={filters.interestTagsAny}
                 onChange={(interestTagsAny) =>
                   onChange({ ...filters, interestTagsAny })
@@ -402,7 +402,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Health Conditions"
-                options={HEALTH_TAG_OPTIONS}
+                options={filterOptions.health_tags}
                 selected={filters.healthTagsAny}
                 onChange={(healthTagsAny) =>
                   onChange({ ...filters, healthTagsAny })
@@ -411,7 +411,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Political Leaning"
-                options={POLITICAL_LEAN_OPTIONS}
+                options={filterOptions.political_leans}
                 selected={filters.politicalLeans}
                 onChange={(politicalLeans) =>
                   onChange({ ...filters, politicalLeans })
@@ -429,6 +429,8 @@ export function PersonaFilterPanel({
               {isLoading ? 'Searching...' : 'Apply Filters'}
             </Button>
           </div>
+            </>
+          )}
         </div>
       )}
     </Card>
