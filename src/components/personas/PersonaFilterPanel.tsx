@@ -60,6 +60,49 @@ const US_STATES = [
   'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'
 ];
 
+// Standard gender options (consolidated non-binary variants)
+const GENDERS = ['male', 'female', 'non-binary'];
+
+// Marital status options in preferred order (excluding engaged)
+const MARITAL_STATUSES = [
+  'single',
+  'married',
+  'divorced',
+  'widowed',
+  'separated',
+  'in a relationship',
+  'partnered',
+  'cohabiting',
+];
+
+// Education levels in order with proper display names
+const EDUCATION_LEVELS = [
+  'high school',
+  'some college',
+  'associate',
+  'bachelor',
+  'master',
+  'mba',
+  'jd',
+  'md',
+  'phd',
+  'doctorate',
+];
+
+// Custom labels for education levels
+const EDUCATION_LABELS: Record<string, string> = {
+  'high school': 'High School',
+  'some college': 'Some College',
+  'associate': 'Associate Degree',
+  'bachelor': "Bachelor's Degree",
+  'master': "Master's Degree",
+  'mba': 'MBA',
+  'jd': 'JD',
+  'md': 'MD',
+  'phd': 'PhD',
+  'doctorate': 'Doctorate',
+};
+
 interface PersonaFilterPanelProps {
   filters: PersonaFilters;
   onChange: (filters: PersonaFilters) => void;
@@ -76,14 +119,17 @@ function MultiSelect({
   selected,
   onChange,
   placeholder = 'Select...',
+  labelFormatter,
 }: {
   label: string;
   options: string[];
   selected: string[];
   onChange: (values: string[]) => void;
   placeholder?: string;
+  labelFormatter?: (value: string) => string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const getLabel = (option: string) => labelFormatter ? labelFormatter(option) : formatOptionLabel(option);
 
   const toggleOption = (option: string) => {
     if (selected.includes(option)) {
@@ -131,7 +177,7 @@ function MultiSelect({
                   className="rounded"
                 />
                 <span className="text-sm">
-                  {formatOptionLabel(option)}
+                  {getLabel(option)}
                 </span>
               </label>
             ))}
@@ -147,7 +193,7 @@ function MultiSelect({
               className="text-xs cursor-pointer"
               onClick={() => toggleOption(s)}
             >
-              {formatOptionLabel(s)}
+              {getLabel(s)}
               <X className="h-3 w-3 ml-1" />
             </Badge>
           ))}
@@ -319,7 +365,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Gender"
-                options={filterOptions.genders}
+                options={GENDERS}
                 selected={filters.genders}
                 onChange={(genders) => onChange({ ...filters, genders })}
               />
@@ -370,7 +416,7 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Marital Status"
-                options={filterOptions.marital_statuses}
+                options={MARITAL_STATUSES}
                 selected={filters.maritalStatuses}
                 onChange={(maritalStatuses) =>
                   onChange({ ...filters, maritalStatuses })
@@ -416,11 +462,12 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Education"
-                options={filterOptions.education_levels}
+                options={EDUCATION_LEVELS}
                 selected={filters.educationLevels}
                 onChange={(educationLevels) =>
                   onChange({ ...filters, educationLevels })
                 }
+                labelFormatter={(v) => EDUCATION_LABELS[v] || formatOptionLabel(v)}
               />
             </div>
           </div>
