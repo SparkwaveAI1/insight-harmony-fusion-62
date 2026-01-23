@@ -20,6 +20,12 @@ Deno.serve(async (req) => {
     try {
       console.log('Fixing search_personas_unified sorting...')
 
+      // First drop all existing overloads of the function
+      await connection.queryObject(`
+        DROP FUNCTION IF EXISTS search_personas_unified(int, int, boolean, uuid, uuid[], int, int, text[], text[], text[], boolean, text[], text, text[], text[], text[], text[], text[], text[], text, text, text, vector, float, text);
+      `)
+      console.log('Dropped existing function overloads')
+
       // Update the function with fixed sorting - default to created_at DESC
       await connection.queryObject(`
         CREATE OR REPLACE FUNCTION search_personas_unified(
@@ -178,11 +184,11 @@ Deno.serve(async (req) => {
 
       // Verify by checking the first few results
       const result = await connection.queryObject<{ name: string; created_at: string }>(`
-        SELECT name, created_at::text FROM search_personas_unified(
-          p_limit := 5,
-          p_public_only := true,
-          p_sort_by := 'created'
-        )
+        SELECT name, created_at::text
+        FROM v4_personas
+        WHERE is_public = true
+        ORDER BY created_at DESC
+        LIMIT 5
       `)
 
       return new Response(

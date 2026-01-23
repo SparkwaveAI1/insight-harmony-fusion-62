@@ -101,3 +101,6 @@ verify_jwt = true
 
 [functions.openai-proxy]
 verify_jwt = false
+
+[functions.run-sql-migration]
+verify_jwt = false
