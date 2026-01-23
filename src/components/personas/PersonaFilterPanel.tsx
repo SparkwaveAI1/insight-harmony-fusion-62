@@ -358,9 +358,6 @@ export function PersonaFilterPanel({
 
           {/* Demographics section */}
           <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
-              Demographics
-            </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {/* Age range */}
               <div>
@@ -457,9 +454,6 @@ export function PersonaFilterPanel({
 
           {/* Professional section */}
           <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
-              Professional
-            </h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <Label className="text-sm font-medium">Occupation Contains</Label>
@@ -502,21 +496,9 @@ export function PersonaFilterPanel({
             </div>
           </div>
 
-          {/* Interests & Health section */}
+          {/* Health & Political section */}
           <div className="mb-4">
-            <h4 className="text-sm font-semibold mb-2 text-muted-foreground">
-              Interests & Health
-            </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <MultiSelect
-                label="Interests"
-                options={filterOptions.interest_tags}
-                selected={filters.interestTagsAny}
-                onChange={(interestTagsAny) =>
-                  onChange({ ...filters, interestTagsAny })
-                }
-              />
-
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <MultiSelect
                 label="Health Conditions"
                 options={filterOptions.health_tags}
