@@ -20,13 +20,26 @@ Deno.serve(async (req) => {
     try {
       console.log('Fixing search_personas_unified sorting...')
 
-      // First drop all existing overloads of the function
+      // Drop ALL overloads using DO block with regprocedure
       await connection.queryObject(`
-        DROP FUNCTION IF EXISTS search_personas_unified(int, int, boolean, uuid, uuid[], int, int, text[], text[], text[], boolean, text[], text, text[], text[], text[], text[], text[], text[], text, text, text, vector, float, text);
+        DO $$
+        DECLARE
+          func_oid oid;
+        BEGIN
+          FOR func_oid IN
+            SELECT p.oid
+            FROM pg_proc p
+            JOIN pg_namespace n ON p.pronamespace = n.oid
+            WHERE n.nspname = 'public'
+            AND p.proname = 'search_personas_unified'
+          LOOP
+            EXECUTE format('DROP FUNCTION %s', func_oid::regprocedure);
+          END LOOP;
+        END $$;
       `)
-      console.log('Dropped existing function overloads')
+      console.log('Dropped all function overloads')
 
-      // Update the function with fixed sorting - default to created_at DESC
+      // Now create the single clean version
       await connection.queryObject(`
         CREATE OR REPLACE FUNCTION search_personas_unified(
           p_limit int DEFAULT 50,
@@ -56,7 +69,7 @@ Deno.serve(async (req) => {
           p_sort_by text DEFAULT 'created'
         )
         RETURNS TABLE (
-          persona_id uuid,
+          persona_id text,
           name text,
           age int,
           gender text,
@@ -86,7 +99,6 @@ Deno.serve(async (req) => {
         DECLARE
           v_total bigint;
         BEGIN
-          -- Count total matching personas
           SELECT COUNT(DISTINCT p.persona_id) INTO v_total
           FROM v4_personas p
           LEFT JOIN collection_personas cp ON cp.persona_id = p.persona_id
@@ -98,12 +110,12 @@ Deno.serve(async (req) => {
             AND (p_age_max IS NULL OR p.age_computed <= p_age_max)
             AND (p_genders IS NULL OR p.gender_computed ILIKE ANY(SELECT '%' || unnest(p_genders) || '%'))
             AND (p_ethnicities IS NULL OR p.ethnicity_computed ILIKE ANY(SELECT '%' || unnest(p_ethnicities) || '%'))
-            AND (p_states IS NULL OR p.state_computed ILIKE ANY(SELECT '%' || unnest(p_states) || '%'))
+            AND (p_states IS NULL OR p.state_region_computed ILIKE ANY(SELECT '%' || unnest(p_states) || '%'))
             AND (p_has_children IS NULL OR p.has_children_computed = p_has_children)
             AND (p_marital_statuses IS NULL OR p.marital_status_computed ILIKE ANY(SELECT '%' || unnest(p_marital_statuses) || '%'))
             AND (p_occupation_contains IS NULL OR p.occupation_computed ILIKE '%' || p_occupation_contains || '%')
-            AND (p_income_brackets IS NULL OR p.income_bracket_computed ILIKE ANY(SELECT '%' || unnest(p_income_brackets) || '%'))
-            AND (p_education_levels IS NULL OR p.education_level_computed ILIKE ANY(SELECT '%' || unnest(p_education_levels) || '%'))
+            AND (p_income_brackets IS NULL OR p.income_bracket ILIKE ANY(SELECT '%' || unnest(p_income_brackets) || '%'))
+            AND (p_education_levels IS NULL OR p.education_level ILIKE ANY(SELECT '%' || unnest(p_education_levels) || '%'))
             AND (p_interest_tags_any IS NULL OR p.interest_tags && p_interest_tags_any)
             AND (p_health_tags_any IS NULL OR p.health_tags && p_health_tags_any)
             AND (p_work_role_tags_any IS NULL OR p.work_role_tags && p_work_role_tags_any)
@@ -113,34 +125,33 @@ Deno.serve(async (req) => {
             AND (p_name_contains IS NULL OR p.name ILIKE '%' || p_name_contains || '%')
             AND (p_semantic_embedding IS NULL OR (1 - (p.profile_embedding <=> p_semantic_embedding)) >= p_semantic_threshold);
 
-          -- Return results sorted by created_at DESC (most recent first) by default
           RETURN QUERY
           SELECT
-            p.persona_id,
-            p.name,
-            p.age_computed,
-            p.gender_computed,
-            p.ethnicity_computed,
-            p.state_computed,
-            p.city_computed,
-            p.occupation_computed,
-            p.income_bracket_computed,
-            p.education_level_computed,
-            p.has_children_computed,
-            p.dependents_computed,
-            p.political_lean_computed,
-            p.profile_image_url,
-            p.profile_thumbnail_url,
-            p.interest_tags,
-            p.health_tags,
-            p.created_at,
-            p.background,
-            p.is_public,
+            p.persona_id::text,
+            p.name::text,
+            p.age_computed::int,
+            p.gender_computed::text,
+            p.ethnicity_computed::text,
+            p.state_region_computed::text,
+            p.city_computed::text,
+            p.occupation_computed::text,
+            p.income_bracket::text,
+            p.education_level::text,
+            p.has_children_computed::boolean,
+            p.dependents_computed::int,
+            p.political_lean_computed::text,
+            p.profile_image_url::text,
+            p.profile_thumbnail_url::text,
+            p.interest_tags::text[],
+            p.health_tags::text[],
+            p.created_at::timestamptz,
+            p.background::text,
+            p.is_public::boolean,
             CASE WHEN p_semantic_embedding IS NOT NULL
               THEN (1 - (p.profile_embedding <=> p_semantic_embedding))::float
-              ELSE NULL
+              ELSE NULL::float
             END AS semantic_score,
-            v_total
+            v_total::bigint
           FROM v4_personas p
           LEFT JOIN collection_personas cp ON cp.persona_id = p.persona_id
           WHERE
@@ -151,12 +162,12 @@ Deno.serve(async (req) => {
             AND (p_age_max IS NULL OR p.age_computed <= p_age_max)
             AND (p_genders IS NULL OR p.gender_computed ILIKE ANY(SELECT '%' || unnest(p_genders) || '%'))
             AND (p_ethnicities IS NULL OR p.ethnicity_computed ILIKE ANY(SELECT '%' || unnest(p_ethnicities) || '%'))
-            AND (p_states IS NULL OR p.state_computed ILIKE ANY(SELECT '%' || unnest(p_states) || '%'))
+            AND (p_states IS NULL OR p.state_region_computed ILIKE ANY(SELECT '%' || unnest(p_states) || '%'))
             AND (p_has_children IS NULL OR p.has_children_computed = p_has_children)
             AND (p_marital_statuses IS NULL OR p.marital_status_computed ILIKE ANY(SELECT '%' || unnest(p_marital_statuses) || '%'))
             AND (p_occupation_contains IS NULL OR p.occupation_computed ILIKE '%' || p_occupation_contains || '%')
-            AND (p_income_brackets IS NULL OR p.income_bracket_computed ILIKE ANY(SELECT '%' || unnest(p_income_brackets) || '%'))
-            AND (p_education_levels IS NULL OR p.education_level_computed ILIKE ANY(SELECT '%' || unnest(p_education_levels) || '%'))
+            AND (p_income_brackets IS NULL OR p.income_bracket ILIKE ANY(SELECT '%' || unnest(p_income_brackets) || '%'))
+            AND (p_education_levels IS NULL OR p.education_level ILIKE ANY(SELECT '%' || unnest(p_education_levels) || '%'))
             AND (p_interest_tags_any IS NULL OR p.interest_tags && p_interest_tags_any)
             AND (p_health_tags_any IS NULL OR p.health_tags && p_health_tags_any)
             AND (p_work_role_tags_any IS NULL OR p.work_role_tags && p_work_role_tags_any)
@@ -166,23 +177,22 @@ Deno.serve(async (req) => {
             AND (p_name_contains IS NULL OR p.name ILIKE '%' || p_name_contains || '%')
             AND (p_semantic_embedding IS NULL OR (1 - (p.profile_embedding <=> p_semantic_embedding)) >= p_semantic_threshold)
           GROUP BY p.persona_id
-          ORDER BY
-            CASE WHEN p_sort_by = 'semantic' AND p_semantic_embedding IS NOT NULL
-              THEN (1 - (p.profile_embedding <=> p_semantic_embedding))
-              ELSE 0
-            END DESC,
-            CASE WHEN p_sort_by = 'name' THEN p.name END ASC,
-            CASE WHEN p_sort_by = 'created' OR p_sort_by IS NULL OR p_sort_by = '' THEN p.created_at END DESC,
-            p.created_at DESC
+          ORDER BY p.created_at DESC
           LIMIT p_limit
           OFFSET p_offset;
         END;
         $fn$
       `)
+      console.log('Created new function')
 
-      console.log('Function updated successfully')
+      // Grant permissions
+      await connection.queryObject(`
+        GRANT EXECUTE ON FUNCTION search_personas_unified TO authenticated;
+        GRANT EXECUTE ON FUNCTION search_personas_unified TO anon;
+      `)
+      console.log('Granted permissions')
 
-      // Verify by checking the first few results
+      // Verify
       const result = await connection.queryObject<{ name: string; created_at: string }>(`
         SELECT name, created_at::text
         FROM v4_personas
@@ -194,7 +204,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Sorting fix applied! Function now defaults to created_at DESC',
+          message: 'Function recreated with created_at DESC sorting',
           sample: result.rows
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
