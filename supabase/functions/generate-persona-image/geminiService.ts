@@ -2,7 +2,7 @@ export async function generateImageWithGemini(prompt: string, apiKey: string): P
   console.log("Calling Gemini API for image generation...");
 
   const imageResponse = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: {
@@ -11,7 +11,10 @@ export async function generateImageWithGemini(prompt: string, apiKey: string): P
       body: JSON.stringify({
         contents: [{
           parts: [{ text: prompt }]
-        }]
+        }],
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"]
+        }
       })
     }
   );
