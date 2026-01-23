@@ -1892,10 +1892,12 @@ export type Database = {
           created_at: string | null
           creation_completed: boolean | null
           creation_stage: string | null
+          dependents_computed: number | null
           education_level: string | null
           embedding_updated_at: string | null
           enhancement_applied_at: string | null
           enrichment_status: string | null
+          ethnicity_computed: string | null
           evidence_notes: string | null
           full_profile: Json
           gender_computed: string | null
@@ -1910,10 +1912,12 @@ export type Database = {
           name: string
           occupation_computed: string | null
           persona_id: string
+          political_lean_computed: string | null
           profile_embedding: string | null
           profile_image_url: string | null
           profile_thumbnail_url: string | null
           schema_version: string
+          search_vector: unknown
           state_region_computed: string | null
           statistical_enhancement_status: string | null
           thought_coherence: number | null
@@ -1931,10 +1935,12 @@ export type Database = {
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
+          dependents_computed?: number | null
           education_level?: string | null
           embedding_updated_at?: string | null
           enhancement_applied_at?: string | null
           enrichment_status?: string | null
+          ethnicity_computed?: string | null
           evidence_notes?: string | null
           full_profile?: Json
           gender_computed?: string | null
@@ -1949,10 +1955,12 @@ export type Database = {
           name: string
           occupation_computed?: string | null
           persona_id: string
+          political_lean_computed?: string | null
           profile_embedding?: string | null
           profile_image_url?: string | null
           profile_thumbnail_url?: string | null
           schema_version?: string
+          search_vector?: unknown
           state_region_computed?: string | null
           statistical_enhancement_status?: string | null
           thought_coherence?: number | null
@@ -1970,10 +1978,12 @@ export type Database = {
           created_at?: string | null
           creation_completed?: boolean | null
           creation_stage?: string | null
+          dependents_computed?: number | null
           education_level?: string | null
           embedding_updated_at?: string | null
           enhancement_applied_at?: string | null
           enrichment_status?: string | null
+          ethnicity_computed?: string | null
           evidence_notes?: string | null
           full_profile?: Json
           gender_computed?: string | null
@@ -1988,10 +1998,12 @@ export type Database = {
           name?: string
           occupation_computed?: string | null
           persona_id?: string
+          political_lean_computed?: string | null
           profile_embedding?: string | null
           profile_image_url?: string | null
           profile_thumbnail_url?: string | null
           schema_version?: string
+          search_vector?: unknown
           state_region_computed?: string | null
           statistical_enhancement_status?: string | null
           thought_coherence?: number | null
@@ -2301,6 +2313,26 @@ export type Database = {
         Args: { full_profile_data: Json }
         Returns: Json
       }
+      extract_health_tags: {
+        Args: {
+          p_background: string
+          p_conversation_summary: Json
+          p_full_profile: Json
+        }
+        Returns: string[]
+      }
+      extract_interest_tags: {
+        Args: {
+          p_background: string
+          p_conversation_summary: Json
+          p_full_profile: Json
+        }
+        Returns: string[]
+      }
+      extract_work_role_tags: {
+        Args: { p_full_profile: Json; p_occupation: string }
+        Returns: string[]
+      }
       fail_stale_persona_jobs: { Args: never; Returns: undefined }
       find_orphaned_persona_references: {
         Args: never
@@ -2312,6 +2344,15 @@ export type Database = {
       }
       fix_orphaned_persona_queue_items: { Args: never; Returns: undefined }
       generate_participant_identifier: { Args: never; Returns: string }
+      generate_persona_search_vector: {
+        Args: {
+          p_background: string
+          p_conversation_summary: Json
+          p_full_profile: Json
+          p_name: string
+        }
+        Returns: unknown
+      }
       get_current_user_id: { Args: never; Returns: string }
       get_distribution_report: {
         Args: never
@@ -2336,6 +2377,7 @@ export type Database = {
         }[]
       }
       get_next_batch_id: { Args: never; Returns: string }
+      get_persona_filter_options: { Args: never; Returns: Json }
       get_queue_health_status: {
         Args: never
         Returns: {
@@ -2544,6 +2586,67 @@ export type Database = {
           profile_image_url: string
           state_region_computed: string
           work_role_tags: string[]
+        }[]
+      }
+      search_personas_unified: {
+        Args: {
+          p_age_max?: number
+          p_age_min?: number
+          p_cities?: string[]
+          p_collection_ids?: string[]
+          p_countries?: string[]
+          p_dependents_max?: number
+          p_dependents_min?: number
+          p_education_levels?: string[]
+          p_ethnicities?: string[]
+          p_exclude_persona_ids?: string[]
+          p_genders?: string[]
+          p_has_children?: boolean
+          p_health_tags_any?: string[]
+          p_income_brackets?: string[]
+          p_interest_tags_all?: string[]
+          p_interest_tags_any?: string[]
+          p_limit?: number
+          p_marital_statuses?: string[]
+          p_name_contains?: string
+          p_name_exact?: string
+          p_occupation_contains?: string
+          p_offset?: number
+          p_persona_ids?: string[]
+          p_political_leans?: string[]
+          p_public_only?: boolean
+          p_semantic_embedding?: string
+          p_semantic_threshold?: number
+          p_sort_by?: string
+          p_states?: string[]
+          p_text_contains?: string
+          p_text_excludes?: string
+          p_user_id?: string
+          p_work_role_tags_any?: string[]
+        }
+        Returns: {
+          age: number
+          background: string
+          city: string
+          created_at: string
+          dependents: number
+          education_level: string
+          ethnicity: string
+          gender: string
+          has_children: boolean
+          health_tags: string[]
+          income_bracket: string
+          interest_tags: string[]
+          is_public: boolean
+          name: string
+          occupation: string
+          persona_id: string
+          political_lean: string
+          profile_image_url: string
+          profile_thumbnail_url: string
+          semantic_score: number
+          state_region: string
+          total_count: number
         }[]
       }
       show_limit: { Args: never; Returns: number }
