@@ -35,7 +35,7 @@ serve(async (req) => {
     // Build the image prompt
     const imagePrompt = buildImagePrompt(personaData);
     
-    // Generate image with Gemini (uses LOVABLE_API_KEY internally)
+    // Generate image with Gemini API
     const base64Image = await generateImageWithGemini(imagePrompt, GEMINI_API_KEY || "");
     
     // Upload image to Supabase storage (both full and thumbnail)
