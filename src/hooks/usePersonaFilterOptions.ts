@@ -59,18 +59,21 @@ export function usePersonaFilterOptions() {
         if (rpcError) throw rpcError;
 
         if (data) {
+          // Type assertion for the RPC response
+          const rpcData = data as Record<string, unknown>;
+          
           const fetchedOptions: PersonaFilterOptions = {
-            genders: data.genders || [],
-            ethnicities: data.ethnicities || [],
-            states: data.states || [],
-            countries: data.countries || [],
-            education_levels: data.education_levels || [],
-            income_brackets: data.income_brackets || [],
-            marital_statuses: data.marital_statuses || [],
-            interest_tags: data.interest_tags || [],
-            health_tags: data.health_tags || [],
-            work_role_tags: data.work_role_tags || [],
-            political_leans: data.political_leans || [],
+            genders: Array.isArray(rpcData.genders) ? rpcData.genders : [],
+            ethnicities: Array.isArray(rpcData.ethnicities) ? rpcData.ethnicities : [],
+            states: Array.isArray(rpcData.states) ? rpcData.states : [],
+            countries: Array.isArray(rpcData.countries) ? rpcData.countries : [],
+            education_levels: Array.isArray(rpcData.education_levels) ? rpcData.education_levels : [],
+            income_brackets: Array.isArray(rpcData.income_brackets) ? rpcData.income_brackets : [],
+            marital_statuses: Array.isArray(rpcData.marital_statuses) ? rpcData.marital_statuses : [],
+            interest_tags: Array.isArray(rpcData.interest_tags) ? rpcData.interest_tags : [],
+            health_tags: Array.isArray(rpcData.health_tags) ? rpcData.health_tags : [],
+            work_role_tags: Array.isArray(rpcData.work_role_tags) ? rpcData.work_role_tags : [],
+            political_leans: Array.isArray(rpcData.political_leans) ? rpcData.political_leans : [],
           };
 
           // Update cache

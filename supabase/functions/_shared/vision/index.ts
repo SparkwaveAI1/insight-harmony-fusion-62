@@ -24,7 +24,7 @@
  */
 
 // Types
-export {
+export type {
   VisionImage,
   DetailPolicy,
   VisionAnalysisRequest,
@@ -33,8 +33,11 @@ export {
   VisionProviderAdapter,
   VisionProviderConfig,
   VisionConfig,
-  VisionProviderError,
   AllowedMimeType,
+} from './types.ts';
+
+export {
+  VisionProviderError,
   ALLOWED_MIME_TYPES,
   extractBase64FromDataUrl,
   buildDataUrl,
@@ -47,11 +50,12 @@ export {
 } from './types.ts';
 
 // Config
+export type { ModelRoutingTable } from './config.ts';
+
 export {
   getDefaultVisionConfig,
   loadVisionConfigFromEnv,
   VISION_PRESETS,
-  ModelRoutingTable,
   DEFAULT_ROUTING_TABLE,
   CHEAP_ROUTING_TABLE,
   getRoutingTableForProject,
@@ -59,8 +63,9 @@ export {
 } from './config.ts';
 
 // Logging
+export type { VisionLogEntry } from './logging.ts';
+
 export {
-  VisionLogEntry,
   createVisionLogEntry,
   addResponseToLog,
   addTraitAnalyzerToLog,

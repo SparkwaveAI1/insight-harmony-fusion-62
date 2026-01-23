@@ -1,29 +1,16 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * OpenAI Service - Secure Proxy Pattern
+ * 
+ * All OpenAI API calls are routed through a server-side edge function
+ * that handles authentication and API key management securely.
+ * API keys are NEVER exposed to the client.
+ */
 export class OpenAIService {
-  private static async getApiKey(): Promise<string> {
-    try {
-      const { data, error } = await supabase.functions.invoke('get-api-key', {
-        body: { service: 'openai' }
-      });
-
-      if (error) {
-        console.error('Error getting OpenAI API key:', error);
-        throw new Error('Failed to get OpenAI API key');
-      }
-
-      if (!data?.apiKey) {
-        throw new Error('OpenAI API key not found. Please add your API key in settings.');
-      }
-
-      return data.apiKey;
-    } catch (error) {
-      console.error('Error in getApiKey:', error);
-      throw error;
-    }
-  }
-
+  /**
+   * Generate a response using OpenAI chat completions via secure proxy
+   */
   static async generateResponse(
     messages: Array<{ role: string; content: string }>,
     options?: {
@@ -34,36 +21,39 @@ export class OpenAIService {
     }
   ): Promise<string> {
     try {
-      const apiKey = await this.getApiKey();
-      
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: options?.model || 'gpt-4.1-2025-04-14', // Updated to match edge function
-          messages,
-          temperature: options?.temperature || 0.7,
-          max_tokens: options?.maxTokens || 2000,
-          stream: options?.stream || false,
-        }),
+      const payload = {
+        model: options?.model || 'gpt-4.1-2025-04-14',
+        messages,
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 2000,
+        stream: options?.stream ?? false,
+      };
+
+      // Use secure proxy - API key is handled server-side
+      const { data, error } = await supabase.functions.invoke('openai-proxy', {
+        body: { endpoint: 'chat/completions', payload }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+      if (error) {
+        console.error('Error invoking OpenAI proxy:', error);
+        throw new Error('Failed to generate response. Please try again.');
       }
 
-      const data = await response.json();
-      return data.choices[0]?.message?.content || '';
+      if (data.error) {
+        console.error('OpenAI API error:', data.error);
+        throw new Error(data.error);
+      }
+
+      return data.choices?.[0]?.message?.content || '';
     } catch (error) {
       console.error('Error generating OpenAI response:', error);
       throw error;
     }
   }
 
+  /**
+   * Generate a completion from a simple prompt
+   */
   static async generateCompletion(
     prompt: string,
     options?: {
@@ -76,6 +66,9 @@ export class OpenAIService {
     return this.generateResponse(messages, options);
   }
 
+  /**
+   * Generate a response with a system prompt
+   */
   static async generateWithSystemPrompt(
     systemPrompt: string,
     userPrompt: string,
@@ -90,5 +83,39 @@ export class OpenAIService {
       { role: 'user', content: userPrompt }
     ];
     return this.generateResponse(messages, options);
+  }
+
+  /**
+   * Generate embeddings via secure proxy
+   */
+  static async generateEmbedding(
+    text: string,
+    model: string = 'text-embedding-3-small'
+  ): Promise<number[]> {
+    try {
+      const payload = {
+        model,
+        input: text,
+      };
+
+      const { data, error } = await supabase.functions.invoke('openai-proxy', {
+        body: { endpoint: 'embeddings', payload }
+      });
+
+      if (error) {
+        console.error('Error invoking OpenAI proxy for embeddings:', error);
+        throw new Error('Failed to generate embeddings');
+      }
+
+      if (data.error) {
+        console.error('OpenAI embeddings error:', data.error);
+        throw new Error(data.error);
+      }
+
+      return data.data?.[0]?.embedding || [];
+    } catch (error) {
+      console.error('Error generating embeddings:', error);
+      throw error;
+    }
   }
 }
