@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getPublicV4PersonasShowAll, getPublicPersonasByIds } from "@/services/persona";
-import { useSemanticPersonaSearch, SemanticSearchResult } from "@/hooks/useSemanticPersonaSearch";
+import { getPublicPersonasByIds } from "@/services/persona";
 import { useFilteredPersonaSearch } from "@/hooks/useFilteredPersonaSearch";
 import { PersonaFilterPanel } from "./PersonaFilterPanel";
 import { DEFAULT_FILTERS } from "@/types/personaFilters";
@@ -28,176 +27,95 @@ const PublicPersonasList = ({
   onSearchingChange,
   className = "grid grid-cols-1 lg:grid-cols-2 gap-6"
 }: PublicPersonasListProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Fetch all public personas (used when no search query and no filters)
-  const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['public-personas-show-all'],
-    queryFn: getPublicV4PersonasShowAll,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    retry: 1
-  });
-
-  // Semantic search (used when search query is 2+ characters)
-  const {
-    results: semanticResults,
-    isLoading: isSearching
-  } = useSemanticPersonaSearch(searchQuery, {
-    enabled: searchQuery.length >= 2,
-    maxResults: 100
-  });
-
-  // Advanced filtered search using RPC
+  // Server-side filtered search using RPC - this is now the PRIMARY data source
   const {
     results: filteredResults,
-    totalCount: filteredTotalCount,
+    totalCount,
     isLoading: isFilterLoading,
     filters,
     setFilters,
     resetFilters,
     search: executeFilteredSearch,
     hasActiveFilters,
-    currentPage: filterPage,
-    setCurrentPage: setFilterPage,
-    totalPages: filterTotalPages,
+    currentPage,
+    setCurrentPage,
+    totalPages,
   } = useFilteredPersonaSearch(DEFAULT_FILTERS, { publicOnly: true, limit: itemsPerPage });
 
-  // Get the persona IDs from filtered results to fetch full data
-  const filteredPersonaIds = useMemo(
+  // Get the persona IDs from results to fetch full data
+  const personaIds = useMemo(
     () => filteredResults.map(r => r.persona_id),
     [filteredResults]
   );
 
-  // Fetch full persona data for filtered results (same source as main library)
-  const { data: filteredFullPersonas = [], isLoading: isLoadingFilteredPersonas } = useQuery({
-    queryKey: ['filtered-personas-full', filteredPersonaIds],
-    queryFn: () => getPublicPersonasByIds(filteredPersonaIds),
-    enabled: hasActiveFilters && filteredPersonaIds.length > 0,
+  // Fetch full persona data for display (PersonaCard needs full V4Persona structure)
+  const { data: fullPersonas = [], isLoading: isLoadingFullPersonas, refetch } = useQuery({
+    queryKey: ['public-personas-full', personaIds],
+    queryFn: () => getPublicPersonasByIds(personaIds),
+    enabled: personaIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  // Maintain the order from search results when displaying filtered personas
-  const orderedFilteredPersonas = useMemo(() => {
-    if (!filteredFullPersonas.length) return [];
-    const personaMap = new Map(filteredFullPersonas.map(p => [p.persona_id, p]));
-    return filteredPersonaIds
+  // Maintain the order from search results when displaying personas
+  const orderedPersonas = useMemo(() => {
+    if (!fullPersonas.length) return [];
+    const personaMap = new Map(fullPersonas.map(p => [p.persona_id, p]));
+    return personaIds
       .map(id => personaMap.get(id))
       .filter((p): p is V4Persona => p !== undefined);
-  }, [filteredFullPersonas, filteredPersonaIds]);
+  }, [fullPersonas, personaIds]);
+
+  // Initial load - fetch first page on mount
+  useEffect(() => {
+    if (!hasInitialized) {
+      setHasInitialized(true);
+      executeFilteredSearch();
+    }
+  }, [hasInitialized, executeFilteredSearch]);
 
   // Notify parent of search state
   useEffect(() => {
-    onSearchingChange?.(isSearching);
-  }, [isSearching, onSearchingChange]);
+    onSearchingChange?.(isFilterLoading);
+  }, [isFilterLoading, onSearchingChange]);
 
   // Update the parent component with loaded personas
   useEffect(() => {
-    if (allPersonas && onPersonasLoad) {
-      onPersonasLoad(allPersonas);
+    if (orderedPersonas.length > 0 && onPersonasLoad) {
+      onPersonasLoad(orderedPersonas);
     }
-  }, [allPersonas, onPersonasLoad]);
+  }, [orderedPersonas, onPersonasLoad]);
 
-  // Apply age filter
-  const applyAgeFilter = (personas: (V4Persona | SemanticSearchResult)[]) => {
-    if (!selectedAge) return personas;
-    
-    return personas.filter(persona => {
-      // Use age_computed if available, otherwise fallback to conversation_summary
-      const age = 'age_computed' in persona && persona.age_computed 
-        ? persona.age_computed 
-        : persona.conversation_summary?.demographics?.age;
-      
-      if (!age) return false;
-      
-      const ageNum = typeof age === 'string' ? parseInt(age) : age;
-      if (isNaN(ageNum)) return false;
-
-      switch (selectedAge) {
-        case "18-25":
-          return ageNum >= 18 && ageNum <= 25;
-        case "26-35":
-          return ageNum >= 26 && ageNum <= 35;
-        case "36-50":
-          return ageNum >= 36 && ageNum <= 50;
-        case "51-65":
-          return ageNum >= 51 && ageNum <= 65;
-        case "65+":
-          return ageNum >= 65;
-        default:
-          return true;
-      }
-    });
-  };
-
-  // Determine which personas to show
-  const useSemanticSearch = searchQuery.length >= 2;
-  const basePersonas = useSemanticSearch ? semanticResults : allPersonas;
-  const filteredPersonas = applyAgeFilter(basePersonas);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredPersonas.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedPersonas = filteredPersonas.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters or page size change
-  useEffect(() => {
+  // Handle items per page change - reset to page 1 and re-search
+  const handleItemsPerPageChange = useCallback((newLimit: number) => {
+    setItemsPerPage(newLimit);
     setCurrentPage(1);
-  }, [searchQuery, selectedAge, itemsPerPage]);
+    // Note: useFilteredPersonaSearch will need to be updated to react to limit changes
+    // For now, we trigger a new search after state updates
+    setTimeout(() => executeFilteredSearch(), 0);
+  }, [setCurrentPage, executeFilteredSearch]);
 
-  if (error) {
-    console.error("Error loading public personas:", error);
-    return (
-      <div className="text-center py-12">
-        <p className="text-destructive">Error loading personas: {error.message}</p>
-      </div>
-    );
-  }
+  const isLoading = isFilterLoading || isLoadingFullPersonas;
 
-  if (isLoading || (useSemanticSearch && isSearching)) {
+  // Handle page changes
+  const handlePageChange = useCallback((newPage: number) => {
+    setCurrentPage(newPage);
+    setTimeout(() => executeFilteredSearch(), 0);
+  }, [setCurrentPage, executeFilteredSearch]);
+
+  const handleVisibilityChange = useCallback((personaId: string, isPublic: boolean) => {
+    if (!isPublic) {
+      // Re-fetch current page when a persona is made private
+      executeFilteredSearch();
+    }
+  }, [executeFilteredSearch]);
+
+  // Show loading state on initial load
+  if (isLoading && !hasInitialized) {
     return <PersonaLoadingState />;
   }
-
-  if (paginatedPersonas.length === 0) {
-    const hasFilters = searchQuery || selectedAge;
-    
-    if (hasFilters) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No public personas match your current filters.</p>
-        </div>
-      );
-    }
-    
-    return <PersonaEmptyState />;
-  }
-
-  const handleVisibilityChange = (personaId: string, isPublic: boolean) => {
-    if (!isPublic) {
-      refetch();
-    }
-  };
-
-  // Determine which personas to display - use full persona data for filtered results
-  const displayPersonas = hasActiveFilters
-    ? orderedFilteredPersonas
-    : paginatedPersonas;
-
-  const displayTotalPages = hasActiveFilters ? filterTotalPages : totalPages;
-  const displayCurrentPage = hasActiveFilters ? filterPage : currentPage;
-  const displayTotalCount = hasActiveFilters ? filteredTotalCount : filteredPersonas.length;
-
-  const handlePageChange = (newPage: number) => {
-    if (hasActiveFilters) {
-      setFilterPage(newPage);
-      executeFilteredSearch();
-    } else {
-      setCurrentPage(newPage);
-    }
-  };
 
   return (
     <div>
@@ -206,43 +124,55 @@ const PublicPersonasList = ({
         filters={filters}
         onChange={setFilters}
         onApply={executeFilteredSearch}
-        onClear={resetFilters}
+        onClear={() => {
+          resetFilters();
+          setTimeout(() => executeFilteredSearch(), 0);
+        }}
         isLoading={isFilterLoading}
-        resultCount={hasActiveFilters ? filteredTotalCount : undefined}
+        resultCount={totalCount}
       />
 
-      {/* Loading state for filtered search */}
-      {hasActiveFilters && (isFilterLoading || isLoadingFilteredPersonas) && <PersonaLoadingState />}
+      {/* Loading state */}
+      {isLoading && <PersonaLoadingState />}
 
       {/* Results grid */}
-      {(!hasActiveFilters || (!isFilterLoading && !isLoadingFilteredPersonas)) && displayPersonas.length > 0 && (
+      {!isLoading && orderedPersonas.length > 0 && (
         <div className={className}>
-          {displayPersonas.map((persona) => (
+          {orderedPersonas.map((persona) => (
             <PersonaCard
               key={persona.persona_id}
-              persona={persona as V4Persona}
+              persona={persona}
               onVisibilityChange={handleVisibilityChange}
             />
           ))}
         </div>
       )}
 
-      {/* Empty state for filtered results */}
-      {hasActiveFilters && !isFilterLoading && filteredResults.length === 0 && (
+      {/* Empty state */}
+      {!isLoading && orderedPersonas.length === 0 && hasInitialized && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No personas match your filter criteria.</p>
-          <Button variant="link" onClick={resetFilters} className="mt-2">
-            Clear all filters
-          </Button>
+          {hasActiveFilters ? (
+            <>
+              <p className="text-muted-foreground">No personas match your filter criteria.</p>
+              <Button variant="link" onClick={() => {
+                resetFilters();
+                setTimeout(() => executeFilteredSearch(), 0);
+              }} className="mt-2">
+                Clear all filters
+              </Button>
+            </>
+          ) : (
+            <PersonaEmptyState />
+          )}
         </div>
       )}
 
       {/* Pagination */}
-      {displayPersonas.length > 0 && (
+      {orderedPersonas.length > 0 && (
         <div className="flex justify-center items-center gap-4 mt-8 pb-8 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Show:</span>
-            <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
+            <Select value={String(itemsPerPage)} onValueChange={(val) => handleItemsPerPageChange(Number(val))}>
               <SelectTrigger className="w-20 h-8">
                 <SelectValue />
               </SelectTrigger>
@@ -254,11 +184,11 @@ const PublicPersonasList = ({
             </Select>
           </div>
 
-          {displayTotalPages > 1 && (
+          {totalPages > 1 && (
             <>
               <Button
-                onClick={() => handlePageChange(Math.max(1, displayCurrentPage - 1))}
-                disabled={displayCurrentPage === 1}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1 || isLoading}
                 variant="outline"
                 size="sm"
               >
@@ -267,12 +197,12 @@ const PublicPersonasList = ({
               </Button>
 
               <span className="text-sm text-muted-foreground">
-                Page {displayCurrentPage} of {displayTotalPages} ({displayTotalCount.toLocaleString()} personas)
+                Page {currentPage} of {totalPages} ({totalCount.toLocaleString()} personas)
               </span>
 
               <Button
-                onClick={() => handlePageChange(Math.min(displayTotalPages, displayCurrentPage + 1))}
-                disabled={displayCurrentPage === displayTotalPages}
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages || isLoading}
                 variant="outline"
                 size="sm"
               >
@@ -282,9 +212,9 @@ const PublicPersonasList = ({
             </>
           )}
 
-          {displayTotalPages <= 1 && (
+          {totalPages <= 1 && (
             <span className="text-sm text-muted-foreground">
-              {displayTotalCount.toLocaleString()} personas
+              {totalCount.toLocaleString()} personas
             </span>
           )}
         </div>

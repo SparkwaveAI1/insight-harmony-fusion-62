@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getMyV4PersonasShowAll } from "@/services/persona";
-import { useSemanticPersonaSearch, SemanticSearchResult } from "@/hooks/useSemanticPersonaSearch";
+import { getMyPersonasByIds } from "@/services/persona";
+import { useFilteredPersonaSearch } from "@/hooks/useFilteredPersonaSearch";
+import { DEFAULT_FILTERS } from "@/types/personaFilters";
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona/operations/updatePersona";
 import { Button } from "@/components/ui/button";
@@ -29,111 +30,103 @@ const MyPersonasList = ({
 }: MyPersonasListProps) => {
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  
-  // Fetch all user's personas (used when no search query)
-  const { data: allPersonas = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['my-personas-show-all', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      return await getMyV4PersonasShowAll(user.id);
-    },
-    enabled: !!user?.id && !authLoading,
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Server-side filtered search using RPC - this is now the PRIMARY data source
+  const {
+    results: filteredResults,
+    totalCount,
+    isLoading: isFilterLoading,
+    filters,
+    setFilters,
+    resetFilters,
+    search: executeFilteredSearch,
+    hasActiveFilters,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+  } = useFilteredPersonaSearch(DEFAULT_FILTERS, {
+    publicOnly: false,
+    userId: user?.id,
+    limit: itemsPerPage
+  });
+
+  // Get the persona IDs from results to fetch full data
+  const personaIds = useMemo(
+    () => filteredResults.map(r => r.persona_id),
+    [filteredResults]
+  );
+
+  // Fetch full persona data for display (PersonaCard needs full V4Persona structure)
+  const { data: fullPersonas = [], isLoading: isLoadingFullPersonas } = useQuery({
+    queryKey: ['my-personas-full', personaIds, user?.id],
+    queryFn: () => getMyPersonasByIds(personaIds, user?.id || ''),
+    enabled: personaIds.length > 0 && !!user?.id,
     staleTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    retry: 1
   });
 
-  // Semantic search (used when search query is 2+ characters)
-  // Note: This searches across all public personas, then we filter to user's
-  const { 
-    results: semanticResults, 
-    isLoading: isSearching 
-  } = useSemanticPersonaSearch(searchQuery, { 
-    enabled: searchQuery.length >= 2,
-    maxResults: 100 
-  });
+  // Maintain the order from search results when displaying personas
+  const orderedPersonas = useMemo(() => {
+    if (!fullPersonas.length) return [];
+    const personaMap = new Map(fullPersonas.map(p => [p.persona_id, p]));
+    return personaIds
+      .map(id => personaMap.get(id))
+      .filter((p): p is V4Persona => p !== undefined);
+  }, [fullPersonas, personaIds]);
 
-  // Filter semantic results to only show user's personas
-  const userSemanticResults = semanticResults.filter(p => p.user_id === user?.id);
+  // Initial load - fetch first page on mount when user is available
+  useEffect(() => {
+    if (!hasInitialized && user?.id && !authLoading) {
+      setHasInitialized(true);
+      executeFilteredSearch();
+    }
+  }, [hasInitialized, user?.id, authLoading, executeFilteredSearch]);
 
   // Notify parent of search state
   useEffect(() => {
-    onSearchingChange?.(isSearching);
-  }, [isSearching, onSearchingChange]);
+    onSearchingChange?.(isFilterLoading);
+  }, [isFilterLoading, onSearchingChange]);
 
   // Update the parent component with loaded personas
   useEffect(() => {
-    if (allPersonas && onPersonasLoad) {
-      onPersonasLoad(allPersonas);
+    if (orderedPersonas.length > 0 && onPersonasLoad) {
+      onPersonasLoad(orderedPersonas);
     }
-  }, [allPersonas]);
+  }, [orderedPersonas, onPersonasLoad]);
 
-  // Apply age filter
-  const applyAgeFilter = (personas: (V4Persona | SemanticSearchResult)[]) => {
-    if (!selectedAge) return personas;
-    
-    return personas.filter(persona => {
-      const age = 'age_computed' in persona && persona.age_computed 
-        ? persona.age_computed 
-        : persona.conversation_summary?.demographics?.age;
-      
-      if (!age) return false;
-      
-      const ageNum = typeof age === 'string' ? parseInt(age) : age;
-      if (isNaN(ageNum)) return false;
-
-      switch (selectedAge) {
-        case "18-25":
-          return ageNum >= 18 && ageNum <= 25;
-        case "26-35":
-          return ageNum >= 26 && ageNum <= 35;
-        case "36-50":
-          return ageNum >= 36 && ageNum <= 50;
-        case "51-65":
-          return ageNum >= 51 && ageNum <= 65;
-        case "65+":
-          return ageNum >= 65;
-        default:
-          return true;
-      }
-    });
-  };
-
-  // Determine which personas to show
-  const useSemanticSearch = searchQuery.length >= 2;
-  const basePersonas = useSemanticSearch ? userSemanticResults : allPersonas;
-  const filteredPersonas = applyAgeFilter(basePersonas);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredPersonas.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedPersonas = filteredPersonas.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters or page size change
-  useEffect(() => {
+  // Handle items per page change - reset to page 1 and re-search
+  const handleItemsPerPageChange = useCallback((newLimit: number) => {
+    setItemsPerPage(newLimit);
     setCurrentPage(1);
-  }, [searchQuery, selectedAge, itemsPerPage]);
+    setTimeout(() => executeFilteredSearch(), 0);
+  }, [setCurrentPage, executeFilteredSearch]);
+
+  const isLoading = isFilterLoading || isLoadingFullPersonas;
+
+  // Handle page changes
+  const handlePageChange = useCallback((newPage: number) => {
+    setCurrentPage(newPage);
+    setTimeout(() => executeFilteredSearch(), 0);
+  }, [setCurrentPage, executeFilteredSearch]);
 
   // Handle visibility changes
-  const handleVisibilityChange = async (personaId: string, isPublic: boolean) => {
+  const handleVisibilityChange = useCallback(async (personaId: string, isPublic: boolean) => {
     try {
       await updatePersonaVisibility(personaId, isPublic);
-      queryClient.invalidateQueries({ queryKey: ['my-personas-show-all', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['public-personas-show-all'] });
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['my-personas-full'] });
+      queryClient.invalidateQueries({ queryKey: ['public-personas-full'] });
+      executeFilteredSearch();
     } catch (error) {
       console.error("Error updating persona visibility:", error);
     }
-  };
+  }, [queryClient, executeFilteredSearch]);
 
   // Handle deletion
-  const handleDelete = (personaId: string) => {
-    refetch();
-  };
+  const handleDelete = useCallback((personaId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['my-personas-full'] });
+    executeFilteredSearch();
+  }, [queryClient, executeFilteredSearch]);
 
   if (authLoading) {
     return <PersonaLoadingState />;
@@ -147,95 +140,87 @@ const MyPersonasList = ({
     );
   }
 
-  if (error) {
-    console.error("Error loading my personas:", error);
-    return (
-      <div className="text-center py-12">
-        <p className="text-destructive">Error loading personas: {error.message}</p>
-      </div>
-    );
-  }
-
-  if (isLoading || (useSemanticSearch && isSearching)) {
+  // Show loading state on initial load
+  if (isLoading && !hasInitialized) {
     return <PersonaLoadingState />;
-  }
-
-  if (paginatedPersonas.length === 0) {
-    const hasFilters = searchQuery || selectedAge;
-    
-    if (hasFilters) {
-      return (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">No personas match your current filters.</p>
-        </div>
-      );
-    }
-    
-    return <PersonaEmptyState />;
   }
 
   return (
     <div>
-      <div className={className}>
-        {paginatedPersonas.map((persona) => (
-          <PersonaCard 
-            key={persona.persona_id} 
-            persona={persona as V4Persona}
-            onVisibilityChange={handleVisibilityChange}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
-      
-      <div className="flex justify-center items-center gap-4 mt-8 pb-8 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show:</span>
-          <Select value={String(itemsPerPage)} onValueChange={(val) => setItemsPerPage(Number(val))}>
-            <SelectTrigger className="w-20 h-8">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Loading state */}
+      {isLoading && <PersonaLoadingState />}
+
+      {/* Results grid */}
+      {!isLoading && orderedPersonas.length > 0 && (
+        <div className={className}>
+          {orderedPersonas.map((persona) => (
+            <PersonaCard
+              key={persona.persona_id}
+              persona={persona}
+              onVisibilityChange={handleVisibilityChange}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
+      )}
 
-        {totalPages > 1 && (
-          <>
-            <Button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              variant="outline"
-              size="sm"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Previous
-            </Button>
+      {/* Empty state */}
+      {!isLoading && orderedPersonas.length === 0 && hasInitialized && (
+        <PersonaEmptyState />
+      )}
 
+      {/* Pagination */}
+      {orderedPersonas.length > 0 && (
+        <div className="flex justify-center items-center gap-4 mt-8 pb-8 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Show:</span>
+            <Select value={String(itemsPerPage)} onValueChange={(val) => handleItemsPerPageChange(Number(val))}>
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {totalPages > 1 && (
+            <>
+              <Button
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1 || isLoading}
+                variant="outline"
+                size="sm"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+
+              <span className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages} ({totalCount.toLocaleString()} personas)
+              </span>
+
+              <Button
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages || isLoading}
+                variant="outline"
+                size="sm"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+
+          {totalPages <= 1 && (
             <span className="text-sm text-muted-foreground">
-              Page {currentPage} of {totalPages} ({filteredPersonas.length} personas)
+              {totalCount.toLocaleString()} personas
             </span>
-
-            <Button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              variant="outline"
-              size="sm"
-            >
-              Next
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-
-        {totalPages <= 1 && (
-          <span className="text-sm text-muted-foreground">
-            {filteredPersonas.length} personas
-          </span>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -51,6 +51,24 @@ export async function getPublicPersonasByIds(personaIds: string[]): Promise<V4Pe
 }
 
 /**
+ * Fetches user's personas by their IDs from v4_personas
+ * Used to get full persona data after filtered search returns IDs
+ */
+export async function getMyPersonasByIds(personaIds: string[], userId: string): Promise<V4Persona[]> {
+  if (!personaIds.length) return [];
+  if (!userId) throw new Error('Missing userId');
+
+  const { data, error } = await supabase
+    .from('v4_personas')
+    .select('*')
+    .in('persona_id', personaIds)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as V4Persona[];
+}
+
+/**
  * Fetches ALL personas owned by a user from v4_personas (no validation filtering)
  * Used for "My Personas" view to show everything the user owns
  */

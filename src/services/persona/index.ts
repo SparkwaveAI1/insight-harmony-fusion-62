@@ -19,7 +19,7 @@ export { savePersona } from './operations/savePersona';
 export { generatePersona } from './operations/generatePersona';
 
 // Re-export persona service functions
-export { getPublicV4Personas, getPublicV4PersonasShowAll, getMyV4PersonasShowAll, getPublicPersonasByIds } from './personaService';
+export { getPublicV4Personas, getPublicV4PersonasShowAll, getMyV4PersonasShowAll, getPublicPersonasByIds, getMyPersonasByIds } from './personaService';
 
 // Re-export types
 export type { Persona, InterviewSection, InterviewQuestion } from './types';

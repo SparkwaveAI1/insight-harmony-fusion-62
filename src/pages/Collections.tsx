@@ -25,18 +25,6 @@ import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getBearerAndBase, retryFetch } from "@/utils/supabase-helpers";
 
-// Debug helper to diagnose collection loading issues
-const debugCollections = {
-  log: (message: string, data?: any) => {
-    const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
-    console.log(`[${timestamp}] Collections Debug:`, message, data || '');
-  },
-  error: (message: string, error: any) => {
-    const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
-    console.error(`[${timestamp}] Collections Error:`, message, error);
-  }
-};
-
 const Collections = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -56,72 +44,9 @@ const Collections = () => {
   // Use deferred value for search to prevent excessive re-renders
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  // Fetch function for cursor-based pagination
-  const fetchCollectionsPage = useCallback(async (cursor?: string) => {
-    const { token, base } = await getBearerAndBase(supabase);
-    const params = new URLSearchParams();
-    params.set('type', activeTab === 'my-collections' ? 'user' : 'public');
-    if (cursor) params.set('cursor', cursor);
-
-    const res = await retryFetch(`${base}/functions/v1/collections-list?${params.toString()}`, {
-      method: 'GET',
-      headers: { authorization: `Bearer ${token}` },
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(`collections-list failed: ${res.status} ${errText}`);
-    }
-
-    const payload = await res.json();
-    return { data: payload.data || [], next_cursor: payload.next_cursor };
-  }, [activeTab]);
-
-  // Add automatic status report on component mount
-  useEffect(() => {
-    const checkStatus = async () => {
-      debugCollections.log('=== COLLECTIONS STATUS CHECK ===');
-      
-      // Check auth status
-      const session = await supabase.auth.getSession();
-      debugCollections.log('Session exists:', !!session.data.session);
-      debugCollections.log('Token expires at:', session.data.session?.expires_at);
-      
-      // Try a test call to collections-list
-      try {
-        const { token, base } = await getBearerAndBase(supabase);
-        debugCollections.log('Token obtained:', token ? 'Yes' : 'No');
-        
-        const testUrl = `${base}/functions/v1/collections-list?type=public`;
-        const testRes = await fetch(testUrl, {
-          headers: { authorization: `Bearer ${token}` }
-        });
-        
-        debugCollections.log('Test call to collections-list:', {
-          status: testRes.status,
-          statusText: testRes.statusText,
-          ok: testRes.ok
-        });
-        
-        if (!testRes.ok) {
-          const errorText = await testRes.text();
-          debugCollections.error('Collections endpoint error:', errorText);
-        }
-      } catch (error) {
-        debugCollections.error('Failed to reach collections endpoint:', error);
-      }
-      
-      debugCollections.log('=== END STATUS CHECK ===');
-    };
-    
-    checkStatus();
-  }, []);
-
   // Separate pagination feeds for each tab
   const myCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      debugCollections.log('Fetching my collections', { cursor, user: user?.id });
-      
       try {
         const { token, base } = await getBearerAndBase(supabase);
         const url = new URL(`${base}/functions/v1/collections-list`);
@@ -130,51 +55,30 @@ const Collections = () => {
           url.searchParams.set('search', deferredSearchQuery);
         }
         if (cursor) url.searchParams.set('cursor', cursor);
-        
-        debugCollections.log('Fetching from URL', { url: url.toString() });
-        
+
         const res = await retryFetch(url.toString(), {
           method: 'GET',
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-        
-        debugCollections.log('Response received', { 
-          ok: res.ok, 
-          status: res.status,
-          statusText: res.statusText 
-        });
-        
+
         if (!res.ok) {
-          const errorText = await res.text();
-          debugCollections.error('Failed to fetch my collections', { 
-            status: res.status, 
-            error: errorText 
-          });
-          
           if (res.status === 401) {
             toast.error("Session expired. Please sign in again.");
           }
-          
           return { data: [], next_cursor: null };
         }
-        
+
         const json = await res.json();
-        debugCollections.log('Collections fetched successfully', { 
-          count: json?.data?.length || 0,
-          hasMore: !!json?.next_cursor
-        });
-        
         return { data: json?.data || [], next_cursor: json?.next_cursor };
       } catch (error: any) {
         if (error?.message === 'NO_SESSION') {
-          debugCollections.log('No session for my collections');
           toast.error("Please sign in to view your collections");
           return { data: [], next_cursor: null };
         }
-        debugCollections.error('My collections error:', error);
+        console.error('Error fetching collections:', error);
         return { data: [], next_cursor: null };
       }
     }, [user?.id, deferredSearchQuery])
@@ -182,26 +86,19 @@ const Collections = () => {
 
   const publicCollectionsFeed = useCursorFeed<CollectionWithPersonaCount>(
     useCallback(async (cursor?: string) => {
-      debugCollections.log('Fetching public collections', { cursor });
-      
-      // Public collections don't need auth - call edge function directly
       const { data, error } = await supabase.functions.invoke('collections-list', {
-        body: { 
-          type: 'public', 
+        body: {
+          type: 'public',
           cursor,
           ...(deferredSearchQuery.trim() && { search: deferredSearchQuery })
         }
       });
-      
+
       if (error) {
-        debugCollections.error('Public collections error:', error);
+        console.error('Error fetching public collections:', error);
         return { data: [], next_cursor: null };
       }
-      
-      debugCollections.log('Public collections response', { 
-        count: data?.data?.length || 0 
-      });
-      
+
       return { data: data?.data || [], next_cursor: data?.next_cursor };
     }, [deferredSearchQuery])
   );
@@ -214,13 +111,6 @@ const Collections = () => {
   // Single effect to handle all reset scenarios
   useEffect(() => {
     if (!user?.id) return;
-    
-    debugCollections.log('Resetting current feed', { 
-      user: user?.id,
-      search: deferredSearchQuery, 
-      tab: activeTab 
-    });
-    
     // Only reset the current feed (not both feeds every time)
     currentFeed.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
