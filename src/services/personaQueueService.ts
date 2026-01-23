@@ -57,6 +57,24 @@ export async function getQueueItems(userId: string) {
   return data;
 }
 
+// Admin function to get ALL queue items across all users
+export async function getAllQueueItems() {
+  try {
+    const { data, error } = await supabase.rpc('get_all_queue_items');
+
+    if (error) {
+      console.error('Error getting all queue items:', error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (err) {
+    console.error('Exception in getAllQueueItems:', err);
+    // Fallback to empty array instead of throwing
+    return [];
+  }
+}
+
 export const updateQueueStatus = async (
   id: string, 
   status: string, 

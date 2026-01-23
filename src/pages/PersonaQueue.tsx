@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { 
-  addToQueue, 
-  getQueueItems, 
-  updateQueueStatus, 
-  updateQueueStatusSafe, 
+import {
+  addToQueue,
+  getQueueItems,
+  getAllQueueItems,
+  updateQueueStatus,
+  updateQueueStatusSafe,
   parsePersonaDescription,
   parseBulkPersonaDescriptions,
   popNextQueueItem,
@@ -89,10 +90,11 @@ const PersonaQueue = () => {
 
   const loadQueueItems = async () => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
-      const items = await getQueueItems(user.id);
+      // Admins see all queue items across all users
+      const items = isAdmin ? await getAllQueueItems() : await getQueueItems(user.id);
       setQueueItems(items || []);
     } catch (error) {
       console.error('Error loading queue items:', error);

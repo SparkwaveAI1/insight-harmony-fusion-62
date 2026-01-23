@@ -9,20 +9,38 @@ export interface QueueHealthStatus {
 }
 
 export const getQueueHealthStatus = async (): Promise<QueueHealthStatus> => {
-  const { data, error } = await supabase.rpc('get_queue_health_status');
-  
-  if (error) {
-    console.error('Error getting queue health status:', error);
-    throw error;
-  }
+  try {
+    const { data, error } = await supabase.rpc('get_queue_health_status');
 
-  return data?.[0] || {
-    total_pending: 0,
-    total_processing: 0,
-    total_stuck: 0,
-    oldest_stuck_item: null,
-    processing_time_minutes: null
-  };
+    if (error) {
+      console.error('Error getting queue health status:', error);
+      // Return default values instead of throwing
+      return {
+        total_pending: 0,
+        total_processing: 0,
+        total_stuck: 0,
+        oldest_stuck_item: null,
+        processing_time_minutes: null
+      };
+    }
+
+    return data?.[0] || {
+      total_pending: 0,
+      total_processing: 0,
+      total_stuck: 0,
+      oldest_stuck_item: null,
+      processing_time_minutes: null
+    };
+  } catch (err) {
+    console.error('Exception in getQueueHealthStatus:', err);
+    return {
+      total_pending: 0,
+      total_processing: 0,
+      total_stuck: 0,
+      oldest_stuck_item: null,
+      processing_time_minutes: null
+    };
+  }
 };
 
 export const fixOrphanedPersonaQueueItems = async (): Promise<void> => {

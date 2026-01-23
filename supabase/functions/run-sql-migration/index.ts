@@ -18,7 +18,86 @@ Deno.serve(async (req) => {
     const connection = await pool.connect()
 
     try {
-      console.log('Fixing search_personas_unified sorting...')
+      console.log('Fixing queue health functions and permissions...')
+
+      // Fix get_queue_health_status function and permissions
+      await connection.queryObject(`
+        CREATE OR REPLACE FUNCTION public.get_queue_health_status()
+        RETURNS TABLE(
+          total_pending integer,
+          total_processing integer,
+          total_stuck integer,
+          oldest_stuck_item text,
+          processing_time_minutes integer
+        )
+        LANGUAGE sql
+        SECURITY DEFINER
+        SET search_path TO 'public'
+        AS $function$
+          SELECT
+            (SELECT COUNT(*)::integer FROM persona_creation_queue WHERE status = 'pending'),
+            (SELECT COUNT(*)::integer FROM persona_creation_queue WHERE status IN ('processing', 'processing_stage1', 'processing_stage2', 'processing_stage3')),
+            (SELECT COUNT(*)::integer FROM persona_creation_queue WHERE status IN ('processing', 'processing_stage1', 'processing_stage2', 'processing_stage3') AND processing_started_at < NOW() - INTERVAL '10 minutes'),
+            (SELECT name FROM persona_creation_queue WHERE status IN ('processing', 'processing_stage1', 'processing_stage2', 'processing_stage3') AND processing_started_at < NOW() - INTERVAL '10 minutes' ORDER BY processing_started_at ASC LIMIT 1),
+            (SELECT EXTRACT(EPOCH FROM (NOW() - MIN(processing_started_at))) / 60 FROM persona_creation_queue WHERE status IN ('processing', 'processing_stage1', 'processing_stage2', 'processing_stage3'))::integer;
+        $function$;
+
+        GRANT EXECUTE ON FUNCTION get_queue_health_status TO authenticated;
+        GRANT EXECUTE ON FUNCTION get_queue_health_status TO anon;
+      `)
+      console.log('Fixed get_queue_health_status function')
+
+      // Fix fix_orphaned_persona_queue_items function and permissions
+      await connection.queryObject(`
+        CREATE OR REPLACE FUNCTION public.fix_orphaned_persona_queue_items()
+        RETURNS void
+        LANGUAGE plpgsql
+        SECURITY DEFINER
+        SET search_path TO 'public'
+        AS $function$
+        BEGIN
+          -- Reset stuck processing items back to pending
+          UPDATE persona_creation_queue
+          SET status = 'pending',
+              processing_started_at = NULL,
+              locked_at = NULL,
+              error_message = 'Reset: Orphaned processing state',
+              updated_at = NOW()
+          WHERE status IN ('processing', 'processing_stage1', 'processing_stage2', 'processing_stage3')
+            AND processing_started_at < NOW() - INTERVAL '10 minutes';
+        END;
+        $function$;
+
+        GRANT EXECUTE ON FUNCTION fix_orphaned_persona_queue_items TO authenticated;
+        GRANT EXECUTE ON FUNCTION fix_orphaned_persona_queue_items TO anon;
+      `)
+      console.log('Fixed fix_orphaned_persona_queue_items function')
+
+      // Fix pop_next_persona_queue function and permissions
+      await connection.queryObject(`
+        GRANT EXECUTE ON FUNCTION pop_next_persona_queue TO authenticated;
+        GRANT EXECUTE ON FUNCTION pop_next_persona_queue TO anon;
+      `)
+      console.log('Fixed pop_next_persona_queue permissions')
+
+      // Create admin function to get ALL queue items (bypasses RLS)
+      await connection.queryObject(`
+        CREATE OR REPLACE FUNCTION public.get_all_queue_items()
+        RETURNS SETOF persona_creation_queue
+        LANGUAGE sql
+        SECURITY DEFINER
+        SET search_path TO 'public'
+        AS $function$
+          SELECT * FROM persona_creation_queue
+          ORDER BY created_at DESC
+          LIMIT 200;
+        $function$;
+
+        GRANT EXECUTE ON FUNCTION get_all_queue_items TO authenticated;
+      `)
+      console.log('Created get_all_queue_items function for admins')
+
+      console.log('Now fixing search_personas_unified sorting...')
 
       // Drop ALL overloads using DO block with regprocedure
       await connection.queryObject(`
