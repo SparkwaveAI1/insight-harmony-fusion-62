@@ -81,21 +81,69 @@ Deno.serve(async (req) => {
       console.log('Fixed pop_next_persona_queue permissions')
 
       // Create admin function to get ALL queue items (bypasses RLS)
+      // EXCLUDE description field - it's huge and not needed for display
       await connection.queryObject(`
-        CREATE OR REPLACE FUNCTION public.get_all_queue_items()
-        RETURNS SETOF persona_creation_queue
+        DROP FUNCTION IF EXISTS public.get_all_queue_items();
+
+        CREATE FUNCTION public.get_all_queue_items(
+          p_limit int DEFAULT 50,
+          p_offset int DEFAULT 0
+        )
+        RETURNS TABLE(
+          id uuid,
+          user_id uuid,
+          name text,
+          status text,
+          persona_id text,
+          error_message text,
+          collections text[],
+          attempt_count int,
+          processing_started_at timestamptz,
+          created_at timestamptz,
+          updated_at timestamptz,
+          completed_at timestamptz
+        )
         LANGUAGE sql
         SECURITY DEFINER
         SET search_path TO 'public'
         AS $function$
-          SELECT * FROM persona_creation_queue
+          SELECT
+            id,
+            user_id,
+            name,
+            status,
+            persona_id,
+            error_message,
+            collections,
+            attempt_count,
+            processing_started_at,
+            created_at,
+            updated_at,
+            completed_at
+          FROM persona_creation_queue
           ORDER BY created_at DESC
-          LIMIT 200;
+          LIMIT p_limit
+          OFFSET p_offset;
         $function$;
 
         GRANT EXECUTE ON FUNCTION get_all_queue_items TO authenticated;
       `)
-      console.log('Created get_all_queue_items function for admins')
+      console.log('Created get_all_queue_items function for admins (without description)')
+
+      // Create function to get queue item count for pagination
+      await connection.queryObject(`
+        CREATE OR REPLACE FUNCTION public.get_queue_item_count()
+        RETURNS bigint
+        LANGUAGE sql
+        SECURITY DEFINER
+        SET search_path TO 'public'
+        AS $function$
+          SELECT COUNT(*) FROM persona_creation_queue;
+        $function$;
+
+        GRANT EXECUTE ON FUNCTION get_queue_item_count TO authenticated;
+      `)
+      console.log('Created get_queue_item_count function')
 
       console.log('Now fixing search_personas_unified sorting...')
 

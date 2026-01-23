@@ -14,6 +14,7 @@ import {
   addToQueue,
   getQueueItems,
   getAllQueueItems,
+  getQueueItemCount,
   updateQueueStatus,
   updateQueueStatusSafe,
   parsePersonaDescription,
@@ -68,7 +69,13 @@ const PersonaQueue = () => {
   const [processing, setProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [consecutiveFailures, setConsecutiveFailures] = useState(0);
-  
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const ITEMS_PER_PAGE = 50;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+
   const CONSECUTIVE_FAILURE_LIMIT = 3;
   const PERSONA_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
 
@@ -84,15 +91,8 @@ const PersonaQueue = () => {
   useEffect(() => {
     if (user && isAdmin) {
       loadQueueItems();
-
-      // Auto-refresh every 10 seconds to see processing status changes
-      const refreshInterval = setInterval(() => {
-        loadQueueItems();
-      }, 10000);
-
-      return () => clearInterval(refreshInterval);
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, currentPage]);
 
 
   const loadQueueItems = async () => {
@@ -100,22 +100,22 @@ const PersonaQueue = () => {
 
     try {
       setLoading(true);
-      console.log('loadQueueItems: isAdmin=', isAdmin, 'user.email=', user.email);
+      const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
-      // Admins see all queue items across all users
-      const items = isAdmin ? await getAllQueueItems() : await getQueueItems(user.id);
-      console.log('loadQueueItems: loaded', items?.length || 0, 'items');
-
-      // Count by status for debugging
-      if (items && items.length > 0) {
-        const statusCounts = items.reduce((acc: Record<string, number>, item: any) => {
-          acc[item.status] = (acc[item.status] || 0) + 1;
-          return acc;
-        }, {});
-        console.log('loadQueueItems: status counts:', statusCounts);
+      // Admins see all queue items across all users (with pagination)
+      if (isAdmin) {
+        const [items, count] = await Promise.all([
+          getAllQueueItems(ITEMS_PER_PAGE, offset),
+          getQueueItemCount()
+        ]);
+        setQueueItems(items || []);
+        setTotalItems(count);
+        console.log('loadQueueItems: loaded', items?.length || 0, 'of', count, 'items');
+      } else {
+        const items = await getQueueItems(user.id);
+        setQueueItems(items || []);
+        setTotalItems(items?.length || 0);
       }
-
-      setQueueItems(items || []);
     } catch (error: any) {
       console.error('Error loading queue items:', error);
       toast({
@@ -123,7 +123,6 @@ const PersonaQueue = () => {
         description: `Failed to load queue items: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
-      // Set empty array on error so loading state clears
       setQueueItems([]);
     } finally {
       setLoading(false);
@@ -553,7 +552,7 @@ const PersonaQueue = () => {
         setTimeout(async () => {
           console.log('🔍 Checking for next pending item...');
           // Use admin function to get all items across all users
-          const updatedItems = isAdmin ? await getAllQueueItems() : await getQueueItems(user.id);
+          const updatedItems = isAdmin ? await getAllQueueItems(ITEMS_PER_PAGE, 0) : await getQueueItems(user.id);
           const nextPending = updatedItems?.find((item: any) => item.status === 'pending');
           if (nextPending) {
             console.log('🚀 Found next pending item, processing automatically...');
@@ -749,6 +748,36 @@ const PersonaQueue = () => {
                         )}
                       </TableBody>
                     </Table>
+
+                    {/* Pagination controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between px-4 py-3 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} items
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <span className="flex items-center px-3 text-sm">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

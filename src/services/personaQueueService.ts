@@ -57,33 +57,43 @@ export async function getQueueItems(userId: string) {
   return data;
 }
 
-// Admin function to get ALL queue items across all users
-export async function getAllQueueItems() {
-  console.log('getAllQueueItems: calling RPC get_all_queue_items');
+// Admin function to get ALL queue items across all users (with pagination)
+export async function getAllQueueItems(limit: number = 50, offset: number = 0) {
+  console.log('getAllQueueItems: calling RPC with limit=', limit, 'offset=', offset);
 
   try {
-    const { data, error } = await supabase.rpc('get_all_queue_items');
+    const { data, error } = await supabase.rpc('get_all_queue_items', {
+      p_limit: limit,
+      p_offset: offset
+    });
 
     if (error) {
       console.error('getAllQueueItems: RPC error:', error);
-      console.error('Error details:', { code: error.code, message: error.message, details: error.details });
-      // Don't silently fail - throw so the UI can show error
       throw error;
     }
 
     console.log('getAllQueueItems: returned', data?.length || 0, 'items');
-
-    // Sort by created_at descending (most recent first)
-    const sortedData = (data || []).sort((a: any, b: any) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-
-    return sortedData;
+    return data || [];
   } catch (err: any) {
     console.error('getAllQueueItems: Exception:', err);
-    console.error('Exception details:', { message: err?.message, code: err?.code });
-    // Re-throw to let the caller handle it
     throw err;
+  }
+}
+
+// Get total count of queue items for pagination
+export async function getQueueItemCount(): Promise<number> {
+  try {
+    const { data, error } = await supabase.rpc('get_queue_item_count');
+
+    if (error) {
+      console.error('getQueueItemCount: RPC error:', error);
+      return 0;
+    }
+
+    return data || 0;
+  } catch (err) {
+    console.error('getQueueItemCount: Exception:', err);
+    return 0;
   }
 }
 
