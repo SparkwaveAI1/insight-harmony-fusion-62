@@ -98,6 +98,7 @@ export function useFilteredPersonaSearch(
         p_public_only: publicOnly,
         p_limit: limit,
         p_offset: (currentPage - 1) * limit,
+        p_sort_by: 'created', // Sort by created_at DESC (most recent first)
       };
 
       // User ID for private personas

@@ -42,13 +42,13 @@ export async function popNextQueueItem() {
 }
 
 export async function getQueueItems(userId: string) {
-  console.log('getQueueItems called');
-  
+  // Select only columns needed for display (exclude large 'description' field)
   const { data, error } = await supabase
     .from('persona_creation_queue')
-    .select('*')
+    .select('id, user_id, name, status, persona_id, error_message, collections, attempt_count, processing_started_at, created_at, updated_at, completed_at')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(100);
 
   if (error) {
     throw error;
