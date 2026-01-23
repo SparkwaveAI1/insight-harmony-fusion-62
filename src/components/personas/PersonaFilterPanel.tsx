@@ -22,15 +22,18 @@ import {
 import { PersonaFilters } from '@/types/personaFilters';
 import { usePersonaFilterOptions, formatOptionLabel } from '@/hooks/usePersonaFilterOptions';
 
-// Ethnicities to exclude from the filter (duplicates/variants)
-const EXCLUDED_ETHNICITIES = [
-  'white jewish',
-  'white (irish american)',
-  'white (german and english descent)',
-  'white (polish american)',
-  'caucasian',
-  'black',
-  'black/african american',
+// Standard ethnicity categories for filtering
+const ETHNICITIES = [
+  'White (e.g., European descent)',
+  'Black or African descent',
+  'East Asian (e.g., Chinese, Korean, Japanese)',
+  'South Asian (e.g., Indian, Pakistani, Sri Lankan)',
+  'Southeast Asian (e.g., Filipino, Vietnamese, Thai)',
+  'Middle Eastern or North African (MENA)',
+  'Native American or Alaska Native',
+  'Native Hawaiian or Pacific Islander',
+  'Mixed / Multiracial',
+  'Another race or ancestry',
 ];
 
 // Standard income brackets (in order from lowest to highest)
@@ -400,11 +403,10 @@ export function PersonaFilterPanel({
 
               <MultiSelect
                 label="Ethnicity"
-                options={filterOptions.ethnicities.filter(
-                  (e) => !EXCLUDED_ETHNICITIES.includes(e.toLowerCase())
-                )}
+                options={ETHNICITIES}
                 selected={filters.ethnicities}
                 onChange={(ethnicities) => onChange({ ...filters, ethnicities })}
+                labelFormatter={(v) => v}
               />
 
               <MultiSelect

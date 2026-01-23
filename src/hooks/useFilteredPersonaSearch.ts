@@ -4,6 +4,35 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PersonaFilters, DEFAULT_FILTERS } from '@/types/personaFilters';
 
+// Map ethnicity display categories to search terms for database matching
+const ETHNICITY_SEARCH_TERMS: Record<string, string[]> = {
+  'White (e.g., European descent)': ['white', 'european', 'caucasian', 'irish', 'german', 'italian', 'polish', 'english', 'scottish', 'french', 'russian', 'jewish'],
+  'Black or African descent': ['black', 'african', 'african american', 'african-american', 'nigerian', 'ethiopian', 'jamaican', 'haitian'],
+  'East Asian (e.g., Chinese, Korean, Japanese)': ['east asian', 'chinese', 'korean', 'japanese', 'taiwanese'],
+  'South Asian (e.g., Indian, Pakistani, Sri Lankan)': ['south asian', 'indian', 'pakistani', 'sri lankan', 'bangladeshi', 'nepali'],
+  'Southeast Asian (e.g., Filipino, Vietnamese, Thai)': ['southeast asian', 'filipino', 'filipina', 'vietnamese', 'thai', 'indonesian', 'malaysian', 'cambodian', 'burmese', 'laotian'],
+  'Middle Eastern or North African (MENA)': ['middle eastern', 'arab', 'arabic', 'persian', 'iranian', 'turkish', 'lebanese', 'egyptian', 'moroccan', 'north african', 'mena'],
+  'Native American or Alaska Native': ['native american', 'indigenous', 'alaska native', 'american indian', 'first nations', 'cherokee', 'navajo', 'sioux', 'apache', 'choctaw'],
+  'Native Hawaiian or Pacific Islander': ['hawaiian', 'pacific islander', 'samoan', 'tongan', 'fijian', 'polynesian', 'micronesian', 'melanesian', 'maori'],
+  'Mixed / Multiracial': ['mixed', 'multiracial', 'biracial', 'multi-ethnic', 'mixed race'],
+  'Another race or ancestry': ['other'],
+};
+
+// Expand selected ethnicity categories to search terms
+function expandEthnicityFilters(selectedCategories: string[]): string[] {
+  const searchTerms: string[] = [];
+  for (const category of selectedCategories) {
+    const terms = ETHNICITY_SEARCH_TERMS[category];
+    if (terms) {
+      searchTerms.push(...terms);
+    } else {
+      // If not a known category, use as-is
+      searchTerms.push(category);
+    }
+  }
+  return searchTerms;
+}
+
 export interface FilteredSearchResult {
   persona_id: string;
   name: string;
@@ -108,7 +137,10 @@ export function useFilteredPersonaSearch(
       if (filters.ageMin !== null) params.p_age_min = filters.ageMin;
       if (filters.ageMax !== null) params.p_age_max = filters.ageMax;
       if (filters.genders.length > 0) params.p_genders = filters.genders;
-      if (filters.ethnicities.length > 0) params.p_ethnicities = filters.ethnicities;
+      if (filters.ethnicities.length > 0) {
+        // Expand ethnicity categories to search terms
+        params.p_ethnicities = expandEthnicityFilters(filters.ethnicities);
+      }
       if (filters.states.length > 0) params.p_states = filters.states;
 
       // Household
