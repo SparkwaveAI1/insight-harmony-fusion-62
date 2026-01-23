@@ -59,19 +59,31 @@ export async function getQueueItems(userId: string) {
 
 // Admin function to get ALL queue items across all users
 export async function getAllQueueItems() {
+  console.log('getAllQueueItems: calling RPC get_all_queue_items');
+
   try {
     const { data, error } = await supabase.rpc('get_all_queue_items');
 
     if (error) {
-      console.error('Error getting all queue items:', error);
+      console.error('getAllQueueItems: RPC error:', error);
+      console.error('Error details:', { code: error.code, message: error.message, details: error.details });
+      // Don't silently fail - throw so the UI can show error
       throw error;
     }
 
-    return data || [];
-  } catch (err) {
-    console.error('Exception in getAllQueueItems:', err);
-    // Fallback to empty array instead of throwing
-    return [];
+    console.log('getAllQueueItems: returned', data?.length || 0, 'items');
+
+    // Sort by created_at descending (most recent first)
+    const sortedData = (data || []).sort((a: any, b: any) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return sortedData;
+  } catch (err: any) {
+    console.error('getAllQueueItems: Exception:', err);
+    console.error('Exception details:', { message: err?.message, code: err?.code });
+    // Re-throw to let the caller handle it
+    throw err;
   }
 }
 

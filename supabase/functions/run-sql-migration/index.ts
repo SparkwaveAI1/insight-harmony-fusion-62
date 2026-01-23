@@ -271,7 +271,22 @@ Deno.serve(async (req) => {
       `)
       console.log('Granted permissions')
 
-      // Verify
+      // Test get_all_queue_items function directly
+      const queueTest = await connection.queryObject(`
+        SELECT id, name, status, user_id, processing_started_at, created_at
+        FROM persona_creation_queue
+        ORDER BY created_at DESC
+        LIMIT 20
+      `)
+      console.log('Queue items found:', queueTest.rows.length)
+
+      // Test calling the RPC function
+      const rpcTest = await connection.queryObject(`
+        SELECT * FROM get_all_queue_items()
+      `)
+      console.log('RPC function returned:', rpcTest.rows.length, 'items')
+
+      // Verify personas
       const result = await connection.queryObject<{ name: string; created_at: string }>(`
         SELECT name, created_at::text
         FROM v4_personas
@@ -283,8 +298,12 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Function recreated with created_at DESC sorting',
-          sample: result.rows
+          message: 'Migration complete',
+          queue_items: queueTest.rows,
+          queue_count: queueTest.rows.length,
+          rpc_test_count: rpcTest.rows.length,
+          rpc_test_items: rpcTest.rows.slice(0, 5),
+          sample_personas: result.rows
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )

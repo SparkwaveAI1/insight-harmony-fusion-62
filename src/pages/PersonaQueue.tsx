@@ -84,6 +84,13 @@ const PersonaQueue = () => {
   useEffect(() => {
     if (user && isAdmin) {
       loadQueueItems();
+
+      // Auto-refresh every 10 seconds to see processing status changes
+      const refreshInterval = setInterval(() => {
+        loadQueueItems();
+      }, 10000);
+
+      return () => clearInterval(refreshInterval);
     }
   }, [user, isAdmin]);
 
@@ -93,16 +100,31 @@ const PersonaQueue = () => {
 
     try {
       setLoading(true);
+      console.log('loadQueueItems: isAdmin=', isAdmin, 'user.email=', user.email);
+
       // Admins see all queue items across all users
       const items = isAdmin ? await getAllQueueItems() : await getQueueItems(user.id);
+      console.log('loadQueueItems: loaded', items?.length || 0, 'items');
+
+      // Count by status for debugging
+      if (items && items.length > 0) {
+        const statusCounts = items.reduce((acc: Record<string, number>, item: any) => {
+          acc[item.status] = (acc[item.status] || 0) + 1;
+          return acc;
+        }, {});
+        console.log('loadQueueItems: status counts:', statusCounts);
+      }
+
       setQueueItems(items || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading queue items:', error);
       toast({
         title: "Error",
-        description: "Failed to load queue items",
+        description: `Failed to load queue items: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
+      // Set empty array on error so loading state clears
+      setQueueItems([]);
     } finally {
       setLoading(false);
     }
@@ -530,8 +552,9 @@ const PersonaQueue = () => {
       if (consecutiveFailures < CONSECUTIVE_FAILURE_LIMIT) {
         setTimeout(async () => {
           console.log('🔍 Checking for next pending item...');
-          const updatedItems = await getQueueItems(user.id);
-          const nextPending = updatedItems?.find(item => item.status === 'pending');
+          // Use admin function to get all items across all users
+          const updatedItems = isAdmin ? await getAllQueueItems() : await getQueueItems(user.id);
+          const nextPending = updatedItems?.find((item: any) => item.status === 'pending');
           if (nextPending) {
             console.log('🚀 Found next pending item, processing automatically...');
             onProcessClick(); // Recursive call to process next
@@ -559,7 +582,25 @@ const PersonaQueue = () => {
               <div className="container py-6">
                 <div className="flex items-center justify-between mb-6">
                   <SidebarTrigger className="hidden md:flex" />
-                  <h1 className="text-3xl font-bold">Persona Queue Admin</h1>
+                  <div>
+                    <h1 className="text-3xl font-bold">Persona Queue Admin</h1>
+                    {queueItems.length > 0 && (
+                      <div className="flex gap-4 mt-2 text-sm">
+                        <span className="text-muted-foreground">
+                          Total: <strong>{queueItems.length}</strong>
+                        </span>
+                        <span className="text-yellow-600">
+                          Pending: <strong>{queueItems.filter(i => i.status === 'pending').length}</strong>
+                        </span>
+                        <span className="text-blue-600">
+                          Processing: <strong>{queueItems.filter(i => i.status?.startsWith('processing')).length}</strong>
+                        </span>
+                        <span className="text-green-600">
+                          Completed: <strong>{queueItems.filter(i => i.status === 'completed').length}</strong>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="grid lg:grid-cols-4 gap-6 mb-8">
