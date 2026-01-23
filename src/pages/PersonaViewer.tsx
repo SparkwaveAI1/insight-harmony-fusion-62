@@ -11,7 +11,6 @@ import PublicPersonasList from "@/components/personas/PublicPersonasList";
 import MyPersonasList from "@/components/personas/MyPersonasList";
 import ViewerHeader from "@/components/personas/ViewerHeader";
 import PersonaFetcher from "@/components/personas/PersonaFetcher";
-import FilterSection from "@/components/personas/FilterSection";
 import { useParams, useLocation } from "react-router-dom";
 
 import { V4Persona } from "@/types/persona-v4";
@@ -33,15 +32,10 @@ const PersonaViewerContent = () => {
   const { personaId } = useParams<{ personaId?: string }>();
   const [myPersonas, setMyPersonas] = useState<V4Persona[]>([]);
   const [publicPersonas, setPublicPersonas] = useState<V4Persona[]>([]);
-  
-  // Simplified filter states - only search and age
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAge, setSelectedAge] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
-  
+
   const location = useLocation();
   const queryClientInstance = useQueryClient();
-  
+
   // Determine if we're in the public library view
   const isLibraryView = location.pathname.includes('/persona-library');
 
@@ -56,11 +50,6 @@ const PersonaViewerContent = () => {
       queryClientInstance.invalidateQueries({ queryKey: ['public-personas-show-all'] });
     }
   }, [isLibraryView, queryClientInstance]);
-
-  const handleResetFilters = () => {
-    setSearchQuery("");
-    setSelectedAge("");
-  };
 
   // If viewing a specific persona, show the detail view
   if (personaId) {
@@ -91,7 +80,7 @@ const PersonaViewerContent = () => {
           <ViewerHeader isLoading={isLoading} />
           
           {/* Page Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <h1 className="text-3xl md:text-4xl font-bold mb-2 font-plasmik">
               {isLibraryView ? "Persona Library" : "My Personas"}
             </h1>
@@ -100,42 +89,26 @@ const PersonaViewerContent = () => {
                 Browse publicly shared personas from our community
               </p>
             )}
-            <div className="w-32 h-1 bg-accent mb-6"></div>
+            <div className="w-32 h-1 bg-accent"></div>
           </div>
 
-          {/* Simplified Filter Section - Search + Age only */}
-          <FilterSection 
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onResetFilters={handleResetFilters}
-            selectedAge={selectedAge}
-            onAgeChange={(val) => setSelectedAge(val === "any" ? "" : val)}
-            isSearching={isSearching}
-          />
-
-          {/* Tabbed View */}
+          {/* Tabbed View - tabs first, then filters inside each tab */}
           <Tabs defaultValue='public-personas' className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="my-personas">My Personas</TabsTrigger>
               <TabsTrigger value="public-personas">Public Personas</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="my-personas" className="space-y-6">
+            <TabsContent value="my-personas" className="space-y-4 mt-0">
               <MyPersonasList
                 onPersonasLoad={setMyPersonas}
-                searchQuery={searchQuery}
-                selectedAge={selectedAge}
-                onSearchingChange={setIsSearching}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>
 
-            <TabsContent value="public-personas" className="space-y-6">
-              <PublicPersonasList 
+            <TabsContent value="public-personas" className="space-y-4 mt-0">
+              <PublicPersonasList
                 onPersonasLoad={setPublicPersonas}
-                searchQuery={searchQuery}
-                selectedAge={selectedAge}
-                onSearchingChange={setIsSearching}
                 className="grid grid-cols-1 lg:grid-cols-2 gap-6"
               />
             </TabsContent>

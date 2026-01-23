@@ -1,7 +1,7 @@
 // src/components/personas/PersonaFilterPanel.tsx
 
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, X, Filter, Loader2 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { ChevronDown, ChevronUp, X, Filter, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -250,6 +250,7 @@ export function PersonaFilterPanel({
   const [isExpanded, setIsExpanded] = useState(false);
   const { options: filterOptions, isLoading: optionsLoading } = usePersonaFilterOptions();
 
+  // Count active filters (excluding the main search fields which are always visible)
   const activeFilterCount = [
     filters.ageMin !== null || filters.ageMax !== null,
     filters.genders.length > 0,
@@ -264,52 +265,97 @@ export function PersonaFilterPanel({
     filters.healthTagsAny.length > 0,
     filters.workRoleTagsAny.length > 0,
     filters.politicalLeans.length > 0,
-    filters.textContains !== '',
     filters.textExcludes !== '',
-    filters.nameContains !== '',
   ].filter(Boolean).length;
+
+  // Check if any search/filter is active
+  const hasAnyFilter = activeFilterCount > 0 || filters.nameContains !== '' || filters.textContains !== '';
+
+  // Handle search on Enter key
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onApply();
+    }
+  }, [onApply]);
 
   return (
     <Card className="mb-4">
-      {/* Header - always visible */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          <span className="font-medium">Advanced Filters</span>
-          {activeFilterCount > 0 && (
-            <Badge variant="secondary">{activeFilterCount} active</Badge>
-          )}
-          {resultCount !== undefined && (
-            <span className="text-sm text-muted-foreground">
-              ({resultCount.toLocaleString()} results)
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {activeFilterCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={onClear}>
-              Clear All
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? (
+      {/* Primary Search Row - Always Visible */}
+      <div className="p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Main search input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name..."
+              value={filters.nameContains}
+              onChange={(e) => onChange({ ...filters, nameContains: e.target.value })}
+              onKeyDown={handleKeyDown}
+              className="pl-9"
+            />
+          </div>
+
+          {/* Profile search input */}
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search profile content (e.g., cooking, diabetes)..."
+              value={filters.textContains}
+              onChange={(e) => onChange({ ...filters, textContains: e.target.value })}
+              onKeyDown={handleKeyDown}
+            />
+          </div>
+
+          {/* Search button */}
+          <Button onClick={onApply} disabled={isLoading} className="shrink-0">
+            {isLoading ? (
               <>
-                <ChevronUp className="h-4 w-4 mr-1" /> Hide
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Searching...
               </>
             ) : (
-              <>
-                <ChevronDown className="h-4 w-4 mr-1" /> Show
-              </>
+              'Search'
+            )}
+          </Button>
+        </div>
+
+        {/* Results count and filter toggle row */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t">
+          <div className="flex items-center gap-3">
+            {resultCount !== undefined && (
+              <span className="text-sm text-muted-foreground">
+                {resultCount.toLocaleString()} personas found
+              </span>
+            )}
+            {hasAnyFilter && (
+              <Button variant="ghost" size="sm" onClick={onClear} className="h-7 text-xs">
+                Clear all
+              </Button>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-8"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Advanced Filters
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="ml-2 h-5 px-1.5">
+                {activeFilterCount}
+              </Badge>
+            )}
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4 ml-2" />
+            ) : (
+              <ChevronDown className="h-4 w-4 ml-2" />
             )}
           </Button>
         </div>
       </div>
 
-      {/* Expanded filter content */}
+      {/* Expanded Advanced Filters */}
       {isExpanded && (
         <div className="px-4 pb-4 border-t pt-4">
           {/* Loading state for options */}
@@ -322,37 +368,19 @@ export function PersonaFilterPanel({
 
           {!optionsLoading && (
             <>
-          {/* Quick search row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <Label className="text-sm font-medium">Name Contains</Label>
-              <Input
-                placeholder="Search by name..."
-                value={filters.nameContains}
-                onChange={(e) =>
-                  onChange({ ...filters, nameContains: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Profile Contains</Label>
-              <Input
-                placeholder="e.g., cooking, diabetes"
-                value={filters.textContains}
-                onChange={(e) =>
-                  onChange({ ...filters, textContains: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Exclude Terms</Label>
-              <Input
-                placeholder="e.g., exclude certain terms"
-                value={filters.textExcludes}
-                onChange={(e) =>
-                  onChange({ ...filters, textExcludes: e.target.value })
-                }
-              />
+          {/* Exclude terms row */}
+          <div className="mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Exclude Terms</Label>
+                <Input
+                  placeholder="Exclude personas containing these terms..."
+                  value={filters.textExcludes}
+                  onChange={(e) =>
+                    onChange({ ...filters, textExcludes: e.target.value })
+                  }
+                />
+              </div>
             </div>
           </div>
 

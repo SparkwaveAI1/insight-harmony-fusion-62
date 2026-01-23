@@ -6,6 +6,7 @@ import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
 import { getMyPersonasByIds } from "@/services/persona";
 import { useFilteredPersonaSearch } from "@/hooks/useFilteredPersonaSearch";
+import { PersonaFilterPanel } from "./PersonaFilterPanel";
 import { DEFAULT_FILTERS } from "@/types/personaFilters";
 import { useAuth } from "@/context/AuthContext";
 import { updatePersonaVisibility } from "@/services/persona/operations/updatePersona";
@@ -15,17 +16,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MyPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
-  searchQuery?: string;
-  selectedAge?: string;
-  onSearchingChange?: (isSearching: boolean) => void;
   className?: string;
 }
 
 const MyPersonasList = ({
   onPersonasLoad,
-  searchQuery = "",
-  selectedAge = "",
-  onSearchingChange,
   className = "grid grid-cols-1 lg:grid-cols-2 gap-6"
 }: MyPersonasListProps) => {
   const { user, isLoading: authLoading } = useAuth();
@@ -82,11 +77,6 @@ const MyPersonasList = ({
       executeFilteredSearch();
     }
   }, [hasInitialized, user?.id, authLoading, executeFilteredSearch]);
-
-  // Notify parent of search state
-  useEffect(() => {
-    onSearchingChange?.(isFilterLoading);
-  }, [isFilterLoading, onSearchingChange]);
 
   // Update the parent component with loaded personas
   useEffect(() => {
@@ -147,6 +137,19 @@ const MyPersonasList = ({
 
   return (
     <div>
+      {/* Filter Panel */}
+      <PersonaFilterPanel
+        filters={filters}
+        onChange={setFilters}
+        onApply={executeFilteredSearch}
+        onClear={() => {
+          resetFilters();
+          setTimeout(() => executeFilteredSearch(), 0);
+        }}
+        isLoading={isFilterLoading}
+        resultCount={totalCount}
+      />
+
       {/* Loading state */}
       {isLoading && <PersonaLoadingState />}
 

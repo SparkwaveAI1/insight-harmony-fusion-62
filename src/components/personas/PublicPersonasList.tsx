@@ -14,17 +14,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PublicPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
-  searchQuery?: string;
-  selectedAge?: string;
-  onSearchingChange?: (isSearching: boolean) => void;
   className?: string;
 }
 
 const PublicPersonasList = ({
   onPersonasLoad,
-  searchQuery = "",
-  selectedAge = "",
-  onSearchingChange,
   className = "grid grid-cols-1 lg:grid-cols-2 gap-6"
 }: PublicPersonasListProps) => {
   const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -75,11 +69,6 @@ const PublicPersonasList = ({
       executeFilteredSearch();
     }
   }, [hasInitialized, executeFilteredSearch]);
-
-  // Notify parent of search state
-  useEffect(() => {
-    onSearchingChange?.(isFilterLoading);
-  }, [isFilterLoading, onSearchingChange]);
 
   // Update the parent component with loaded personas
   useEffect(() => {
