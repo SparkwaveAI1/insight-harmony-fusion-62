@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   addToQueue,
   getQueueItems,
@@ -74,6 +75,7 @@ const PersonaQueue = () => {
   const [showJsonImportDialog, setShowJsonImportDialog] = useState(false);
   const [jsonImportText, setJsonImportText] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -307,21 +309,57 @@ const PersonaQueue = () => {
     if (!user || !jsonImportText.trim()) return;
 
     setIsImporting(true);
+    setImportError(null);
 
     try {
       // Parse JSON
       let personaData;
       try {
         personaData = JSON.parse(jsonImportText);
-      } catch (parseError) {
+        console.log("📋 JSON parsed successfully:", {
+          keys: Object.keys(personaData),
+          hasName: !!personaData.name,
+          hasDescription: !!personaData.description,
+          hasPersonaData: !!personaData.persona_data,
+          hasIdentity: !!personaData.identity,
+          structure: personaData.persona_data ? 'V3' : personaData.identity ? 'V3-flat' : 'Legacy'
+        });
+      } catch (parseError: any) {
+        console.error('❌ JSON parse error:', parseError);
         toast({
-          title: "Invalid JSON",
-          description: "Please check your JSON format and try again.",
+          title: "Invalid JSON Syntax",
+          description: `JSON parsing failed: ${parseError.message}. Please check your JSON format.`,
           variant: "destructive",
         });
         setIsImporting(false);
         return;
       }
+
+      // Validate basic structure
+      if (!personaData || typeof personaData !== 'object') {
+        console.error('❌ Invalid persona data: not an object', personaData);
+        toast({
+          title: "Invalid Persona Data",
+          description: "JSON must contain a persona object.",
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+
+      // Check for required fields
+      if (!personaData.name) {
+        console.error('❌ Missing required field: name');
+        toast({
+          title: "Missing Required Field",
+          description: "Persona JSON must include a 'name' field.",
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+
+      console.log("🚀 Starting import for persona:", personaData.name);
 
       // Use the existing importPersonaFromJSON function which handles:
       // - Validation
@@ -331,7 +369,11 @@ const PersonaQueue = () => {
       const persona = await importPersonaFromJSON(personaData);
 
       if (persona) {
-        console.log("✅ Persona imported successfully:", persona.name);
+        console.log("✅ Persona imported successfully:", {
+          name: persona.name,
+          persona_id: persona.persona_id,
+          hasImage: !!persona.profile_image_url
+        });
         toast({
           title: "Success",
           description: `Persona "${persona.name}" imported successfully with profile image!`,
@@ -343,17 +385,39 @@ const PersonaQueue = () => {
         // Navigate to the persona detail page
         navigate(`/persona-detail/${persona.persona_id}`);
       } else {
+        console.error('❌ Import returned null - unknown failure');
+        const errorMsg = "Failed to import persona. The import function returned no data. Check console for details.";
+        setImportError(errorMsg);
         toast({
-          title: "Error",
-          description: "Failed to import persona. Please check the JSON format.",
+          title: "Import Failed",
+          description: errorMsg,
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error('❌ Error importing persona:', error);
+      console.error('❌ Error importing persona:', {
+        message: error.message,
+        stack: error.stack,
+        error: error
+      });
+
+      // Provide more specific error messages
+      let errorDescription = error.message || "Unknown error occurred";
+
+      if (error.message?.includes('User must be authenticated')) {
+        errorDescription = "You must be signed in to import personas.";
+      } else if (error.message?.includes('name is required')) {
+        errorDescription = "Persona JSON must include a 'name' field.";
+      } else if (error.message?.includes('Database error') || error.message?.includes('Failed to save')) {
+        errorDescription = error.message;
+      } else if (error.message?.includes('V4 persona import not yet supported')) {
+        errorDescription = error.message;
+      }
+
+      setImportError(errorDescription);
       toast({
-        title: "Import failed",
-        description: error.message || "Unknown error occurred",
+        title: "Import Failed",
+        description: errorDescription,
         variant: "destructive",
       });
     } finally {
@@ -856,7 +920,12 @@ const PersonaQueue = () => {
       </div>
 
       {/* JSON Import Dialog */}
-      <Dialog open={showJsonImportDialog} onOpenChange={setShowJsonImportDialog}>
+      <Dialog open={showJsonImportDialog} onOpenChange={(open) => {
+        setShowJsonImportDialog(open);
+        if (!open) {
+          setImportError(null);
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -869,6 +938,20 @@ const PersonaQueue = () => {
           </DialogHeader>
 
           <div className="space-y-4">
+            {importError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <div className="font-semibold mb-2">Import Error:</div>
+                  <div className="text-sm whitespace-pre-wrap font-mono bg-red-50 p-2 rounded border border-red-200">
+                    {importError}
+                  </div>
+                  <div className="text-sm mt-2">
+                    Check the browser console (F12) for detailed error logs.
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Paste JSON Data</label>
               <Textarea
