@@ -31,7 +31,9 @@ import { getUserCollections } from '@/services/collections/collectionOperations'
 import { supabase } from '@/integrations/supabase/client';
 import { QueueHealthMonitor } from '@/components/persona-queue/QueueHealthMonitor';
 import { getProcessingTimeText, getStatusColor, getStatusDisplay } from '@/services/queueHealthService';
-import { RefreshCw, Trash2, ExternalLink } from 'lucide-react';
+import { RefreshCw, Trash2, ExternalLink, Upload, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { importPersonaFromJSON } from "@/services/persona/operations/importPersona";
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
@@ -69,6 +71,9 @@ const PersonaQueue = () => {
   const [processing, setProcessing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+  const [showJsonImportDialog, setShowJsonImportDialog] = useState(false);
+  const [jsonImportText, setJsonImportText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -253,18 +258,18 @@ const PersonaQueue = () => {
       // Check if this is bulk input (contains numbered entries with names)
       // Match either start of string or newline followed by numbered entry
       const hasBulkFormat = /(?:^|\n)\d+\.\s+[A-Z]/.test(textareaContent.trim());
-      
+
       if (hasBulkFormat) {
         // Parse multiple personas
         const personas = parseBulkPersonaDescriptions(textareaContent.trim());
-        
+
         // Add all to queue in parallel
-        const addPromises = personas.map(p => 
+        const addPromises = personas.map(p =>
           addToQueue(user.id, p.name, p.description, p.collections)
         );
-        
+
         await Promise.all(addPromises);
-        
+
         toast({
           title: "Success",
           description: `Added ${personas.length} persona${personas.length > 1 ? 's' : ''} to queue`,
@@ -272,20 +277,20 @@ const PersonaQueue = () => {
       } else {
         // Single persona (existing logic)
         const parsed = parsePersonaDescription(textareaContent.trim());
-        
+
         await addToQueue(
           user.id,
           parsed.name,
           parsed.description,
           parsed.collections
         );
-        
+
         toast({
           title: "Success",
           description: `Added "${parsed.name}" to queue`,
         });
       }
-      
+
       setTextareaContent(''); // Clear textarea
       loadQueueItems(); // Refresh the list
     } catch (error) {
@@ -295,6 +300,64 @@ const PersonaQueue = () => {
         description: "Failed to add to queue",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleJsonImport = async () => {
+    if (!user || !jsonImportText.trim()) return;
+
+    setIsImporting(true);
+
+    try {
+      // Parse JSON
+      let personaData;
+      try {
+        personaData = JSON.parse(jsonImportText);
+      } catch (parseError) {
+        toast({
+          title: "Invalid JSON",
+          description: "Please check your JSON format and try again.",
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+
+      // Use the existing importPersonaFromJSON function which handles:
+      // - Validation
+      // - V3 vs Legacy detection
+      // - Profile image generation
+      // - Saving to database
+      const persona = await importPersonaFromJSON(personaData);
+
+      if (persona) {
+        console.log("✅ Persona imported successfully:", persona.name);
+        toast({
+          title: "Success",
+          description: `Persona "${persona.name}" imported successfully with profile image!`,
+        });
+
+        setJsonImportText('');
+        setShowJsonImportDialog(false);
+
+        // Navigate to the persona detail page
+        navigate(`/persona-detail/${persona.persona_id}`);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to import persona. Please check the JSON format.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Error importing persona:', error);
+      toast({
+        title: "Import failed",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -630,6 +693,10 @@ const PersonaQueue = () => {
                         <Button onClick={handleParseAndAdd} className="flex-1">
                           Parse & Add to Queue
                         </Button>
+                        <Button onClick={() => setShowJsonImportDialog(true)} variant="outline">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import JSON
+                        </Button>
                         <Button onClick={onProcessClick} disabled={busy}>
                           {busy ? "Processing..." : "Process Queue"}
                         </Button>
@@ -787,6 +854,60 @@ const PersonaQueue = () => {
           </div>
         </SidebarInset>
       </div>
+
+      {/* JSON Import Dialog */}
+      <Dialog open={showJsonImportDialog} onOpenChange={setShowJsonImportDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Import Persona from JSON
+            </DialogTitle>
+            <DialogDescription>
+              Import a persona by pasting JSON data. The persona will be validated and a profile image will be generated automatically.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Paste JSON Data</label>
+              <Textarea
+                placeholder="Paste your persona JSON data here..."
+                value={jsonImportText}
+                onChange={(e) => setJsonImportText(e.target.value)}
+                className="min-h-48 font-mono text-sm resize-none"
+                disabled={isImporting}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowJsonImportDialog(false)}
+                disabled={isImporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleJsonImport}
+                disabled={isImporting || !jsonImportText.trim()}
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import Persona
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

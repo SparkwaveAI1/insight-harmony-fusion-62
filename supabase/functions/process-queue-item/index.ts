@@ -17,7 +17,12 @@ serve(async (req) => {
   )
 
   try {
-    console.log('[process-queue-item] Starting queue processing...')
+    // Parse request body to get depth for chain safety limit
+    const body = await req.json().catch(() => ({}))
+    const depth = body?.depth || 0
+    const trigger = body?.trigger || 'unknown'
+
+    console.log(`[process-queue-item] Starting queue processing... (trigger: ${trigger}, depth: ${depth})`)
 
     // Step 1: Atomically pop the next pending queue item
     const { data: item, error: popError } = await supabase.rpc('pop_next_persona_queue')
@@ -139,12 +144,61 @@ serve(async (req) => {
 
     console.log(`[process-queue-item] Successfully processed: ${item.name} -> ${personaId}`)
 
+    // Step 5: Check for next item and chain (continuous processing)
+    let chainedToNext = false
+
+    if (depth < 25) {  // Safety limit: max 25 personas per chain
+      console.log('[process-queue-item] Checking for next item in queue...')
+
+      const { data: nextItem, error: nextError } = await supabase.rpc('pop_next_persona_queue')
+
+      if (!nextError && nextItem) {
+        console.log(`[process-queue-item] Found next item: ${nextItem.name}, chaining...`)
+        chainedToNext = true
+
+        // Invoke this function recursively for the next item
+        try {
+          // Use setTimeout to avoid blocking the current response
+          setTimeout(async () => {
+            try {
+              await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/process-queue-item`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  trigger: 'chain',
+                  depth: depth + 1,
+                  previous_item: item.name
+                })
+              })
+              console.log('[process-queue-item] Chain invoked successfully')
+            } catch (chainError) {
+              console.error('[process-queue-item] Chain invocation failed:', chainError)
+            }
+          }, 100) // Small delay to ensure current response completes
+        } catch (chainError) {
+          console.error('[process-queue-item] Chain setup failed:', chainError)
+          // Don't throw - current persona was still processed successfully
+        }
+      } else if (nextError) {
+        console.error('[process-queue-item] Error checking for next item:', nextError)
+      } else {
+        console.log('[process-queue-item] No more items in queue, chain complete')
+      }
+    } else {
+      console.log(`[process-queue-item] Depth limit reached (${depth}), stopping chain. Cron will pick up remaining items.`)
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         message: `Processed ${item.name}`,
         persona_id: personaId,
-        item_id: item.id
+        item_id: item.id,
+        chained_to_next: chainedToNext,
+        depth: depth
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
