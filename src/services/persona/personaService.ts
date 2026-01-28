@@ -10,9 +10,10 @@ export interface GetPublicV4PersonasOptions {
  * @param opts Options including allowIncomplete for relaxed validation
  */
 export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Promise<V4Persona[]> {
+  // Fetch only essential columns for list views (not full_profile JSONB)
   const { data, error } = await supabase
     .from('v4_personas_public_safe')
-    .select('*')
+    .select('persona_id, name, profile_image_url, profile_thumbnail_url, created_at, updated_at, user_id, is_public, schema_version, conversation_summary')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -24,9 +25,10 @@ export async function getPublicV4Personas(opts?: GetPublicV4PersonasOptions): Pr
  * Used for library views to show everything that's public
  */
 export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
+  // Fetch only essential columns for list views (not full_profile JSONB)
   const { data, error } = await supabase
     .from('v4_personas_public_safe')
-    .select('*')
+    .select('persona_id, name, profile_image_url, profile_thumbnail_url, created_at, updated_at, user_id, is_public, schema_version, conversation_summary')
     .order('created_at', { ascending: false })
     .limit(10000);
 
@@ -41,9 +43,10 @@ export async function getPublicV4PersonasShowAll(): Promise<V4Persona[]> {
 export async function getPublicPersonasByIds(personaIds: string[]): Promise<V4Persona[]> {
   if (!personaIds.length) return [];
 
+  // Fetch only essential columns for list views (not full_profile JSONB)
   const { data, error } = await supabase
     .from('v4_personas_public_safe')
-    .select('*')
+    .select('persona_id, name, profile_image_url, profile_thumbnail_url, created_at, updated_at, user_id, is_public, schema_version, conversation_summary')
     .in('persona_id', personaIds);
 
   if (error) throw error;
@@ -58,9 +61,10 @@ export async function getMyPersonasByIds(personaIds: string[], userId: string): 
   if (!personaIds.length) return [];
   if (!userId) throw new Error('Missing userId');
 
+  // Fetch only essential columns for list views (not full_profile JSONB)
   const { data, error } = await supabase
     .from('v4_personas')
-    .select('*')
+    .select('persona_id, name, profile_image_url, profile_thumbnail_url, created_at, updated_at, user_id, is_public, schema_version, conversation_summary')
     .in('persona_id', personaIds)
     .eq('user_id', userId);
 

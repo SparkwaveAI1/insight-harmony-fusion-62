@@ -1,7 +1,6 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { PersonaProvider } from "./context/PersonaProvider";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -75,15 +74,15 @@ if (typeof window !== 'undefined') {
   console.log(`✅ Window deployment check set: ${(window as any).LOVABLE_DEPLOYMENT_CHECK}`);
 }
 
-// Create a client with aggressive cache invalidation
+// Create a client with reasonable cache settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 0, // Force fresh queries
-      gcTime: 0, // Clear cache immediately (replaces cacheTime)
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
-      refetchOnReconnect: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep in memory for fast access
+      refetchOnWindowFocus: false, // Don't refetch on tab switch (use cache)
+      refetchOnMount: false, // Don't refetch on component mount (use cache)
+      refetchOnReconnect: true, // Refetch on network reconnection
     },
   },
 });
@@ -94,11 +93,10 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
-          <PersonaProvider>
-            <JobCompletionNotifier />
-            
-            
-            <Routes>
+          <JobCompletionNotifier />
+
+
+          <Routes>
                 {/* DEPLOYMENT TEST ROUTE - Independent persona test */}
                 <Route path="/test-persona-library" element={<ProtectedRoute><TestPersonaLibrary /></ProtectedRoute>} />
                 <Route path="/v4-diagnostic" element={<ProtectedRoute><V4Diagnostic /></ProtectedRoute>} />
@@ -172,7 +170,6 @@ function App() {
                 <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster position="top-right" />
-          </PersonaProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

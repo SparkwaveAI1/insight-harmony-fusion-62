@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PersonaProvider } from '@/context/PersonaProvider';
 import { Toaster } from 'sonner';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/sections/Footer';
@@ -40,16 +39,14 @@ const Research: React.FC = () => {
   };
 
   return (
-    <PersonaProvider>
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-grow pt-20">
-          {renderCurrentMode()}
-        </main>
-        <Footer />
-        <Toaster />
-      </div>
-    </PersonaProvider>
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header />
+      <main className="flex-grow pt-20">
+        {renderCurrentMode()}
+      </main>
+      <Footer />
+      <Toaster />
+    </div>
   );
 };
 

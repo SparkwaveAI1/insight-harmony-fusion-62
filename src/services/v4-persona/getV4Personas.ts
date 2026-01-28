@@ -28,9 +28,11 @@ export async function getV4Personas(user_id: string, options?: { allowIncomplete
   try {
     console.log('Fetching V4 personas for user:', user_id);
 
+    // Fetch only essential columns for list views (not full_profile JSONB)
+    // full_profile is ~15KB per persona - only fetch it on detail pages
     const { data, error } = await supabase
       .from('v4_personas')
-      .select('*')
+      .select('persona_id, name, profile_image_url, profile_thumbnail_url, created_at, updated_at, user_id, is_public, schema_version, conversation_summary')
       .eq('user_id', user_id)
       .order('created_at', { ascending: false });
 

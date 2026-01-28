@@ -227,8 +227,8 @@ const PersonaCard: React.FC<PersonaCardProps> = ({
               Owner
             </Badge>
           )}
-          {/* Only show Incomplete badge for user's own personas where we have full_profile data */}
-          {persona.full_profile !== undefined && !persona.full_profile?.identity && (
+          {/* Only show Incomplete badge for user's own personas with missing demographics */}
+          {isOwner && (!persona.conversation_summary?.demographics || !persona.conversation_summary?.character_description) && (
             <Badge variant="destructive" className="text-xs px-2 py-0.5">
               Incomplete
             </Badge>
