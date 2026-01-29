@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/sections/Footer";
 import { Toaster } from "@/components/ui/toaster";
@@ -77,6 +77,10 @@ const PersonaQueue = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
 
+  // Debounce refs to prevent multiple rapid reloads
+  const loadingRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -97,13 +101,34 @@ const PersonaQueue = () => {
 
   useEffect(() => {
     if (user && isAdmin) {
-      loadQueueItems();
+      loadQueueItems(true); // immediate on initial load
     }
-  }, [user, isAdmin, currentPage]);
+  }, [user, isAdmin, currentPage, loadQueueItems]);
 
 
-  const loadQueueItems = async () => {
+  // Debounced load function to prevent multiple rapid API calls
+  const loadQueueItems = useCallback(async (immediate = false) => {
     if (!user) return;
+
+    // Clear any pending debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    // If already loading, skip (unless immediate)
+    if (loadingRef.current && !immediate) {
+      console.log('loadQueueItems: skipped (already loading)');
+      return;
+    }
+
+    // Debounce non-immediate calls by 500ms
+    if (!immediate) {
+      debounceTimerRef.current = setTimeout(() => loadQueueItems(true), 500);
+      return;
+    }
+
+    loadingRef.current = true;
 
     try {
       setLoading(true);
@@ -133,8 +158,9 @@ const PersonaQueue = () => {
       setQueueItems([]);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [user, isAdmin, currentPage, toast]);
 
   const handleTestAdd = async () => {
     if (!user) return;
@@ -852,22 +878,14 @@ const PersonaQueue = () => {
                                       <ExternalLink className="h-3 w-3" />
                                     </Button>
                                   )}
-                                  {item.status === 'pending' && (
+                                  {/* Delete button for all non-completed statuses */}
+                                  {item.status !== 'completed' && (
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleDeleteItem(item.id, item.name)}
-                                      title="Delete from queue"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  )}
-                                  {item.status.startsWith('processing') && (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleManualClear(item.id, item.name)}
-                                      title="Force clear stuck item"
+                                      title={item.status.startsWith('processing') ? 'Delete stuck item' : 'Delete from queue'}
+                                      className={item.status.startsWith('processing') ? 'text-orange-600 hover:text-orange-700' : ''}
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </Button>

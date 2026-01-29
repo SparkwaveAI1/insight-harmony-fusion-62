@@ -24,23 +24,21 @@ Deno.serve(async (req) => {
       await connection.queryObject(`CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions`)
       console.log('Extensions enabled')
 
-      // First check if the job already exists
-      const existingJob = await connection.queryObject(`
-        SELECT jobname FROM cron.job WHERE jobname = 'process-persona-queue-every-2min'
+      // First check if any old jobs exist and remove them
+      const existingJobs = await connection.queryObject(`
+        SELECT jobname FROM cron.job WHERE jobname LIKE 'process-persona-queue%'
       `)
 
-      if (existingJob.rows.length > 0) {
-        console.log('Cron job already exists, removing old one first...')
-        await connection.queryObject(`
-          SELECT cron.unschedule('process-persona-queue-every-2min')
-        `)
+      for (const job of existingJobs.rows as any[]) {
+        console.log(`Removing old cron job: ${job.jobname}`)
+        await connection.queryObject(`SELECT cron.unschedule('${job.jobname}')`)
       }
 
-      console.log('Scheduling queue processing cron job...')
+      console.log('Scheduling queue processing cron job (every 10 minutes)...')
       await connection.queryObject(`
         SELECT cron.schedule(
-          'process-persona-queue-every-2min',
-          '*/2 * * * *',
+          'process-persona-queue-every-10min',
+          '*/10 * * * *',
           $$
           SELECT
             net.http_post(
@@ -55,7 +53,7 @@ Deno.serve(async (req) => {
 
       // Verify it was created
       const verifyJob = await connection.queryObject(`
-        SELECT jobname, schedule FROM cron.job WHERE jobname = 'process-persona-queue-every-2min'
+        SELECT jobname, schedule FROM cron.job WHERE jobname = 'process-persona-queue-every-10min'
       `)
 
       return new Response(

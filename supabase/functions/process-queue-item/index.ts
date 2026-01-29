@@ -6,6 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Timeout for persona creation (4 minutes)
+const PERSONA_CREATION_TIMEOUT_MS = 4 * 60 * 1000
+
+// Helper: wrap a promise with a timeout
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms/1000}s`)), ms)
+    )
+  ])
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -24,6 +37,44 @@ serve(async (req) => {
 
     console.log(`[process-queue-item] Starting queue processing... (trigger: ${trigger}, depth: ${depth})`)
 
+    // Step 0: Clean up stale items BEFORE popping (reset items stuck > 5 min)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    
+    const { data: resetItems, error: resetError } = await supabase
+      .from('persona_creation_queue')
+      .update({ 
+        status: 'pending', 
+        error_message: 'Auto-reset by cron: stale processing > 5m',
+        processing_started_at: null,
+        locked_at: null,
+        updated_at: new Date().toISOString()
+      })
+      .match({ status: 'processing' })
+      .lt('processing_started_at', fiveMinutesAgo)
+      .lt('attempt_count', 3)
+      .select('id, name')
+
+    if (resetItems && resetItems.length > 0) {
+      console.log(`[process-queue-item] Reset ${resetItems.length} stale items:`, resetItems.map(i => i.name))
+    }
+
+    // Also fail items that exceeded retry limit
+    const { data: failedItems } = await supabase
+      .from('persona_creation_queue')
+      .update({ 
+        status: 'failed', 
+        error_message: 'Auto-fail: exceeded max retries (3 attempts)',
+        updated_at: new Date().toISOString()
+      })
+      .match({ status: 'processing' })
+      .lt('processing_started_at', fiveMinutesAgo)
+      .gte('attempt_count', 3)
+      .select('id, name')
+
+    if (failedItems && failedItems.length > 0) {
+      console.log(`[process-queue-item] Failed ${failedItems.length} items (max retries):`, failedItems.map(i => i.name))
+    }
+
     // Step 1: Atomically pop the next pending queue item
     const { data: item, error: popError } = await supabase.rpc('pop_next_persona_queue')
 
@@ -40,15 +91,48 @@ serve(async (req) => {
       )
     }
 
-    console.log(`[process-queue-item] Processing: ${item.name} (${item.id})`)
+    console.log(`[process-queue-item] Processing: ${item.name} (${item.id}) - Attempt ${item.attempt_count}`)
 
-    // Step 2: Call v4-persona-unified to create the persona
-    const { data: unifiedResult, error: unifiedError } = await supabase.functions.invoke('v4-persona-unified', {
-      body: {
-        user_description: item.description,
-        user_id: item.user_id
-      }
-    })
+    // Step 2: Call v4-persona-unified to create the persona (WITH TIMEOUT)
+    let unifiedResult: any
+    let unifiedError: any
+
+    try {
+      const invokePromise = supabase.functions.invoke('v4-persona-unified', {
+        body: {
+          user_description: item.description,
+          user_id: item.user_id
+        }
+      })
+
+      const result = await withTimeout(invokePromise, PERSONA_CREATION_TIMEOUT_MS, 'Persona creation')
+      unifiedResult = result.data
+      unifiedError = result.error
+    } catch (timeoutError: any) {
+      console.error(`[process-queue-item] Timeout or error for ${item.name}:`, timeoutError.message)
+      
+      // On timeout, mark as failed (don't delete - let retry logic handle it)
+      await supabase
+        .from('persona_creation_queue')
+        .update({
+          status: 'pending',  // Back to pending so it can be retried
+          error_message: `Timeout: ${timeoutError.message}`,
+          processing_started_at: null,
+          locked_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', item.id)
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: `Persona creation timed out: ${timeoutError.message}`,
+          item_name: item.name,
+          will_retry: item.attempt_count < 3
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     if (unifiedError || !unifiedResult?.success) {
       const errorMsg = unifiedError?.message || unifiedResult?.error || 'Unknown error'
