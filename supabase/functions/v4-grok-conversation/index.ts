@@ -92,6 +92,26 @@ function decideDetailPolicy(prompt: string): 'high' | 'auto' {
   return 'auto';
 }
 
+// Truncate conversation history to prevent token overflow
+// Keep last N messages (sliding window) to stay within context limits
+const MAX_HISTORY_MESSAGES = 20;
+
+function truncateConversationHistory(history: any[] | undefined): any[] {
+  if (!history || !Array.isArray(history) || history.length === 0) {
+    return [];
+  }
+  
+  // If within limit, return as-is
+  if (history.length <= MAX_HISTORY_MESSAGES) {
+    return history;
+  }
+  
+  // Take the last MAX_HISTORY_MESSAGES (sliding window)
+  const truncated = history.slice(-MAX_HISTORY_MESSAGES);
+  console.log(`📏 Truncated history: ${history.length} → ${truncated.length} messages`);
+  return truncated;
+}
+
 console.log(`🔥 v4-grok-conversation - Edge function is live!`)
 
 serve(async (req) => {
@@ -192,9 +212,11 @@ serve(async (req) => {
         fullPrompt += `IMAGE ANALYSIS:\n${JSON.stringify(imageReadoutJson, null, 2)}\n\n`;
       }
 
-      if (conversation_history?.length > 0) {
+      // Apply sliding window truncation to conversation history
+      const truncatedHistory = truncateConversationHistory(conversation_history);
+      if (truncatedHistory.length > 0) {
         fullPrompt += `CONVERSATION HISTORY:\n`;
-        for (const msg of conversation_history) {
+        for (const msg of truncatedHistory) {
           const content = typeof msg.content === 'string' ? msg.content : '[message]';
           fullPrompt += `${msg.role}: ${content}\n`;
         }
@@ -250,8 +272,10 @@ serve(async (req) => {
         { role: "system", content: analysisData.system_prompt }
       ];
 
-      if (conversation_history?.length > 0) {
-        grokMessages.push(...conversation_history);
+      // Apply sliding window truncation to conversation history
+      const truncatedHistory = truncateConversationHistory(conversation_history);
+      if (truncatedHistory.length > 0) {
+        grokMessages.push(...truncatedHistory);
       }
 
       // Avoid duplicate messages
