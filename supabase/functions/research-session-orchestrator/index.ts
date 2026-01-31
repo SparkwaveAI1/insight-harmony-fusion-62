@@ -12,8 +12,8 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-// Rate limit: 10 requests per minute for research sessions (heavy operation)
-const RATE_LIMIT_CONFIG = { maxRequests: 10, windowSeconds: 60 };
+// Rate limit: 5 requests per minute for research sessions (very heavy operation)
+const RATE_LIMIT_CONFIG = { maxRequests: 5, windowSeconds: 60 };
 
 // Declare EdgeRuntime interface for type safety
 declare const EdgeRuntime: {

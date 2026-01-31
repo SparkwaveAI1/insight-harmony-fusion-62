@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { checkRateLimit, rateLimitResponse, addRateLimitHeaders } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limit: 30 requests per minute (ACP search with LLM parsing)
+const RATE_LIMIT_CONFIG = { maxRequests: 30, windowSeconds: 60 };
 
 // ============================================================
 // COUNTRY NORMALIZATION
@@ -955,6 +959,8 @@ function generateFailureExplanation(
 // MAIN HANDLER
 // ============================================================
 serve(async (req) => {
+  const functionName = 'acp-persona-search-v2';
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -966,6 +972,26 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Extract user ID from auth header for rate limiting
+    const authHeader = req.headers.get('authorization');
+    let userId = 'anonymous';
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) userId = user.id;
+      } catch (e) {
+        console.warn('[acp-persona-search-v2] Could not extract user from token for rate limiting');
+      }
+    }
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(supabase, userId, functionName, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      console.warn(`[acp-persona-search-v2] Rate limit exceeded for user ${userId}`);
+      return rateLimitResponse(rateLimitResult, corsHeaders);
+    }
 
     const { research_query, persona_count = 10, strictness: customStrictness }: SearchRequest = await req.json();
 

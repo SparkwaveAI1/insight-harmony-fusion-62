@@ -1,6 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 import { buildImagePrompt } from "./promptBuilder.ts";
 import { generateImageWithGemini } from "./geminiService.ts";
 import { uploadImageWithThumbnail, updatePersonaWithImageUrl } from "./imageUploadService.ts";
@@ -9,7 +11,12 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
+// Rate limit: 5 requests per minute (expensive Gemini image generation)
+const RATE_LIMIT_CONFIG = { maxRequests: 5, windowSeconds: 60 };
+
 serve(async (req) => {
+  const functionName = 'generate-persona-image';
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -18,6 +25,28 @@ serve(async (req) => {
   try {
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Supabase configuration is missing");
+    }
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Extract user ID from auth header for rate limiting
+    const authHeader = req.headers.get('authorization');
+    let userId = 'anonymous';
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) userId = user.id;
+      } catch (e) {
+        console.warn('[generate-persona-image] Could not extract user from token for rate limiting');
+      }
+    }
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(supabase, userId, functionName, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      console.warn(`[generate-persona-image] Rate limit exceeded for user ${userId}`);
+      return rateLimitResponse(rateLimitResult, corsHeaders);
     }
 
     const { personaData } = await req.json();

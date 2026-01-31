@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse, addRateLimitHeaders } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limit: 30 requests per minute (search with OpenAI embeddings)
+const RATE_LIMIT_CONFIG = { maxRequests: 30, windowSeconds: 60 };
 
 interface SearchRequest {
   query: string;
@@ -15,6 +19,8 @@ interface SearchRequest {
 }
 
 serve(async (req) => {
+  const functionName = 'semantic-persona-search';
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -36,6 +42,18 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       throw new Error('Unauthorized');
+    }
+
+    // Check rate limit using service role client for rate limit table access
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    const rateLimitResult = await checkRateLimit(serviceSupabase, user.id, functionName, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      console.warn(`[semantic-persona-search] Rate limit exceeded for user ${user.id}`);
+      return rateLimitResponse(rateLimitResult, corsHeaders);
     }
 
     const body: SearchRequest = await req.json();
@@ -132,7 +150,7 @@ serve(async (req) => {
         personas,
         duration_ms: duration,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json' }, rateLimitResult) }
     );
 
   } catch (error) {

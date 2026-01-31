@@ -230,17 +230,41 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log(`✅ Downgraded user ${profile.user_id} to free plan`);
 }
 
+/**
+ * Log webhook event for audit trail
+ * Note: No rate limiting on webhooks - Stripe controls send rate
+ * and we must process all payment events reliably
+ */
+function logWebhookEvent(event: Stripe.Event, status: 'received' | 'processed' | 'error', details?: string) {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    event_id: event.id,
+    event_type: event.type,
+    status,
+    details,
+    api_version: event.api_version,
+    livemode: event.livemode,
+  };
+  
+  console.log(`📊 [billing-stripe-webhook] ${JSON.stringify(logEntry)}`);
+}
+
 serve(async (req) => {
   if (req.method !== 'POST') {
+    console.log('📊 [billing-stripe-webhook] Rejected non-POST request');
     return new Response("Method not allowed", { status: 405 });
   }
 
+  const requestId = crypto.randomUUID().slice(0, 8);
+  const startTime = Date.now();
+
   try {
-    console.log("🔔 Stripe webhook received");
+    console.log(`🔔 [billing-stripe-webhook] Request ${requestId} received at ${new Date().toISOString()}`);
     
     // Verify webhook signature
     const event = await verifyStripeSignature(req);
-    console.log("🔒 Webhook signature verified, event type:", event.type);
+    console.log(`🔒 [billing-stripe-webhook] Request ${requestId} signature verified, event: ${event.id}, type: ${event.type}`);
+    logWebhookEvent(event, 'received');
 
     // Handle only checkout.session.completed for credit packs (Task 3C scope)
     switch (event.type) {
@@ -257,11 +281,15 @@ serve(async (req) => {
         break;
 
       default:
-        console.log(`ℹ️ Unhandled event type: ${event.type} - Task 3C handles checkout.session.completed, Task 3D handles invoice.paid, Task 3E handles customer.subscription.deleted`);
+        console.log(`ℹ️ [billing-stripe-webhook] Unhandled event type: ${event.type}`);
     }
 
+    const duration = Date.now() - startTime;
+    logWebhookEvent(event, 'processed', `Completed in ${duration}ms`);
+    console.log(`✅ [billing-stripe-webhook] Request ${requestId} completed in ${duration}ms`);
+
     return new Response(
-      JSON.stringify({ received: true }),
+      JSON.stringify({ received: true, request_id: requestId }),
       { 
         status: 200,
         headers: { "Content-Type": "application/json" }
@@ -269,9 +297,12 @@ serve(async (req) => {
     );
 
   } catch (err: any) {
-    console.error("❌ Webhook error:", err);
+    const duration = Date.now() - startTime;
+    console.error(`❌ [billing-stripe-webhook] Request ${requestId} error after ${duration}ms:`, err.message);
+    console.error(`❌ [billing-stripe-webhook] Stack:`, err.stack);
+    
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: err.message, request_id: requestId }),
       { 
         status: 400,
         headers: { "Content-Type": "application/json" }
