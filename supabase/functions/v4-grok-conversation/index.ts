@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkRateLimit, rateLimitResponse, addRateLimitHeaders, RATE_LIMITS } from '../_shared/rateLimit.ts'
+import { createErrorResponse, logError, validateRequired } from '../_shared/errorHandler.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -120,7 +122,7 @@ serve(async (req) => {
   }
 
   try {
-    const { persona_id, user_message, imageData, images, conversation_history } = await req.json()
+    const { persona_id, user_message, imageData, images, conversation_history, user_id } = await req.json()
 
     console.log(`1. FUNCTION START - persona_id: ${persona_id}`)
 
@@ -129,6 +131,20 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Rate limiting check
+    const rateLimitKey = user_id || persona_id || 'anonymous'
+    const rateLimitResult = await checkRateLimit(
+      supabase, 
+      rateLimitKey, 
+      'v4-grok-conversation',
+      RATE_LIMITS.conversation
+    )
+    
+    if (!rateLimitResult.allowed) {
+      console.warn(`⚠️ Rate limit exceeded for ${rateLimitKey}`)
+      return rateLimitResponse(rateLimitResult, corsHeaders)
+    }
 
     // Normalize images from either imageData (legacy) or images (new array)
     const normalizedImages = normalizeImages(images || imageData);
@@ -349,17 +365,18 @@ serve(async (req) => {
       interpreter_used: !!imageReadoutJson,
       analysis_model: analysisData.model_used,
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json' }, rateLimitResult),
     })
 
   } catch (error) {
-    console.error('❌ Error:', error)
-    return new Response(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return createErrorResponse(
+      error,
+      { 
+        functionName: 'v4-grok-conversation',
+        personaId: 'unknown', // May not be available if error occurred early
+        extra: { stage: 'catch_block' }
+      },
+      corsHeaders
+    )
   }
 })

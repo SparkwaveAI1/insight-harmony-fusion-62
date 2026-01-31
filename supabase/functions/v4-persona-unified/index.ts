@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { generateChatResponse } from '../_shared/openai.ts'
+import { checkRateLimit, rateLimitResponse, addRateLimitHeaders, RATE_LIMITS } from '../_shared/rateLimit.ts'
+import { createErrorResponse, logError } from '../_shared/errorHandler.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +25,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Rate limiting check - persona creation is resource-intensive
+    const rateLimitKey = user_id || 'anonymous'
+    const rateLimitResult = await checkRateLimit(
+      supabase, 
+      rateLimitKey, 
+      'v4-persona-unified',
+      RATE_LIMITS.persona_creation  // 10/min for heavy operations
+    )
+    
+    if (!rateLimitResult.allowed) {
+      console.warn(`⚠️ Rate limit exceeded for persona creation: ${rateLimitKey}`)
+      return rateLimitResponse(rateLimitResult, corsHeaders)
+    }
 
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
     if (!openaiApiKey) {
@@ -701,35 +717,19 @@ Ensure all traits are coherent with the background story and character essence. 
         message: 'Persona created successfully with unified generation!'
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json' }, rateLimitResult),
         status: 200,
       },
     )
 
-  } catch (error: any) {
-    console.error('❌ Error in v4-persona-unified:', error)
-
-    // Handle different error types properly
-    let errorMessage: string;
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'object' && error !== null) {
-      // Handle Supabase errors and other object errors
-      errorMessage = error.message || error.error || JSON.stringify(error);
-    } else {
-      errorMessage = String(error);
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: errorMessage,
-        message: 'Persona generation failed'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+  } catch (error: unknown) {
+    return createErrorResponse(
+      error,
+      { 
+        functionName: 'v4-persona-unified',
+        extra: { stage: 'catch_block' }
       },
+      corsHeaders
     )
   }
 })
