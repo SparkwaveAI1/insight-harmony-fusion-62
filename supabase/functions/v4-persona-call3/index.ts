@@ -1,5 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimit.ts'
+import { createErrorResponse, logError } from '../_shared/errorHandler.ts'
+
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// Rate limit: 20 requests per minute for persona creation
+const RATE_LIMIT_CONFIG = { maxRequests: 20, windowSeconds: 60 }
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,21 +15,40 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  const functionName = 'v4-persona-call3'
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  // Initialize Supabase client
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
   try {
+    // Extract user ID from auth header for rate limiting
+    const authHeader = req.headers.get('authorization')
+    let userId = 'anonymous'
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user } } = await supabase.auth.getUser(token)
+        if (user) userId = user.id
+      } catch (e) {
+        console.warn('Could not extract user from token for rate limiting')
+      }
+    }
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(supabase, userId, functionName, RATE_LIMIT_CONFIG)
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit exceeded for user ${userId} on ${functionName}`)
+      return rateLimitResponse(rateLimitResult, corsHeaders)
+    }
+
     const { persona_id } = await req.json()
     
     console.log('Starting V4 Call 3 - Profile image generation')
     console.log('Persona ID:', persona_id)
-    
-    // Initialize Supabase client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
 
     // Fetch the V4 persona data
     const { data: persona, error: fetchError } = await supabase

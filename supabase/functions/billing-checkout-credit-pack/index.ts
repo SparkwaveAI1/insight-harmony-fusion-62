@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimit.ts';
+import { createErrorResponse, logError } from '../_shared/errorHandler.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,14 +10,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limit: 10 requests per minute for billing operations
+const RATE_LIMIT_CONFIG = { maxRequests: 10, windowSeconds: 60 };
+
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
   apiVersion: "2024-06-20",
 });
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")! // service role for secure operations
-);
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Credit pack configurations
 const CREDIT_PACKS = {
@@ -25,6 +30,8 @@ const CREDIT_PACKS = {
 } as const;
 
 serve(async (req) => {
+  const functionName = 'billing-checkout-credit-pack';
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -39,6 +46,13 @@ serve(async (req) => {
     // Validate required params
     if (!userId || !packType) {
       throw new Error("Missing required params: userId, packType");
+    }
+
+    // Check rate limit using the provided userId
+    const rateLimitResult = await checkRateLimit(supabase, userId, functionName, RATE_LIMIT_CONFIG);
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit exceeded for user ${userId} on ${functionName}`);
+      return rateLimitResponse(rateLimitResult, corsHeaders);
     }
 
     // Validate pack type

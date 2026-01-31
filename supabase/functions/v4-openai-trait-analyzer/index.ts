@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkRateLimit, rateLimitResponse, addRateLimitHeaders } from '../_shared/rateLimit.ts'
+import { createErrorResponse, logError } from '../_shared/errorHandler.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +11,9 @@ const corsHeaders = {
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY')
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// Rate limit: 60 requests per minute for trait analyzer
+const RATE_LIMIT_CONFIG = { maxRequests: 60, windowSeconds: 60 }
 
 // Question context analysis to determine relevant trait categories
 function analyzeQuestionContext(userMessage: string) {
@@ -130,6 +135,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const functionName = 'v4-openai-trait-analyzer'
+  const supabaseService = createClient(supabaseUrl, supabaseServiceKey)
+
   try {
     const { persona_id, user_message, conversation_history } = await req.json()
 
@@ -137,11 +145,27 @@ serve(async (req) => {
       throw new Error('Missing required parameters: persona_id and user_message')
     }
 
-    // Initialize Supabase clients - service for persona data, user-scoped for memories (RLS)
-    const supabaseService = createClient(supabaseUrl, supabaseServiceKey)
-    
-    // Extract authorization from request for user-scoped memory access
+    // Extract user ID from auth header for rate limiting
     const authHeader = req.headers.get('authorization')
+    let userId = 'anonymous'
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '')
+        const { data: { user } } = await supabaseService.auth.getUser(token)
+        if (user) userId = user.id
+      } catch (e) {
+        console.warn('Could not extract user from token for rate limiting')
+      }
+    }
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(supabaseService, userId, functionName, RATE_LIMIT_CONFIG)
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit exceeded for user ${userId} on ${functionName}`)
+      return rateLimitResponse(rateLimitResult, corsHeaders)
+    }
+
+    // Initialize user-scoped Supabase client for memories (respects RLS)
     const supabaseAnon = createClient(
       supabaseUrl, 
       Deno.env.get('SUPABASE_ANON_KEY')!,
