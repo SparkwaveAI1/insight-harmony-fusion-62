@@ -262,8 +262,6 @@ export function PersonaFilterPanel({
     filters.incomeBrackets.length > 0,
     filters.educationLevels.length > 0,
     filters.interestTagsAny.length > 0,
-    filters.healthTagsAny.length > 0,
-    filters.workRoleTagsAny.length > 0,
     filters.politicalLeans.length > 0,
     filters.textExcludes !== '',
   ].filter(Boolean).length;
@@ -305,17 +303,6 @@ export function PersonaFilterPanel({
             />
           </div>
 
-          {/* Search button */}
-          <Button onClick={onApply} disabled={isLoading} className="shrink-0">
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Searching...
-              </>
-            ) : (
-              'Search'
-            )}
-          </Button>
         </div>
 
         {/* Results count and filter toggle row */}
@@ -495,15 +482,6 @@ export function PersonaFilterPanel({
               </div>
 
               <MultiSelect
-                label="Work Role"
-                options={filterOptions.work_role_tags}
-                selected={filters.workRoleTagsAny}
-                onChange={(workRoleTagsAny) =>
-                  onChange({ ...filters, workRoleTagsAny })
-                }
-              />
-
-              <MultiSelect
                 label="Income Bracket"
                 options={INCOME_BRACKETS}
                 selected={filters.incomeBrackets}
@@ -524,18 +502,9 @@ export function PersonaFilterPanel({
             </div>
           </div>
 
-          {/* Health & Political section */}
+          {/* Political section */}
           <div className="mb-4">
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-              <MultiSelect
-                label="Health Conditions"
-                options={filterOptions.health_tags}
-                selected={filters.healthTagsAny}
-                onChange={(healthTagsAny) =>
-                  onChange({ ...filters, healthTagsAny })
-                }
-              />
-
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <MultiSelect
                 label="Political Leaning"
                 options={POLITICAL_LEANS}
@@ -554,7 +523,7 @@ export function PersonaFilterPanel({
               Clear All
             </Button>
             <Button onClick={onApply} disabled={isLoading}>
-              {isLoading ? 'Searching...' : 'Apply Filters'}
+              {isLoading ? 'Searching...' : 'Search'}
             </Button>
           </div>
             </>
