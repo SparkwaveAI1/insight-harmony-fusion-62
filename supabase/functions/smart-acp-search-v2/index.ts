@@ -688,11 +688,8 @@ serve(async (req) => {
       }
       
       const matchingIds = (idsResult.data || []).map((r: any) => r.persona_id);
-      // @ts-ignore - debug variable
-      (globalThis as any).__debugMatchingIds = matchingIds;
-      console.log(`[smart-acp-search-v2] Health RPC found ${matchingIds.length} matching IDs, first 3: ${matchingIds.slice(0, 3).join(', ')}`);
+      console.log(`[smart-acp-search-v2] Health RPC found ${matchingIds.length} matching IDs`);
       
-      // TEMPORARY DEBUG: Add RPC debug info to reason
       if (matchingIds.length === 0) {
         const duration = Date.now() - startTime;
         return new Response(
@@ -704,24 +701,18 @@ serve(async (req) => {
             parsed_criteria: criteria,
             personas: [],
             duration_ms: duration,
-            reason: `RPC returned 0 results. Debug: rpcParams=${JSON.stringify(rpcParams)}, rpcError=${idsResult.error?.message || 'none'}, rpcDataType=${typeof idsResult.data}, rpcDataIsArray=${Array.isArray(idsResult.data)}`,
+            reason: `No personas match the BMI/health criteria`,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      // @ts-ignore
-      (globalThis as any).__batchDebug = [];
-      
       if (matchingIds.length > 0) {
         // Fetch lightweight details in batches (no full_profile to save memory)
-        // full_profile is fetched only for final selected personas
         // NOTE: Keep batch size small (50) to avoid URL length limits with .in() queries
         const batchSize = 50;
-        console.log(`[smart-acp-search-v2] Fetching details for ${matchingIds.length} IDs, first batch: ${matchingIds.slice(0, 3).join(', ')}`);
         for (let i = 0; i < matchingIds.length && dbResults.length < 3000; i += batchSize) {
           const batchIds = matchingIds.slice(i, i + batchSize);
-          console.log(`[smart-acp-search-v2] Batch ${i / batchSize + 1}: fetching ${batchIds.length} IDs`);
           const { data: batchData, error: batchError } = await supabase
             .from('v4_personas')
             .select(`
@@ -734,25 +725,13 @@ serve(async (req) => {
             `)
             .in('persona_id', batchIds);
           
-          // @ts-ignore
-          (globalThis as any).__batchDebug.push({
-            batchNum: i / batchSize + 1,
-            requestedIds: batchIds.length,
-            returnedCount: batchData?.length || 0,
-            error: batchError?.message || null,
-            sampleIds: batchIds.slice(0, 2)
-          });
-          
           if (batchError) {
             console.error(`[smart-acp-search-v2] Batch error: ${batchError.message}`);
             continue;
           }
-          console.log(`[smart-acp-search-v2] Batch ${i / batchSize + 1} returned ${batchData?.length || 0} personas`);
           dbResults.push(...(batchData || []));
         }
-        console.log(`[smart-acp-search-v2] Total fetched: ${dbResults.length}`);
-      } else {
-        console.log(`[smart-acp-search-v2] No matching IDs from RPC`);
+        console.log(`[smart-acp-search-v2] Fetched ${dbResults.length} personas from ${matchingIds.length} matching IDs`);
       }
     } else {
       // Standard query path (no BMI/health conditions filtering needed)
@@ -793,10 +772,6 @@ serve(async (req) => {
     // Step 5: Check if we have results
     if (filtered.length === 0) {
       const duration = Date.now() - startTime;
-      // @ts-ignore - debug variable
-      const debugMatchingIds = (globalThis as any).__debugMatchingIds || [];
-      // @ts-ignore
-      const batchDebug = (globalThis as any).__batchDebug || [];
       return new Response(
         JSON.stringify({
           success: false,
@@ -806,8 +781,7 @@ serve(async (req) => {
           parsed_criteria: criteria,
           personas: [],
           duration_ms: duration,
-          reason: `No personas match. rpcIdsCount=${debugMatchingIds.length}, dbResults=${dbResults?.length || 0}`,
-          _debug: { batchDebug, sampleIds: debugMatchingIds.slice(0, 5) }
+          reason: `No personas match the specified criteria`,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
