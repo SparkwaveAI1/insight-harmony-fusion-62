@@ -666,25 +666,29 @@ serve(async (req) => {
     
     if (needsHealthRpc) {
       // Use unified health conditions RPC (handles BMI + health conditions at DB level)
-      console.log(`[smart-acp-search-v2] Using health RPC: bmi_min=${criteria.bmi_min}, bmi_max=${criteria.bmi_max}, conditions=${criteria.health_conditions?.join(',')}`);
-      const idsResult = await supabase.rpc('get_health_conditions_filtered_persona_ids', {
+      const rpcParams = {
         p_conditions: criteria.health_conditions?.length ? criteria.health_conditions : null,
-        p_bmi_min: criteria.bmi_min || null,
-        p_bmi_max: criteria.bmi_max || null,
-        p_age_min: criteria.age_min || null,
-        p_age_max: criteria.age_max || null,
+        p_bmi_min: criteria.bmi_min ?? null,
+        p_bmi_max: criteria.bmi_max ?? null,
+        p_age_min: criteria.age_min ?? null,
+        p_age_max: criteria.age_max ?? null,
         p_gender: criteria.gender || null,
         p_states: criteria.states?.length ? criteria.states : null,
         p_country: criteria.country || null,
         p_limit: 3000
-      });
+      };
+      console.log(`[smart-acp-search-v2] Using health RPC with params:`, JSON.stringify(rpcParams));
+      const idsResult = await supabase.rpc('get_health_conditions_filtered_persona_ids', rpcParams);
+      
+      console.log(`[smart-acp-search-v2] RPC result - error: ${idsResult.error?.message || 'none'}, data length: ${idsResult.data?.length || 0}, raw data sample: ${JSON.stringify((idsResult.data || []).slice(0, 2))}`);
       
       if (idsResult.error) {
+        console.error(`[smart-acp-search-v2] RPC error details:`, JSON.stringify(idsResult.error));
         throw new Error(`Health filter RPC failed: ${idsResult.error.message}`);
       }
       
       const matchingIds = (idsResult.data || []).map((r: any) => r.persona_id);
-      console.log(`[smart-acp-search-v2] Health RPC found ${matchingIds.length} matching IDs`);
+      console.log(`[smart-acp-search-v2] Health RPC found ${matchingIds.length} matching IDs, first 3: ${matchingIds.slice(0, 3).join(', ')}`);
       
       if (matchingIds.length > 0) {
         // Fetch lightweight details in batches (no full_profile to save memory)
