@@ -104,3 +104,7 @@ verify_jwt = false
 
 [functions.run-sql-migration]
 verify_jwt = false
+
+[functions.smart-acp-search-v2]
+verify_jwt = false
+

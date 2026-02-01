@@ -125,11 +125,12 @@ Examples:
 }
 
 function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds: string[], excludeStates?: string[]) {
+  // Light query - doesn't fetch full_profile to save memory
+  // full_profile will be fetched only for final selected personas
   let query = supabase
     .from('v4_personas')
     .select(`
       persona_id, name, user_id, is_public, created_at,
-      full_profile, conversation_summary,
       profile_image_url, profile_thumbnail_url,
       age_computed, gender_computed, occupation_computed,
       city_computed, state_region_computed, country_computed,
@@ -195,21 +196,28 @@ function buildDatabaseFilter(supabase: any, criteria: ParsedCriteria, excludeIds
 }
 
 /**
- * Filter by numeric BMI value from full_profile.health_profile.bmi
- * FIXED: Now uses actual numeric BMI instead of text category
+ * Filter by numeric BMI value
+ * Uses bmi_value from light RPC if available, otherwise falls back to full_profile
  */
 function filterByBMI(personas: any[], criteria: ParsedCriteria): any[] {
   if (!criteria.bmi_min && !criteria.bmi_max) return personas;
 
   return personas.filter(p => {
-    const healthProfile = p.full_profile?.health_profile;
-    if (!healthProfile) return false; // If no health profile, can't determine BMI
+    // Use bmi_value from light RPC if available (already extracted)
+    let bmiValue: number;
     
-    // Get numeric BMI value
-    const bmiValue = parseFloat(healthProfile.bmi);
-    if (isNaN(bmiValue)) return false; // If BMI not a valid number, exclude
+    if (p.bmi_value !== undefined && p.bmi_value !== null) {
+      // Convert to number in case it's a string from JSON
+      bmiValue = typeof p.bmi_value === 'number' ? p.bmi_value : parseFloat(p.bmi_value);
+    } else {
+      // Fallback to full_profile if bmi_value not present
+      const healthProfile = p.full_profile?.health_profile;
+      if (!healthProfile) return false;
+      bmiValue = parseFloat(healthProfile.bmi);
+    }
     
-    // Check against min/max criteria
+    if (isNaN(bmiValue)) return false;
+    
     if (criteria.bmi_min && bmiValue < criteria.bmi_min) {
       return false;
     }
@@ -517,22 +525,66 @@ serve(async (req) => {
     if (criteria.segments && criteria.segments.length > 1) {
       console.log(`[smart-acp-search-v2] Multi-segment query: ${criteria.segments.length} segments`);
       
-      const segmentDbQuery = buildDatabaseFilter(supabase, criteria, excludeIds, excludeStates);
-      const { data: segmentDbResults, error: segmentDbError } = await segmentDbQuery.limit(2500);
+      let candidatePool: any[] = [];
+      const segmentNeedsHealthRpc = criteria.bmi_min || criteria.bmi_max || 
+        (criteria.health_conditions && criteria.health_conditions.length > 0);
       
-      if (segmentDbError) {
-        throw new Error(`Database query failed: ${segmentDbError.message}`);
+      if (segmentNeedsHealthRpc) {
+        // Use unified health RPC for BMI/health conditions filtering
+        console.log(`[smart-acp-search-v2] Multi-segment using health RPC`);
+        const idsResult = await supabase.rpc('get_health_conditions_filtered_persona_ids', {
+          p_conditions: criteria.health_conditions?.length ? criteria.health_conditions : null,
+          p_bmi_min: criteria.bmi_min || null,
+          p_bmi_max: criteria.bmi_max || null,
+          p_age_min: criteria.age_min || null,
+          p_age_max: criteria.age_max || null,
+          p_gender: criteria.gender || null,
+          p_states: criteria.states?.length ? criteria.states : null,
+          p_country: criteria.country || null,
+          p_limit: 3000
+        });
+        
+        if (idsResult.error) {
+          throw new Error(`Health filter RPC failed: ${idsResult.error.message}`);
+        }
+        
+        const matchingIds = (idsResult.data || []).map((r: any) => r.persona_id);
+        console.log(`[smart-acp-search-v2] Multi-segment health RPC found ${matchingIds.length} matching IDs`);
+        
+        if (matchingIds.length > 0) {
+          const batchSize = 500;
+          for (let i = 0; i < matchingIds.length && candidatePool.length < 3000; i += batchSize) {
+            const batchIds = matchingIds.slice(i, i + batchSize);
+            const { data: batchData, error: batchError } = await supabase
+              .from('v4_personas')
+              .select(`
+                persona_id, name, user_id, is_public, created_at,
+                profile_image_url, profile_thumbnail_url,
+                age_computed, gender_computed, occupation_computed,
+                city_computed, state_region_computed, country_computed,
+                marital_status_computed, has_children_computed, income_bracket,
+                profile_embedding
+              `)
+              .in('persona_id', batchIds);
+            
+            if (batchError) {
+              console.error(`Batch error: ${batchError.message}`);
+              continue;
+            }
+            candidatePool.push(...(batchData || []));
+          }
+        }
+      } else {
+        const segmentDbQuery = buildDatabaseFilter(supabase, criteria, excludeIds, excludeStates);
+        const { data: segmentDbResults, error: segmentDbError } = await segmentDbQuery.limit(2500);
+        
+        if (segmentDbError) {
+          throw new Error(`Database query failed: ${segmentDbError.message}`);
+        }
+        candidatePool = segmentDbResults || [];
       }
       
-      let candidatePool = segmentDbResults || [];
-      
-      // Apply post-filters
-      if (criteria.bmi_min || criteria.bmi_max) {
-        candidatePool = filterByBMI(candidatePool, criteria);
-      }
-      if (criteria.health_conditions?.length) {
-        candidatePool = filterByHealthConditions(candidatePool, criteria.health_conditions);
-      }
+      // Apply remaining post-filters (occupation and income)
       if (criteria.occupation_keywords?.length) {
         candidatePool = filterByOccupation(candidatePool, criteria.occupation_keywords);
       }
@@ -605,14 +657,18 @@ serve(async (req) => {
     }
 
     // Step 3: Build and execute database query with hard filters
-    // Use RPC for BMI filtering (much more efficient - filters at DB level)
+    // Use RPC for BMI/health conditions filtering (much more efficient - filters at DB level)
     let dbResults: any[] = [];
     let dbError: any = null;
     
-    if (criteria.bmi_min || criteria.bmi_max) {
-      // Use the LIGHT RPC function for BMI filtering - no full_profile to save memory
-      console.log(`[smart-acp-search-v2] Using RPC (light) for BMI filter: min=${criteria.bmi_min}, max=${criteria.bmi_max}`);
-      const rpcResult = await supabase.rpc('search_personas_with_bmi_light', {
+    const needsHealthRpc = criteria.bmi_min || criteria.bmi_max || 
+      (criteria.health_conditions && criteria.health_conditions.length > 0);
+    
+    if (needsHealthRpc) {
+      // Use unified health conditions RPC (handles BMI + health conditions at DB level)
+      console.log(`[smart-acp-search-v2] Using health RPC: bmi_min=${criteria.bmi_min}, bmi_max=${criteria.bmi_max}, conditions=${criteria.health_conditions?.join(',')}`);
+      const idsResult = await supabase.rpc('get_health_conditions_filtered_persona_ids', {
+        p_conditions: criteria.health_conditions?.length ? criteria.health_conditions : null,
         p_bmi_min: criteria.bmi_min || null,
         p_bmi_max: criteria.bmi_max || null,
         p_age_min: criteria.age_min || null,
@@ -622,10 +678,41 @@ serve(async (req) => {
         p_country: criteria.country || null,
         p_limit: 3000
       });
-      dbResults = rpcResult.data || [];
-      dbError = rpcResult.error;
+      
+      if (idsResult.error) {
+        throw new Error(`Health filter RPC failed: ${idsResult.error.message}`);
+      }
+      
+      const matchingIds = (idsResult.data || []).map((r: any) => r.persona_id);
+      console.log(`[smart-acp-search-v2] Health RPC found ${matchingIds.length} matching IDs`);
+      
+      if (matchingIds.length > 0) {
+        // Fetch lightweight details in batches (no full_profile to save memory)
+        // full_profile is fetched only for final selected personas
+        const batchSize = 500;
+        for (let i = 0; i < matchingIds.length && dbResults.length < 3000; i += batchSize) {
+          const batchIds = matchingIds.slice(i, i + batchSize);
+          const { data: batchData, error: batchError } = await supabase
+            .from('v4_personas')
+            .select(`
+              persona_id, name, user_id, is_public, created_at,
+              profile_image_url, profile_thumbnail_url,
+              age_computed, gender_computed, occupation_computed,
+              city_computed, state_region_computed, country_computed,
+              marital_status_computed, has_children_computed, income_bracket,
+              profile_embedding
+            `)
+            .in('persona_id', batchIds);
+          
+          if (batchError) {
+            console.error(`Batch error: ${batchError.message}`);
+            continue;
+          }
+          dbResults.push(...(batchData || []));
+        }
+      }
     } else {
-      // Standard query path (no BMI filtering needed)
+      // Standard query path (no BMI/health conditions filtering needed)
       const dbQuery = buildDatabaseFilter(supabase, criteria, excludeIds, excludeStates);
       const result = await dbQuery.limit(2000);
       dbResults = result.data || [];
@@ -641,18 +728,9 @@ serve(async (req) => {
     // Step 4: Apply post-query filters (JSONB fields)
     let filtered = dbResults || [];
     
-    // BMI filter already applied at DB level via RPC, but keep as safety check
-    if (criteria.bmi_min || criteria.bmi_max) {
-      const beforeCount = filtered.length;
-      filtered = filterByBMI(filtered, criteria);
-      console.log(`[smart-acp-search-v2] BMI filter verification: ${beforeCount} → ${filtered.length}`);
-    }
-
-    // Health conditions filter (uses chronic_conditions from JSONB)
-    if (criteria.health_conditions && criteria.health_conditions.length > 0) {
-      const beforeCount = filtered.length;
-      filtered = filterByHealthConditions(filtered, criteria.health_conditions);
-      console.log(`[smart-acp-search-v2] Health conditions filter: ${beforeCount} → ${filtered.length}`);
+    // BMI and health conditions already filtered at DB level via RPC - skip redundant filtering
+    if (needsHealthRpc) {
+      console.log(`[smart-acp-search-v2] BMI/health conditions pre-filtered at DB level: ${filtered.length} personas`);
     }
 
     // Occupation filter (RE-ENABLED - uses occupation_computed)
@@ -696,6 +774,27 @@ serve(async (req) => {
 
     // Step 7: Select diverse subset
     const selected = selectDiverse(ranked, personaCount, criteria.require_geographic_diversity ?? false);
+
+    // Step 7.5: Fetch full_profile and conversation_summary for selected personas only
+    // (Light queries don't include these to save memory during filtering)
+    const selectedIds = selected.map(p => p.persona_id);
+    if (selectedIds.length > 0) {
+      const { data: fullProfiles } = await supabase
+        .from('v4_personas')
+        .select('persona_id, full_profile, conversation_summary')
+        .in('persona_id', selectedIds);
+      
+      if (fullProfiles) {
+        const profileMap = new Map(fullProfiles.map((p: any) => [p.persona_id, p]));
+        for (const persona of selected) {
+          const full = profileMap.get(persona.persona_id);
+          if (full) {
+            persona.full_profile = full.full_profile;
+            persona.conversation_summary = full.conversation_summary;
+          }
+        }
+      }
+    }
 
     // Step 8: Format response
     const matchReason = buildMatchReason(criteria);
