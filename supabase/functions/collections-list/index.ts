@@ -107,10 +107,12 @@ serve(async (req) => {
     }
 
     // Apply search filter
+    // Note: In Supabase filter strings (.or(), .filter()), use * as wildcard, not %
+    // The client converts * to % for SQL ilike operations
     if (searchQuery.trim()) {
-      const searchPattern = `%${searchQuery.trim()}%`;
+      const searchPattern = `*${searchQuery.trim()}*`;
       query = query.or(`name.ilike.${searchPattern},description.ilike.${searchPattern}`);
-      console.log(`[COLLECTIONS] Applying search filter: ${searchQuery}`);
+      console.log(`[COLLECTIONS] Applying search filter: ${searchQuery} (pattern: ${searchPattern})`);
     }
 
     // Apply cursor pagination
