@@ -108,11 +108,13 @@ const Collections = () => {
   // No client-side filtering - search is handled server-side
   const filteredCollections = currentFeed.items;
 
-  // Single effect to handle all reset scenarios
+  // Reset the current feed when search query changes or tab switches
+  // The useCursorFeed hook uses a ref for fetchPage, so reset() will always use the latest search
   useEffect(() => {
     if (!user?.id) return;
-    // Only reset the current feed (not both feeds every time)
-    currentFeed.reset();
+    // Select the appropriate feed based on active tab and reset it
+    const feed = activeTab === 'my-collections' ? myCollectionsFeed : publicCollectionsFeed;
+    feed.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, deferredSearchQuery, activeTab]);
 
