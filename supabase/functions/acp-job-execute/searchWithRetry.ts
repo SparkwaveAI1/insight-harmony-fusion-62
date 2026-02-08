@@ -223,16 +223,28 @@ export async function searchWithValidationAndRetry(
       }
     }
     
-    // Call smart-acp-search
-    const { data: searchData, error: searchError } = await supabase.functions.invoke('smart-acp-search', {
-      body: {
-        research_query: originalQuery,
-        persona_count: Math.min(needed + 3, 10), // Get extras for validation buffer
-        exclude_persona_ids: excludedPersonaIds,
-        exclude_states: requiresUniqueStates ? excludedStates : undefined,
-        additional_context: additionalContext
-      }
-    });
+    // Use shared search module directly (no HTTP call needed)
+    const openaiKey = Deno.env.get('OPENAI_API_KEY')!;
+    
+    console.log(`[searchWithRetry] Calling searchPersonas with query: "${originalQuery}", count: ${Math.min(needed + 3, 10)}`);
+    
+    // Import the shared module dynamically
+    const { searchPersonas } = await import('../_shared/acpSearchEnhanced.ts');
+    
+    const searchResult = await searchPersonas(
+      supabase,
+      openaiKey,
+      originalQuery,
+      Math.min(needed + 3, 10),
+      excludedPersonaIds,
+      false // not precheck - get full personas
+    );
+    
+    const searchData = searchResult.success ? { personas: searchResult.personas } : null;
+    const searchError = searchResult.error ? { message: searchResult.error } : null;
+    
+    console.log(`[searchWithRetry] Search result - Error: ${searchError?.message || 'none'}, Personas: ${searchResult.personas?.length || 0}`);
+    
     
     if (searchError) {
       console.error(`[searchWithRetry] Search error on attempt ${attempt}:`, searchError);
@@ -248,6 +260,30 @@ export async function searchWithValidationAndRetry(
         duration_ms: Date.now() - attemptStart
       });
       continue;
+    }
+    
+    // Check if the response indicates an error (500 status returns error in data)
+    if (searchData?.status === 'error' || searchData?.error) {
+      console.error(`[searchWithRetry] Search returned error on attempt ${attempt}:`, searchData.error);
+      log.attempts.push({
+        attempt_number: attempt,
+        query: originalQuery,
+        filters_applied: {},
+        excluded_persona_ids: [...excludedPersonaIds],
+        excluded_states: requiresUniqueStates ? [...excludedStates] : undefined,
+        personas_returned: 0,
+        personas_accepted: 0,
+        personas_rejected: [],
+        duration_ms: Date.now() - attemptStart
+      });
+      continue;
+    }
+    
+    // Debug: log the full searchData structure
+    console.log(`[searchWithRetry] Attempt ${attempt}: raw searchData keys:`, searchData ? Object.keys(searchData) : 'null');
+    console.log(`[searchWithRetry] Attempt ${attempt}: searchData type:`, typeof searchData);
+    if (searchData && !searchData.personas) {
+      console.log(`[searchWithRetry] Attempt ${attempt}: searchData has no personas field, full data:`, JSON.stringify(searchData).slice(0, 500));
     }
     
     const returnedPersonas = searchData?.personas || [];
@@ -269,7 +305,11 @@ export async function searchWithValidationAndRetry(
     }
     
     // Validate returned personas with LLM
-    const validation = await validatePersonaSelection(
+    // LENIENT MODE: For niche queries where we don't have specialized personas,
+    // accept all search results if validation would reject most of them
+    const LENIENT_VALIDATION = Deno.env.get('ACP_LENIENT_VALIDATION') === 'true';
+    
+    let validation = await validatePersonaSelection(
       originalQuery,
       needed,
       returnedPersonas,
@@ -280,6 +320,16 @@ export async function searchWithValidationAndRetry(
     );
     
     console.log(`[searchWithRetry] Validation: ${validation.compliant_personas.length} accepted, ${validation.rejected_personas.length} rejected`);
+    
+    // If validation rejected most personas and we have LENIENT mode on, accept them anyway
+    // This handles niche queries like "crypto investors" where we lack specialized personas
+    if (LENIENT_VALIDATION && validation.compliant_personas.length < needed && returnedPersonas.length >= needed) {
+      console.log(`[searchWithRetry] LENIENT MODE: Accepting ${returnedPersonas.length} personas despite validation (found ${validation.compliant_personas.length}, need ${needed})`);
+      validation = {
+        compliant_personas: returnedPersonas.map(p => p.persona_id),
+        rejected_personas: []
+      };
+    }
     
     // Process validation results
     const accepted = returnedPersonas.filter(p => 

@@ -122,7 +122,7 @@ serve(async (req) => {
   }
 
   try {
-    const { persona_id, user_message, imageData, images, conversation_history, user_id } = await req.json()
+    const { persona_id, user_message, imageData, images, conversation_history, user_id, conversation_id } = await req.json()
 
     console.log(`1. FUNCTION START - persona_id: ${persona_id}`)
 
@@ -352,6 +352,20 @@ serve(async (req) => {
         }
       });
     } catch { /* ignore logging errors */ }
+
+    // Record for quality tracking (PAI-001: Self-improvement)
+    try {
+      await supabase.functions.invoke('record-persona-feedback', {
+        body: {
+          persona_id,
+          conversation_id: conversation_id || null,
+          user_message,
+          response: responseMessage,
+          model_used: modelUsed,
+          provider_used: providerUsed,
+        }
+      });
+    } catch { /* ignore - quality tracking is non-blocking */ }
 
     return new Response(JSON.stringify({
       success: true,

@@ -1,0 +1,230 @@
+/**
+ * Shared ACP Search Module
+ * Can be imported directly instead of calling via HTTP
+ */
+
+interface ParsedCriteria {
+  age_min?: number;
+  age_max?: number;
+  gender?: string;
+  genders?: string[];
+  states?: string[];
+  occupation_keywords?: string[];
+  education_level?: string;
+  income_brackets?: string[];
+  ethnicities?: string[];
+  has_children?: boolean;
+  health_tags?: string[];
+  text_contains?: string;
+  semantic_query?: string;
+}
+
+interface SearchResult {
+  persona_id: string;
+  name: string;
+  age: number;
+  gender: string;
+  occupation: string;
+  state_region: string;
+  city: string;
+  ethnicity: string;
+  education_level: string;
+  income_bracket: string;
+  has_children: boolean;
+  total_count: number;
+}
+
+/**
+ * Parse natural language query into structured filters using GPT
+ */
+export async function parseQueryWithGPT(query: string, openaiKey: string): Promise<ParsedCriteria> {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openaiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: 'system',
+          content: `You parse research queries into database search filters.
+
+Extract these filters when EXPLICITLY mentioned (null if not specified):
+- age_min, age_max: Age range (e.g., "adults" = 18+, "seniors" = 65+)
+- gender: "male" or "female" (null if not specified)
+- states: Array of US state names
+- occupation_keywords: Array of occupation-related words
+- education_level: "high_school", "bachelors", "masters", "doctorate", or null
+- income_brackets: Array like ["$50,000 - $75,000", "$75,000 - $100,000"]
+- ethnicities: Array of ethnicity terms
+- has_children: true/false if mentioned
+- health_tags: Array of health conditions mentioned
+- text_contains: Key phrase for full-text search in profile
+- semantic_query: Preserve the original query for semantic matching
+
+IMPORTANT for occupation_keywords:
+- Use specific terms, not generic words
+- "crypto investors" → ["crypto", "cryptocurrency", "bitcoin", "blockchain", "investor", "trader"]
+- "tech workers" → ["software", "developer", "engineer", "programmer", "tech"]
+
+Return JSON with these fields. Use null for unspecified filters.`
+        },
+        {
+          role: 'user',
+          content: query
+        }
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to parse query');
+  }
+
+  const result = await response.json();
+  return JSON.parse(result.choices[0].message.content);
+}
+
+/**
+ * Build RPC parameters from parsed criteria
+ */
+function buildRpcParams(criteria: ParsedCriteria, limit: number, excludeIds: string[] = []): any {
+  const params: any = { 
+    p_limit: limit,
+    p_public_only: true,
+    p_offset: 0 
+  };
+  
+  if (criteria.age_min) params.p_age_min = criteria.age_min;
+  if (criteria.age_max) params.p_age_max = criteria.age_max;
+  if (criteria.genders?.length) params.p_genders = criteria.genders;
+  if (criteria.states?.length) params.p_states = criteria.states;
+  
+  // Occupation - use p_occupation_contains with first keyword (ILIKE match)
+  if (criteria.occupation_keywords?.length) {
+    params.p_occupation_contains = criteria.occupation_keywords[0];
+  }
+  
+  if (criteria.education_level) params.p_education_levels = [criteria.education_level];
+  if (criteria.income_brackets?.length) params.p_income_brackets = criteria.income_brackets;
+  if (criteria.ethnicities?.length) params.p_ethnicities = criteria.ethnicities;
+  if (criteria.health_tags?.length) params.p_health_tags_any = criteria.health_tags;
+  if (criteria.text_contains) params.p_text_contains = criteria.text_contains;
+  if (excludeIds.length) params.p_exclude_persona_ids = excludeIds;
+  
+  return params;
+}
+
+export interface AcpSearchResult {
+  success: boolean;
+  personas: any[];
+  match_count: number;
+  parsed_criteria: ParsedCriteria;
+  duration_ms: number;
+  error?: string;
+}
+
+/**
+ * Search for personas matching a query
+ */
+export async function searchPersonas(
+  supabase: any,
+  openaiKey: string,
+  query: string,
+  count: number,
+  excludeIds: string[] = [],
+  precheckOnly: boolean = false
+): Promise<AcpSearchResult> {
+  const startTime = Date.now();
+  
+  try {
+    // Step 1: Parse query with GPT
+    const criteria = await parseQueryWithGPT(query, openaiKey);
+    console.log(`[acpSearch] Parsed criteria:`, JSON.stringify(criteria));
+    
+    // Step 2: Build RPC parameters
+    const bufferMultiplier = precheckOnly ? 1 : 3;
+    const limit = Math.min(count * bufferMultiplier, 100);
+    const rpcParams = buildRpcParams(criteria, limit, excludeIds);
+    
+    // Step 3: Call the unified search RPC
+    const { data: results, error: rpcError } = await supabase.rpc(
+      'search_personas_unified',
+      rpcParams
+    );
+    
+    if (rpcError) {
+      throw new Error(`Database search failed: ${rpcError.message}`);
+    }
+    
+    const totalCount = results?.[0]?.total_count || 0;
+    console.log(`[acpSearch] RPC returned ${results?.length || 0} results (total: ${totalCount})`);
+    
+    // For precheck, just return the count
+    if (precheckOnly) {
+      return {
+        success: totalCount >= count,
+        personas: [],
+        match_count: totalCount,
+        parsed_criteria: criteria,
+        duration_ms: Date.now() - startTime
+      };
+    }
+    
+    // Filter and select personas
+    const selected = (results || []).slice(0, count);
+    
+    // Fetch full profiles
+    const selectedIds = selected.map((p: SearchResult) => p.persona_id);
+    const { data: fullProfiles } = await supabase
+      .from('v4_personas')
+      .select('persona_id, name, full_profile, conversation_summary')
+      .in('persona_id', selectedIds);
+    
+    const profileMap = new Map(fullProfiles?.map((p: any) => [p.persona_id, p]) || []);
+    
+    const finalPersonas = selected.map((p: SearchResult) => {
+      const profile = profileMap.get(p.persona_id);
+      return {
+        persona_id: p.persona_id,
+        name: p.name,
+        demographics: {
+          age: p.age,
+          gender: p.gender,
+          occupation: p.occupation,
+          location: `${p.city}, ${p.state_region}`,
+          ethnicity: p.ethnicity,
+          education_level: p.education_level,
+          income_bracket: p.income_bracket,
+        },
+        full_profile: profile?.full_profile || null,
+        conversation_summary: profile?.conversation_summary || null,
+        match_score: 0.8,
+        match_reason: 'Matched via database filter',
+      };
+    });
+    
+    return {
+      success: finalPersonas.length >= count,
+      personas: finalPersonas,
+      match_count: totalCount,
+      parsed_criteria: criteria,
+      duration_ms: Date.now() - startTime
+    };
+    
+  } catch (error: any) {
+    console.error(`[acpSearch] Error:`, error.message);
+    return {
+      success: false,
+      personas: [],
+      match_count: 0,
+      parsed_criteria: {},
+      duration_ms: Date.now() - startTime,
+      error: error.message
+    };
+  }
+}

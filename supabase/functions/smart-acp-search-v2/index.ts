@@ -25,6 +25,166 @@ interface ParsedCriteria {
   income_level?: 'low' | 'medium' | 'high' | 'very_high';
   relationship_status?: string;
   has_children?: boolean;
+  education_level?: 'high_school' | 'some_college' | 'bachelors' | 'masters' | 'doctorate' | 'none';
+  life_situations?: string[];
+  // Round 2 additions
+  smoking_status?: 'current' | 'former' | 'never';
+  ethnicity?: string;
+  children_age_max?: number; // For "families with children under X"
+}
+
+/**
+ * Criteria classification for progressive filter relaxation.
+ * 
+ * HARD criteria (demographics/geographic): Must match, users specifically need these.
+ * - age_min, age_max: Often legally required for research panels
+ * - gender: Research often requires specific gender
+ * - states, country, city: User specifically wants that location
+ * 
+ * SOFT criteria (lifestyle/preferences): Can be relaxed if results < minimum threshold.
+ * - bmi_min, bmi_max: Health metric, can relax range
+ * - occupation_keywords: Nice-to-have, not essential
+ * - income_level: Can relax bracket boundaries
+ * - relationship_status: Often nice-to-have
+ * - has_children: Unless researching parents specifically
+ * - education_level: Can relax education requirements
+ * - life_situations: Can relax situational requirements
+ * - health_conditions: Can relax condition matching
+ * 
+ * Relaxation order (most expendable first):
+ * 1. occupation_keywords - most flexible, often just adds context
+ * 2. life_situations - situational, often inferred
+ * 3. education_level - often nice-to-have
+ * 4. relationship_status - often secondary criteria
+ * 5. income_level - can find similar socioeconomic profiles
+ * 6. bmi_min/bmi_max - can widen the range
+ * 7. has_children - unless explicitly required for parenting research
+ * 8. health_conditions - last to relax, often the core research focus
+ */
+
+// Soft criteria in relaxation order (first = most expendable)
+const SOFT_CRITERIA_RELAXATION_ORDER: string[] = [
+  'occupation_keywords',
+  'life_situations', 
+  'education_level',
+  'relationship_status',
+  'income_level',
+  'bmi_min',
+  'bmi_max',
+  'has_children',
+  'smoking_status',
+  'ethnicity',
+  'children_age_max',
+  'health_conditions'
+];
+
+// Simple object types for filter tracking
+interface ActiveFilters {
+  hard: { [key: string]: any };
+  soft: { [key: string]: any };
+}
+
+/**
+ * Classify criteria into hard vs soft filters
+ */
+function classifyCriteria(criteria: ParsedCriteria): ActiveFilters {
+  const active: ActiveFilters = { hard: {}, soft: {} };
+  
+  // Hard criteria (demographics/geographic)
+  if (criteria.age_min !== undefined && criteria.age_min !== null) {
+    active.hard['age_min'] = criteria.age_min;
+  }
+  if (criteria.age_max !== undefined && criteria.age_max !== null) {
+    active.hard['age_max'] = criteria.age_max;
+  }
+  if (criteria.gender) {
+    active.hard['gender'] = criteria.gender;
+  }
+  if (criteria.states && criteria.states.length > 0) {
+    active.hard['states'] = criteria.states;
+  }
+  if (criteria.country) {
+    active.hard['country'] = criteria.country;
+  }
+  if (criteria.city) {
+    active.hard['city'] = criteria.city;
+  }
+  
+  // Soft criteria (lifestyle/preferences)
+  if (criteria.occupation_keywords && criteria.occupation_keywords.length > 0) {
+    active.soft['occupation_keywords'] = criteria.occupation_keywords;
+  }
+  if (criteria.life_situations && criteria.life_situations.length > 0) {
+    active.soft['life_situations'] = criteria.life_situations;
+  }
+  if (criteria.education_level) {
+    active.soft['education_level'] = criteria.education_level;
+  }
+  if (criteria.relationship_status) {
+    active.soft['relationship_status'] = criteria.relationship_status;
+  }
+  if (criteria.income_level) {
+    active.soft['income_level'] = criteria.income_level;
+  }
+  if (criteria.bmi_min !== undefined && criteria.bmi_min !== null) {
+    active.soft['bmi_min'] = criteria.bmi_min;
+  }
+  if (criteria.bmi_max !== undefined && criteria.bmi_max !== null) {
+    active.soft['bmi_max'] = criteria.bmi_max;
+  }
+  if (criteria.has_children !== undefined && criteria.has_children !== null) {
+    active.soft['has_children'] = criteria.has_children;
+  }
+  if (criteria.health_conditions && criteria.health_conditions.length > 0) {
+    active.soft['health_conditions'] = criteria.health_conditions;
+  }
+  // Round 2 additions
+  if (criteria.smoking_status) {
+    active.soft['smoking_status'] = criteria.smoking_status;
+  }
+  if (criteria.ethnicity) {
+    active.soft['ethnicity'] = criteria.ethnicity;
+  }
+  if (criteria.children_age_max !== undefined && criteria.children_age_max !== null) {
+    active.soft['children_age_max'] = criteria.children_age_max;
+  }
+  
+  return active;
+}
+
+/**
+ * Get the next soft criterion to relax based on relaxation order
+ */
+function getNextCriterionToRelax(activeFilters: ActiveFilters): string | null {
+  for (const key of SOFT_CRITERIA_RELAXATION_ORDER) {
+    if (activeFilters.soft[key] !== undefined) {
+      return key;
+    }
+  }
+  return null;
+}
+
+/**
+ * Create a relaxed copy of criteria with specified soft criterion removed
+ */
+function relaxCriteria(criteria: ParsedCriteria, criterionToRemove: string): ParsedCriteria {
+  const relaxed: ParsedCriteria = { ...criteria };
+  
+  // Set to undefined to remove from criteria
+  if (criterionToRemove === 'occupation_keywords') relaxed.occupation_keywords = undefined;
+  else if (criterionToRemove === 'life_situations') relaxed.life_situations = undefined;
+  else if (criterionToRemove === 'education_level') relaxed.education_level = undefined;
+  else if (criterionToRemove === 'relationship_status') relaxed.relationship_status = undefined;
+  else if (criterionToRemove === 'income_level') relaxed.income_level = undefined;
+  else if (criterionToRemove === 'bmi_min') relaxed.bmi_min = undefined;
+  else if (criterionToRemove === 'bmi_max') relaxed.bmi_max = undefined;
+  else if (criterionToRemove === 'has_children') relaxed.has_children = undefined;
+  else if (criterionToRemove === 'health_conditions') relaxed.health_conditions = undefined;
+  else if (criterionToRemove === 'smoking_status') relaxed.smoking_status = undefined;
+  else if (criterionToRemove === 'ethnicity') relaxed.ethnicity = undefined;
+  else if (criterionToRemove === 'children_age_max') relaxed.children_age_max = undefined;
+  
+  return relaxed;
 }
 
 interface SmartSearchRequest {
@@ -78,6 +238,51 @@ NEW FILTERS - Extract these as well:
 - has_children: When query mentions parental status:
   - "parents", "mothers", "fathers", "with kids", "have children" → true
   - "childless", "no children", "child-free" → false
+- education_level: When query mentions education:
+  IMPORTANT: "without college", "no college degree", "no degree" means they HAVE a high school diploma but NOT a college degree → use "high_school" (NOT "none")
+  - "high school", "high school diploma", "HS diploma", "GED" → "high_school"
+  - "no college", "without college", "without college degree", "without college degrees", "no degree", "no college degree", "non-college educated", "didn't go to college", "never went to college", "didn't attend college" → "high_school" (they have HS but not college)
+  - "blue-collar", "working class" (implies no college) → "high_school"
+  - "some college", "attended college", "dropped out of college" → "some_college"
+  - "college educated", "bachelor's", "college degree", "college graduate", "with degree" → "bachelors"
+  - "master's", "graduate degree", "grad school", "advanced degree" → "masters"
+  - "PhD", "doctorate", "doctoral" → "doctorate"
+  - "no formal education", "never went to school", "illiterate", "no schooling" → "none" (ONLY use for truly uneducated, NOT for "no college")
+- smoking_status: When query mentions smoking/tobacco use:
+  - "smoker", "smokes", "who smoke", "smoking" → "current"
+  - "non-smoker", "doesn't smoke", "never smoked" → "never"
+  - "former smoker", "quit smoking", "ex-smoker" → "former"
+- ethnicity: When query explicitly mentions race/ethnicity:
+  - "Black", "African American", "African-American" → "Black"
+  - "Hispanic", "Latino", "Latina", "Mexican", "Puerto Rican" → "Hispanic"
+  - "Asian", "Chinese", "Japanese", "Korean", "Vietnamese", "Indian" → "Asian"
+  - "White", "Caucasian" → "White"
+  - Only set when EXPLICITLY mentioned, never infer from context
+- life_situations: Array of applicable life situations:
+  - "caregiver", "caring for", "taking care of elderly" → include "caregiver"
+  - "student", "studying", "in school" → include "student"
+  - "looking for work", "unemployed", "job hunting" → include "job_seeker"
+  - "new parent", "new mom", "new dad", "just had a baby" → include "new_parent"
+  - "retired", "retiree" → include "retiree"
+  - "divorced" → include "divorced"
+  - "widowed", "widow", "widower" → include "widowed"
+
+INFERENCE RULES (apply automatically):
+- "mothers", "moms" → gender: "female", has_children: true
+- "fathers", "dads" → gender: "male", has_children: true
+- "retirees", "retired" → age_min: 65
+- "teenagers", "teens" → age_min: 13, age_max: 19
+- "elderly", "seniors" → age_min: 65
+- "young adults" → age_min: 18, age_max: 30
+- "middle-aged" → age_min: 40, age_max: 60
+- "college students" → age_min: 18, age_max: 25, life_situations: ["student"]
+
+IMPORTANT RULES:
+- "families with children under X" → has_children: true, children_age_max: X, DO NOT set age_max (parent ages vary)
+- "working full-time" is too generic for occupation_keywords - only use specific job types
+- CRITICAL: "without college degree", "no college", "no degree" → education_level: "high_school" (they HAVE high school but NOT college)
+- Only use education_level: "none" for "no formal education", "never went to school" (truly uneducated)
+- "advanced degrees" or "masters or PhD" → education_level: "masters" (includes doctorate)
 
 Respond with JSON:
 {
@@ -95,19 +300,32 @@ Respond with JSON:
   "income_level": "low" | "medium" | "high" | "very_high" | null,
   "relationship_status": string | null,
   "has_children": boolean | null,
+  "children_age_max": number | null,
+  "education_level": "high_school" | "some_college" | "bachelors" | "masters" | "doctorate" | "none" | null,
+  "life_situations": ["caregiver", "student", "job_seeker", "new_parent", "retiree", "divorced", "widowed"] | null,
+  "smoking_status": "current" | "former" | "never" | null,
+  "ethnicity": string | null,
   "semantic_query": "full descriptive query for semantic matching",
   "segments": ["segment 1", "segment 2"] | null
 }
 
 Examples:
-- "overweight adults from California" → {"states": ["California"], "country": "United States", "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health", "segments": null}
-- "people with diabetes" → {"health_conditions": ["diabetes"], "semantic_query": "people with diabetes health management", "segments": null}
-- "wealthy divorced women" → {"gender": "female", "income_level": "high", "relationship_status": "divorced", "semantic_query": "wealthy divorced women lifestyle", "segments": null}
-- "working parents with anxiety" → {"has_children": true, "health_conditions": ["anxiety"], "semantic_query": "working parents anxiety stress mental health", "segments": null}
-- "low income seniors with heart disease" → {"age_min": 65, "income_level": "low", "health_conditions": ["heart", "cardiac", "cardiovascular"], "semantic_query": "low income seniors heart disease health", "segments": null}
-- "single mothers in Texas" → {"states": ["Texas"], "country": "United States", "gender": "female", "has_children": true, "relationship_status": "single", "semantic_query": "single mothers parenting lifestyle", "segments": null}
-- "tech workers" → {"occupation_keywords": ["tech", "software", "engineer", "developer", "IT", "programmer"], "semantic_query": "technology workers software engineers", "segments": null}
-- "obese adults" → {"bmi_min": 30, "age_min": 18, "semantic_query": "obese adults weight health", "segments": null}`
+- "overweight adults from California" → {"states": ["California"], "country": "United States", "bmi_min": 25, "age_min": 18, "semantic_query": "overweight adults lifestyle health"}
+- "people with diabetes" → {"health_conditions": ["diabetes"], "semantic_query": "people with diabetes health management"}
+- "wealthy divorced women" → {"gender": "female", "income_level": "high", "relationship_status": "divorced", "semantic_query": "wealthy divorced women lifestyle"}
+- "working parents with anxiety" → {"has_children": true, "health_conditions": ["anxiety"], "semantic_query": "working parents anxiety stress mental health"}
+- "low income seniors with heart disease" → {"age_min": 65, "income_level": "low", "health_conditions": ["heart", "cardiac", "cardiovascular"], "semantic_query": "low income seniors heart disease health"}
+- "single mothers in Texas" → {"states": ["Texas"], "country": "United States", "gender": "female", "has_children": true, "relationship_status": "single", "semantic_query": "single mothers parenting lifestyle"}
+- "tech workers" → {"occupation_keywords": ["tech", "software", "engineer", "developer", "IT", "programmer"], "semantic_query": "technology workers software engineers"}
+- "obese adults who smoke" → {"bmi_min": 30, "age_min": 18, "smoking_status": "current", "semantic_query": "obese smokers health lifestyle"}
+- "mothers with college degrees" → {"gender": "female", "has_children": true, "education_level": "bachelors", "semantic_query": "educated mothers parenting lifestyle"}
+- "adults without college degrees ages 30-50" → {"age_min": 30, "age_max": 50, "education_level": "high_school", "semantic_query": "adults without college education working class"} (NOTE: "without college" = "high_school", NOT "none")
+- "parents with no degree" → {"has_children": true, "education_level": "high_school", "semantic_query": "parents without college education"} (no degree = high_school)
+- "Black men ages 50-70 with heart conditions" → {"gender": "male", "age_min": 50, "age_max": 70, "ethnicity": "Black", "health_conditions": ["heart", "cardiac"], "semantic_query": "Black men heart health"}
+- "low-income Asian families with children under 5" → {"income_level": "low", "ethnicity": "Asian", "has_children": true, "children_age_max": 5, "semantic_query": "low income Asian families young children parenting"}
+- "divorced women ages 35-55 working full-time" → {"gender": "female", "age_min": 35, "age_max": 55, "relationship_status": "divorced", "semantic_query": "divorced working women career lifestyle"}
+- "high school graduates working blue-collar jobs" → {"education_level": "high_school", "occupation_keywords": ["construction", "manufacturing", "warehouse", "mechanic", "trades", "labor"], "semantic_query": "blue collar workers manual labor high school education"}
+- "professionals with advanced degrees" → {"education_level": "masters", "semantic_query": "professionals with masters or PhD advanced education"}`
         },
         { role: 'user', content: query }
       ],
@@ -230,8 +448,8 @@ function filterByBMI(personas: any[], criteria: ParsedCriteria): any[] {
 }
 
 /**
- * NEW: Filter by health conditions from full_profile.health_profile.chronic_conditions
- * Uses ILIKE-style matching on the JSON array of conditions
+ * Filter by health conditions from BOTH chronic_conditions AND mental_health_flags
+ * Uses ILIKE-style matching on the JSON arrays
  */
 function filterByHealthConditions(personas: any[], conditions: string[]): any[] {
   if (!conditions || conditions.length === 0) return personas;
@@ -240,15 +458,17 @@ function filterByHealthConditions(personas: any[], conditions: string[]): any[] 
     const healthProfile = p.full_profile?.health_profile;
     if (!healthProfile) return false;
     
-    // chronic_conditions is a JSON array of strings
-    const chronicConditions = healthProfile.chronic_conditions;
-    if (!Array.isArray(chronicConditions) || chronicConditions.length === 0) {
-      return false;
-    }
+    // Combine chronic_conditions AND mental_health_flags
+    const chronicConditions = Array.isArray(healthProfile.chronic_conditions) 
+      ? healthProfile.chronic_conditions : [];
+    const mentalHealthFlags = Array.isArray(healthProfile.mental_health_flags) 
+      ? healthProfile.mental_health_flags : [];
     
-    // Convert all conditions to lowercase for matching
-    const conditionsLower = chronicConditions.map((c: string) => c.toLowerCase());
-    const conditionsStr = conditionsLower.join(' ');
+    const allConditions = [...chronicConditions, ...mentalHealthFlags];
+    if (allConditions.length === 0) return false;
+    
+    // Convert all to lowercase for matching
+    const conditionsStr = allConditions.map((c: string) => c.toLowerCase()).join(' ');
     
     // Check if ANY of the search keywords match ANY of the conditions
     return conditions.some(keyword => {
@@ -320,6 +540,210 @@ function filterByOccupation(personas: any[], keywords: string[]): any[] {
       const words = keyword.toLowerCase().split(/\s+/).filter(w => w.length > 2);
       return words.some(word => occupation.includes(word));
     });
+  });
+}
+
+/**
+ * Filter by education level
+ * Maps various database education strings to enum categories
+ */
+function filterByEducation(personas: any[], educationLevel: string): any[] {
+  if (!educationLevel) return personas;
+
+  return personas.filter(p => {
+    const eduRaw = (p.full_profile?.identity?.education_level || '').toLowerCase();
+    if (!eduRaw) return false;
+
+    switch (educationLevel) {
+      case 'none':
+        // No formal education
+        return eduRaw.includes('no formal') || eduRaw.includes('none') || eduRaw === '';
+      case 'high_school':
+        // High school diploma, GED, no college
+        return eduRaw.includes('high school') || eduRaw.includes('ged') || 
+               eduRaw.includes('secondary') || eduRaw.includes('diploma');
+      case 'some_college':
+        // Some college but no degree
+        return eduRaw.includes('some college') || eduRaw.includes('no degree') ||
+               eduRaw.includes('associate') || eduRaw.includes('vocational') ||
+               eduRaw.includes('trade school') || eduRaw.includes('certificate');
+      case 'bachelors':
+        // Bachelor's degree
+        return (eduRaw.includes('bachelor') || eduRaw.includes('b.a.') || 
+                eduRaw.includes('b.s.') || eduRaw.includes('bs in') || 
+                eduRaw.includes('ba in') || eduRaw.includes('college degree')) &&
+               !eduRaw.includes('master') && !eduRaw.includes('phd') && 
+               !eduRaw.includes('doctorate') && !eduRaw.includes('mba') &&
+               !eduRaw.includes('juris');
+      case 'masters':
+        // Master's degree, MBA, JD
+        return eduRaw.includes('master') || eduRaw.includes('mba') || 
+               eduRaw.includes('m.a.') || eduRaw.includes('m.s.') ||
+               eduRaw.includes('juris') || eduRaw.includes('j.d.');
+      case 'doctorate':
+        // PhD, MD, doctorate
+        return eduRaw.includes('phd') || eduRaw.includes('doctorate') || 
+               eduRaw.includes('doctoral') || eduRaw.includes('m.d.') ||
+               eduRaw.includes('doctor of');
+      default:
+        return true;
+    }
+  });
+}
+
+/**
+ * Filter by life situations
+ * Infers from various profile fields
+ */
+function filterByLifeSituations(personas: any[], situations: string[]): any[] {
+  if (!situations || situations.length === 0) return personas;
+
+  return personas.filter(p => {
+    const profile = p.full_profile || {};
+    const identity = profile.identity || {};
+    const relationships = profile.relationships || {};
+    const dailyLife = profile.daily_life || {};
+    
+    const occupation = (identity.occupation || '').toLowerCase();
+    const relationshipStatus = (identity.relationship_status || '').toLowerCase();
+    const caregivingRoles = (relationships.caregiving_roles || []).map((r: string) => r.toLowerCase());
+    const householdStatus = (relationships.household?.status || '').toLowerCase();
+    const age = identity.age || p.age_computed || 0;
+    
+    // Build a list of detected situations for this persona
+    const detectedSituations: string[] = [];
+    
+    // Caregiver detection
+    if (caregivingRoles.length > 0 || 
+        householdStatus.includes('caregiv') || 
+        occupation.includes('caregiv')) {
+      detectedSituations.push('caregiver');
+    }
+    
+    // Student detection
+    if (occupation.includes('student') || 
+        occupation.includes('studying') ||
+        occupation.includes('in school')) {
+      detectedSituations.push('student');
+    }
+    
+    // Job seeker detection
+    if (occupation.includes('unemployed') || 
+        occupation.includes('job seek') ||
+        occupation.includes('looking for work') ||
+        occupation.includes('between jobs')) {
+      detectedSituations.push('job_seeker');
+    }
+    
+    // New parent detection (has children + young or recent keywords)
+    if ((identity.dependents > 0 || p.has_children_computed) && 
+        (householdStatus.includes('new') || householdStatus.includes('baby') ||
+         householdStatus.includes('infant') || householdStatus.includes('newborn'))) {
+      detectedSituations.push('new_parent');
+    }
+    
+    // Retiree detection
+    if (occupation.includes('retire') || age >= 65) {
+      detectedSituations.push('retiree');
+    }
+    
+    // Divorced detection
+    if (relationshipStatus.includes('divorce')) {
+      detectedSituations.push('divorced');
+    }
+    
+    // Widowed detection
+    if (relationshipStatus.includes('widow')) {
+      detectedSituations.push('widowed');
+    }
+    
+    // Check if ANY requested situation matches ANY detected situation
+    return situations.some(s => detectedSituations.includes(s));
+  });
+}
+
+/**
+ * Filter by smoking status
+ * Checks substance_use.cigarettes field in health_profile
+ */
+function filterBySmokingStatus(personas: any[], status: string): any[] {
+  if (!status) return personas;
+
+  return personas.filter(p => {
+    const healthProfile = p.full_profile?.health_profile;
+    if (!healthProfile) return false;
+    
+    const cigarettes = (healthProfile.substance_use?.cigarettes || '').toLowerCase();
+    if (!cigarettes) return false;
+
+    switch (status) {
+      case 'current':
+        // Current smoker - daily, occasional, regular
+        return cigarettes.includes('daily') || 
+               cigarettes.includes('occasional') || 
+               cigarettes.includes('regular') ||
+               cigarettes.includes('smokes') ||
+               (cigarettes.includes('yes') && !cigarettes.includes('quit'));
+      case 'former':
+        // Former smoker - quit, ex-smoker, used to
+        return cigarettes.includes('quit') || 
+               cigarettes.includes('former') ||
+               cigarettes.includes('ex-') ||
+               cigarettes.includes('used to');
+      case 'never':
+        // Never smoked
+        return cigarettes.includes('never') || 
+               cigarettes.includes('none') ||
+               cigarettes === 'no';
+      default:
+        return true;
+    }
+  });
+}
+
+/**
+ * Filter by ethnicity
+ * Checks identity.ethnicity field
+ */
+function filterByEthnicity(personas: any[], ethnicity: string): any[] {
+  if (!ethnicity) return personas;
+
+  const ethnicityLower = ethnicity.toLowerCase();
+
+  return personas.filter(p => {
+    const personaEthnicity = (p.full_profile?.identity?.ethnicity || '').toLowerCase();
+    if (!personaEthnicity) return false;
+
+    // Map search terms to database variations
+    if (ethnicityLower === 'black' || ethnicityLower === 'african american') {
+      return personaEthnicity.includes('black') || 
+             personaEthnicity.includes('african');
+    }
+    if (ethnicityLower === 'hispanic' || ethnicityLower === 'latino' || ethnicityLower === 'latina') {
+      return personaEthnicity.includes('latin') || 
+             personaEthnicity.includes('hispanic') ||
+             personaEthnicity.includes('mexican') ||
+             personaEthnicity.includes('puerto rican') ||
+             personaEthnicity.includes('cuban');
+    }
+    if (ethnicityLower === 'asian') {
+      return personaEthnicity.includes('asian') || 
+             personaEthnicity.includes('chinese') ||
+             personaEthnicity.includes('japanese') ||
+             personaEthnicity.includes('korean') ||
+             personaEthnicity.includes('vietnamese') ||
+             personaEthnicity.includes('indian') ||
+             personaEthnicity.includes('filipino') ||
+             personaEthnicity.includes('pakistani');
+    }
+    if (ethnicityLower === 'white' || ethnicityLower === 'caucasian') {
+      return personaEthnicity.includes('white') || 
+             personaEthnicity.includes('caucasian') ||
+             personaEthnicity.includes('european');
+    }
+    
+    // Fallback: direct substring match
+    return personaEthnicity.includes(ethnicityLower);
   });
 }
 
@@ -477,6 +901,10 @@ function buildMatchReason(criteria: ParsedCriteria): string {
     parts.push(`has_children=${criteria.has_children}`);
   }
   if (criteria.occupation_keywords?.length) parts.push(`occupation matches`);
+  if (criteria.education_level) parts.push(`education=${criteria.education_level}`);
+  if (criteria.life_situations?.length) parts.push(`situations=${criteria.life_situations.join(' or ')}`);
+  if (criteria.smoking_status) parts.push(`smoking=${criteria.smoking_status}`);
+  if (criteria.ethnicity) parts.push(`ethnicity=${criteria.ethnicity}`);
   
   return parts.length > 0 ? `Matched: ${parts.join(', ')}` : 'semantic similarity';
 }
@@ -520,6 +948,15 @@ serve(async (req) => {
     // Step 1: Parse query with GPT
     const criteria = await parseQueryWithGPT(body.research_query, openaiKey);
     console.log(`[smart-acp-search-v2] Parsed criteria:`, JSON.stringify(criteria));
+    
+    // Step 1.5: Classify criteria for potential relaxation
+    const activeFilters = classifyCriteria(criteria);
+    const hardCount = Object.keys(activeFilters.hard).length;
+    const softCount = Object.keys(activeFilters.soft).length;
+    console.log(`[smart-acp-search-v2] Filter classification: ${hardCount} hard (${Object.keys(activeFilters.hard).join(', ')}), ${softCount} soft (${Object.keys(activeFilters.soft).join(', ')})`);
+    
+    // Track relaxed criteria for response
+    const relaxedCriteria: string[] = [];
 
     // Step 2: Handle multi-segment queries
     if (criteria.segments && criteria.segments.length > 1) {
@@ -590,6 +1027,61 @@ serve(async (req) => {
       }
       if (criteria.income_level) {
         candidatePool = filterByIncome(candidatePool, criteria.income_level);
+      }
+      
+      // Education, life_situations, smoking, ethnicity filters require full_profile
+      const needsFullProfileFilterSegment = criteria.education_level || 
+        (criteria.life_situations && criteria.life_situations.length > 0) ||
+        criteria.smoking_status || criteria.ethnicity;
+      
+      if (needsFullProfileFilterSegment && candidatePool.length > 0) {
+        console.log(`[smart-acp-search-v2] Multi-segment: Fetching full_profile for ${candidatePool.length} candidates`);
+        const idsForProfile = candidatePool.map(p => p.persona_id);
+        const batchSize = 50;
+        const profileMap = new Map();
+        for (let i = 0; i < idsForProfile.length; i += batchSize) {
+          const batchIds = idsForProfile.slice(i, i + batchSize);
+          const { data: profiles } = await supabase
+            .from('v4_personas')
+            .select('persona_id, full_profile')
+            .in('persona_id', batchIds);
+          if (profiles) {
+            for (const p of profiles) {
+              profileMap.set(p.persona_id, p.full_profile);
+            }
+          }
+        }
+        for (const persona of candidatePool) {
+          persona.full_profile = profileMap.get(persona.persona_id);
+        }
+      }
+
+      // Education filter
+      if (criteria.education_level) {
+        const beforeCount = candidatePool.length;
+        candidatePool = filterByEducation(candidatePool, criteria.education_level);
+        console.log(`[smart-acp-search-v2] Multi-segment education filter: ${beforeCount} → ${candidatePool.length}`);
+      }
+
+      // Life situations filter
+      if (criteria.life_situations && criteria.life_situations.length > 0) {
+        const beforeCount = candidatePool.length;
+        candidatePool = filterByLifeSituations(candidatePool, criteria.life_situations);
+        console.log(`[smart-acp-search-v2] Multi-segment life situations filter: ${beforeCount} → ${candidatePool.length}`);
+      }
+
+      // Smoking status filter
+      if (criteria.smoking_status) {
+        const beforeCount = candidatePool.length;
+        candidatePool = filterBySmokingStatus(candidatePool, criteria.smoking_status);
+        console.log(`[smart-acp-search-v2] Multi-segment smoking filter: ${beforeCount} → ${candidatePool.length}`);
+      }
+
+      // Ethnicity filter
+      if (criteria.ethnicity) {
+        const beforeCount = candidatePool.length;
+        candidatePool = filterByEthnicity(candidatePool, criteria.ethnicity);
+        console.log(`[smart-acp-search-v2] Multi-segment ethnicity filter: ${beforeCount} → ${candidatePool.length}`);
       }
       
       console.log(`[smart-acp-search-v2] Candidate pool: ${candidatePool.length} personas`);
@@ -769,7 +1261,74 @@ serve(async (req) => {
       console.log(`[smart-acp-search-v2] Income filter: ${beforeCount} → ${filtered.length}`);
     }
 
-    // Step 5: Check if we have results
+    // Education, life_situations, smoking, ethnicity filters require full_profile - fetch if needed
+    const needsFullProfileFilter = criteria.education_level || 
+      (criteria.life_situations && criteria.life_situations.length > 0) ||
+      criteria.smoking_status || criteria.ethnicity;
+    
+    if (needsFullProfileFilter && filtered.length > 0) {
+      console.log(`[smart-acp-search-v2] Fetching full_profile for ${filtered.length} candidates (education/life_situations filter)`);
+      const idsForProfile = filtered.map(p => p.persona_id);
+      // Fetch in batches to avoid URL length limits
+      const batchSize = 50;
+      const profileMap = new Map();
+      for (let i = 0; i < idsForProfile.length; i += batchSize) {
+        const batchIds = idsForProfile.slice(i, i + batchSize);
+        const { data: profiles } = await supabase
+          .from('v4_personas')
+          .select('persona_id, full_profile')
+          .in('persona_id', batchIds);
+        if (profiles) {
+          for (const p of profiles) {
+            profileMap.set(p.persona_id, p.full_profile);
+          }
+        }
+      }
+      // Attach full_profile to filtered personas
+      for (const persona of filtered) {
+        persona.full_profile = profileMap.get(persona.persona_id);
+      }
+    }
+
+    // Education filter (requires full_profile)
+    if (criteria.education_level) {
+      const beforeCount = filtered.length;
+      filtered = filterByEducation(filtered, criteria.education_level);
+      console.log(`[smart-acp-search-v2] Education filter: ${beforeCount} → ${filtered.length}`);
+    }
+
+    // Life situations filter (requires full_profile)
+    if (criteria.life_situations && criteria.life_situations.length > 0) {
+      const beforeCount = filtered.length;
+      filtered = filterByLifeSituations(filtered, criteria.life_situations);
+      console.log(`[smart-acp-search-v2] Life situations filter: ${beforeCount} → ${filtered.length}`);
+    }
+
+    // Smoking status filter (requires full_profile)
+    if (criteria.smoking_status) {
+      const beforeCount = filtered.length;
+      filtered = filterBySmokingStatus(filtered, criteria.smoking_status);
+      console.log(`[smart-acp-search-v2] Smoking filter: ${beforeCount} → ${filtered.length}`);
+    }
+
+    // Ethnicity filter (requires full_profile)
+    if (criteria.ethnicity) {
+      const beforeCount = filtered.length;
+      filtered = filterByEthnicity(filtered, criteria.ethnicity);
+      console.log(`[smart-acp-search-v2] Ethnicity filter: ${beforeCount} → ${filtered.length}`);
+    }
+
+    // Step 5: Check results and suggest relaxation if needed
+    // (activeFilters was computed earlier in Step 1.5)
+    const activeSoftCriteriaKeys = Object.keys(activeFilters.soft);
+    
+    // If results are too few and we have soft criteria, log suggestion
+    const MIN_RESULTS_THRESHOLD = 3;
+    if (filtered.length < MIN_RESULTS_THRESHOLD && filtered.length > 0 && activeSoftCriteriaKeys.length > 0) {
+      console.log(`[smart-acp-search-v2] Low results (${filtered.length}). Soft criteria that could be relaxed: ${activeSoftCriteriaKeys.join(', ')}`);
+      // Note: Full progressive relaxation implemented in task 3.2
+    }
+    
     if (filtered.length === 0) {
       const duration = Date.now() - startTime;
       return new Response(
@@ -779,9 +1338,10 @@ serve(async (req) => {
           request_id: requestId,
           query: body.research_query,
           parsed_criteria: criteria,
+          active_filters: activeFilters,
           personas: [],
           duration_ms: duration,
-          reason: `No personas match the specified criteria`,
+          reason: `No personas match the specified criteria${activeSoftCriteriaKeys.length > 0 ? '. Consider relaxing: ' + activeSoftCriteriaKeys.join(', ') : ''}`,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -844,6 +1404,12 @@ serve(async (req) => {
     const duration = Date.now() - startTime;
     console.log(`[smart-acp-search-v2] Complete: ${personas.length} personas, ${duration}ms`);
 
+    // Build reason string
+    let reasonStr = `Found ${filtered.length} matching personas, selected ${personas.length} diverse results`;
+    if (filtered.length < MIN_RESULTS_THRESHOLD && activeSoftCriteriaKeys.length > 0) {
+      reasonStr += ` (consider relaxing: ${activeSoftCriteriaKeys.join(', ')})`;
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -851,10 +1417,11 @@ serve(async (req) => {
         request_id: requestId,
         query: body.research_query,
         parsed_criteria: criteria,
+        active_filters: activeFilters,
         total_matching: filtered.length,
         personas,
         duration_ms: duration,
-        reason: `Found ${filtered.length} matching personas, selected ${personas.length} diverse results`,
+        reason: reasonStr,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

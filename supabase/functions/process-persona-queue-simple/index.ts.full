@@ -1,0 +1,236 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Constants
+const MAX_ITEMS_PER_RUN = 10
+const MAX_RETRIES = 3
+const PERSONA_CREATION_TIMEOUT_MS = 4 * 60 * 1000
+
+// Helper: wrap a promise with a timeout
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms/1000}s`)), ms)
+    )
+  ])
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
+
+  try {
+    console.log(`[process-persona-queue-simple] Starting simple queue processing...`)
+
+    // Test basic connection first
+    console.log(`[process-persona-queue-simple] Environment check: URL=${!!Deno.env.get('SUPABASE_URL')}, KEY=${!!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`)
+
+    // Step 1: Clean up stale items (reset items stuck > 5 min)
+    console.log(`[process-persona-queue-simple] Starting cleanup step...`)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    
+    const { data: resetItems } = await supabase
+      .from('persona_creation_queue')
+      .update({ 
+        status: 'pending',
+        error_message: 'Auto-reset by queue processor: stale processing > 5m',
+        processing_started_at: null,
+        locked_at: null,
+        updated_at: new Date().toISOString()
+      })
+      .match({ status: 'processing' })
+      .lt('processing_started_at', fiveMinutesAgo)
+      .lt('attempt_count', MAX_RETRIES)
+      .select('id, name')
+
+    // Fail items that exceeded retry limit
+    const { data: autoFailedItems } = await supabase
+      .from('persona_creation_queue')
+      .update({ 
+        status: 'failed',
+        error_message: `Auto-fail: exceeded max retries (${MAX_RETRIES} attempts)`,
+        updated_at: new Date().toISOString()
+      })
+      .match({ status: 'processing' })
+      .lt('processing_started_at', fiveMinutesAgo)
+      .gte('attempt_count', MAX_RETRIES)
+      .select('id, name')
+
+    console.log(`[process-persona-queue-simple] Cleanup: Reset ${resetItems?.length || 0} stale items, Failed ${autoFailedItems?.length || 0} items`)
+
+    // Step 2: Simple sequential processing - NO RECURSION
+    console.log(`[process-persona-queue-simple] Starting processing loop...`)
+    let processed = 0
+    let failed = 0
+    
+    // Process up to MAX_ITEMS_PER_RUN items
+    while (processed + failed < MAX_ITEMS_PER_RUN) {
+      // Get next pending item
+      const { data: item, error: popError } = await supabase.rpc('pop_next_persona_queue')
+      
+      if (popError) {
+        console.error('[process-persona-queue-simple] Error popping queue item:', popError)
+        break
+      }
+
+      if (!item) {
+        console.log('[process-persona-queue-simple] No more pending items')
+        break
+      }
+
+      console.log(`[process-persona-queue-simple] Processing: ${item.name} (${item.id}) - Attempt ${item.attempt_count + 1}`)
+
+      try {
+        // Create persona with timeout
+        const invokePromise = supabase.functions.invoke('v4-persona-unified', {
+          body: {
+            user_description: item.description,
+            user_id: item.user_id
+          }
+        })
+
+        const result = await withTimeout(invokePromise, PERSONA_CREATION_TIMEOUT_MS, `Persona creation for ${item.name}`)
+        
+        if (result.error || !result.data?.success) {
+          const errorMsg = result.error?.message || result.data?.error || 'Unknown error'
+          throw new Error(errorMsg)
+        }
+
+        const personaId = result.data.persona_id
+
+        // Validate persona_id format
+        if (!personaId || !String(personaId).startsWith('v4_')) {
+          throw new Error(`Invalid persona_id returned: ${personaId}`)
+        }
+
+        // Add to collections if specified
+        if (item.collections && item.collections.length > 0) {
+          console.log(`[process-persona-queue-simple] Adding to collections: ${item.collections.join(', ')}`)
+
+          const { data: userCollections } = await supabase
+            .from('collections')
+            .select('id, name')
+            .eq('user_id', item.user_id)
+
+          if (userCollections) {
+            const collectionMap = new Map(
+              userCollections.map(c => [c.name.toLowerCase().trim(), c.id])
+            )
+
+            for (const collectionName of item.collections) {
+              const collectionId = collectionMap.get(collectionName.toLowerCase().trim())
+              if (collectionId) {
+                const { error: addError } = await supabase
+                  .from('collection_personas')
+                  .insert({ collection_id: collectionId, persona_id: personaId })
+
+                if (addError && !addError.message.includes('duplicate')) {
+                  console.warn(`[process-persona-queue-simple] Failed to add to collection "${collectionName}":`, addError.message)
+                }
+              }
+            }
+          }
+        }
+
+        // Mark as completed
+        await supabase
+          .from('persona_creation_queue')
+          .update({
+            status: 'completed',
+            persona_id: personaId,
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', item.id)
+
+        processed++
+        console.log(`[process-persona-queue-simple] ✅ Success: ${item.name} -> ${personaId}`)
+
+      } catch (error: any) {
+        console.error(`[process-persona-queue-simple] ❌ Error processing ${item.name}:`, error.message)
+        
+        const newAttemptCount = (item.attempt_count || 0) + 1
+        
+        if (newAttemptCount >= MAX_RETRIES) {
+          // Max retries exceeded - mark as failed and remove from queue
+          await supabase
+            .from('persona_creation_queue')
+            .update({
+              status: 'failed',
+              error_message: `Failed after ${MAX_RETRIES} attempts: ${error.message}`,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', item.id)
+          
+          failed++
+          console.log(`[process-persona-queue-simple] 💀 Failed permanently: ${item.name} (${newAttemptCount}/${MAX_RETRIES} attempts)`)
+        } else {
+          // Reset to pending for retry
+          await supabase
+            .from('persona_creation_queue')
+            .update({
+              status: 'pending',
+              error_message: `Attempt ${newAttemptCount}/${MAX_RETRIES} failed: ${error.message}`,
+              processing_started_at: null,
+              locked_at: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', item.id)
+            
+          console.log(`[process-persona-queue-simple] 🔄 Retry queued: ${item.name} (${newAttemptCount}/${MAX_RETRIES} attempts)`)
+        }
+      }
+    }
+
+    // Step 3: Get remaining queue count
+    const { count: remaining, error: countError } = await supabase
+      .from('persona_creation_queue')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      
+    if (countError) {
+      console.warn(`[process-persona-queue-simple] Count query error: ${countError.message}`)
+      // Continue without exact count rather than failing
+    }
+
+    const summary = {
+      success: true,
+      processed,
+      failed,
+      remaining: remaining || 0,
+      max_per_run: MAX_ITEMS_PER_RUN
+    }
+
+    console.log(`[process-persona-queue-simple] ✨ Completed: ${JSON.stringify(summary)}`)
+
+    return new Response(
+      JSON.stringify(summary),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error: any) {
+    console.error('[process-persona-queue-simple] Fatal error:', error)
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        processed: 0,
+        failed: 0,
+        remaining: -1
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
+  }
+})

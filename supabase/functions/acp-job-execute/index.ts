@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { searchWithValidationAndRetry } from './searchWithRetry.ts';
+import { searchPersonas } from '../_shared/acpSearchEnhanced.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -355,7 +356,8 @@ serve(async (req) => {
     console.log(`🔔 [ACP-JOB] ${action.toUpperCase()} request for job_id: ${jobRequest.job_id}`);
 
     // ============= PRECHECK ACTION =============
-    // Fast check to see if we can fulfill the job BEFORE accepting it
+    // Use the SAME search function as execute, but with precheck_only flag
+    // This ensures precheck results match what execute will actually find
     if (action === 'precheck') {
       const { persona_criteria, research_query, questions = [], num_personas = 5 } = jobRequest;
       
@@ -367,50 +369,36 @@ serve(async (req) => {
 
       console.log(`🔍 [ACP-PRECHECK] Checking if we can fulfill: "${effectiveQuery}" (need ${num_personas} personas)`);
 
-      // Extract keywords from query for matching
-      const queryLower = effectiveQuery.toLowerCase();
-      const keywords = queryLower.split(/\s+/).filter((w: string) => w.length > 3);
+      // Use v3 search with precheck_only flag for consistency with actual search
+      const searchVersion = Deno.env.get('ACP_SEARCH_VERSION') || 'v3';
+      const searchFunction = searchVersion === 'v3' ? 'smart-acp-search-v3' : 'smart-acp-search-v2';
       
-      // Build ILIKE conditions for occupation search
-      const keywordConditions = keywords.slice(0, 10).map((kw: string) => 
-        `occupation_computed ILIKE '%${kw.replace(/'/g, "''")}%'`
-      ).join(' OR ');
+      // Use shared search module directly (no HTTP call needed)
+      const openaiKey = Deno.env.get('OPENAI_API_KEY')!;
+      const precheckResult = await searchPersonas(
+        supabase,
+        openaiKey,
+        effectiveQuery,
+        num_personas,
+        [],
+        true // precheck only
+      );
 
-      // Fast count query - just check if enough personas exist with matching occupations
-      const countQuery = `
-        SELECT COUNT(*) as total
-        FROM v4_personas 
-        WHERE is_public = true 
-        AND (${keywordConditions || 'true'})
-      `;
+      let matchCount = precheckResult.match_count || 0;
+      let canFulfill = precheckResult.success || matchCount >= num_personas;
+      let reason = '';
 
-      const { data: countResult, error: countError } = await supabase
-        .rpc('exec_sql', { sql: countQuery })
-        .single();
-
-      // Fallback: if RPC doesn't exist, do a simple select count
-      let matchCount = 0;
-      if (countError) {
-        // Fallback using standard query
-        const { count, error: fallbackError } = await supabase
-          .from('v4_personas')
-          .select('persona_id', { count: 'exact', head: true })
-          .eq('is_public', true);
-        
-        if (!fallbackError) {
-          matchCount = count || 0;
-        }
-        console.log(`🔍 [ACP-PRECHECK] Fallback count (all public): ${matchCount}`);
+      if (precheckResult.error) {
+        console.error(`🔍 [ACP-PRECHECK] Search error:`, precheckResult.error);
+        canFulfill = false;
+        reason = `Precheck failed: ${precheckResult.error}`;
       } else {
-        matchCount = parseInt(countResult?.total || '0');
-        console.log(`🔍 [ACP-PRECHECK] Keyword match count: ${matchCount}`);
+        matchCount = precheckResult.match_count || 0;
+        canFulfill = precheckResult.success || matchCount >= num_personas;
+        reason = canFulfill 
+          ? `Found ${matchCount} potential matches for ${num_personas} requested`
+          : `Insufficient personas: found ${matchCount}, need ${num_personas}. Query: "${effectiveQuery}"`;
       }
-
-      // Check if we have enough potential matches
-      const canFulfill = matchCount >= num_personas;
-      const reason = canFulfill 
-        ? `Found ${matchCount} potential matches for ${num_personas} requested`
-        : `Insufficient personas: found ${matchCount}, need ${num_personas}. Query: "${effectiveQuery}"`;
 
       console.log(`${canFulfill ? '✅' : '❌'} [ACP-PRECHECK] ${reason}`);
 
