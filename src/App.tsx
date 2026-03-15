@@ -55,6 +55,10 @@ import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 import { JobCompletionNotifier } from "./components/persona-creation/JobCompletionNotifier";
 import ScrollToTop from "./components/layout/ScrollToTop";
 
+// Blog pages
+import BlogIndex from "./pages/blog/BlogIndex";
+import BlogPost from "./pages/blog/BlogPost";
+
 
 
 import "./App.css";
@@ -107,6 +111,10 @@ function App() {
                 <Route path="/sign-in" element={<Auth />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/contact" element={<Contact />} />
+
+                {/* Blog Routes — public */}
+                <Route path="/blog" element={<BlogIndex />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
                 
                 {/* Documentation - Protected Route */}
                 <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
