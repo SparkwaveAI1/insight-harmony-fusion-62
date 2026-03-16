@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
+
+# Environment files — never commit credentials
+.env
+.env.*
+!.env.example
+acp-connection/.env
+acp-connection/.env.*
