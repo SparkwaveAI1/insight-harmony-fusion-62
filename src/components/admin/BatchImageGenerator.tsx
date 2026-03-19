@@ -76,12 +76,22 @@ export function BatchImageGenerator() {
         );
 
         if (fnError || !data?.success) {
-          failures.push({ 
-            id: persona.persona_id, 
-            name, 
-            error: fnError?.message || data?.error || 'Unknown error' 
-          });
-          setState(prev => ({ ...prev, failures: [...failures] }));
+          const errorMsg = fnError?.message || data?.error || 'Unknown error';
+          // If rate limited, wait and retry once
+          if (errorMsg.includes('rate limit') || errorMsg.includes('429') || fnError?.message?.includes('non-2xx')) {
+            await new Promise(resolve => setTimeout(resolve, 15000));
+            const { data: retryData, error: retryError } = await supabase.functions.invoke(
+              'generate-persona-image',
+              { body: { personaData: persona } }
+            );
+            if (retryError || !retryData?.success) {
+              failures.push({ id: persona.persona_id, name, error: retryError?.message || retryData?.error || 'Retry failed' });
+              setState(prev => ({ ...prev, failures: [...failures] }));
+            }
+          } else {
+            failures.push({ id: persona.persona_id, name, error: errorMsg });
+            setState(prev => ({ ...prev, failures: [...failures] }));
+          }
         }
         // Edge function updates the database with profile_image_url and profile_thumbnail_url
       } catch (err) {
@@ -93,9 +103,9 @@ export function BatchImageGenerator() {
         setState(prev => ({ ...prev, failures: [...failures] }));
       }
 
-      // Rate limit: 3 second delay between calls
+      // Delay between calls — Gemini image gen takes ~8-12s so 5s gap is safe
       if (i < personas.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
 
