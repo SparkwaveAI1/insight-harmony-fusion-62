@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useDeferredValue, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useDeferredValue, useCallback, useMemo, useRef } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ import { useCursorFeed } from "@/hooks/useCursorFeed";
 import { supabase } from "@/integrations/supabase/client";
 import Button from "@/components/ui-custom/Button";
 import { Plus, Trash2, Edit, FolderOpen, Search, Globe, Lock, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +31,7 @@ const Collections = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('my-collections');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('name-asc');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -105,8 +107,17 @@ const Collections = () => {
 
   const currentFeed = activeTab === 'my-collections' ? myCollectionsFeed : publicCollectionsFeed;
 
-  // No client-side filtering - search is handled server-side
-  const filteredCollections = currentFeed.items;
+  // Search is handled server-side; sort is client-side on loaded items
+  const filteredCollections = useMemo(() => {
+    const items = [...currentFeed.items];
+    switch (sortOrder) {
+      case 'count-desc': return items.sort((a, b) => (b.persona_count ?? 0) - (a.persona_count ?? 0));
+      case 'count-asc':  return items.sort((a, b) => (a.persona_count ?? 0) - (b.persona_count ?? 0));
+      case 'name-desc':  return items.sort((a, b) => b.name.localeCompare(a.name));
+      case 'name-asc':
+      default:           return items.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }, [currentFeed.items, sortOrder]);
 
   // Reset the current feed when search query changes or tab switches
   // The useCursorFeed hook uses a ref for fetchPage, so reset() will always use the latest search
@@ -220,21 +231,34 @@ const Collections = () => {
   function renderCollectionsContent() {
     return (
       <>
-        {/* Search Control */}
+        {/* Search + Sort Controls */}
         <div className="flex flex-col gap-2 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search collections..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="pl-10"
-            />
-            {deferredSearchQuery !== searchQuery && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-              </div>
-            )}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search collections..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="pl-10"
+              />
+              {deferredSearchQuery !== searchQuery && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                </div>
+              )}
+            </div>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-52 shrink-0">
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Name A → Z</SelectItem>
+                <SelectItem value="name-desc">Name Z → A</SelectItem>
+                <SelectItem value="count-desc">Most Personas</SelectItem>
+                <SelectItem value="count-asc">Fewest Personas</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           {/* Search Feedback */}

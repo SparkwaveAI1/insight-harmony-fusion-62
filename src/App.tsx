@@ -1,82 +1,76 @@
-
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import PageLoader from "./components/layout/PageLoader";
 
-// Pages
+// Eager imports — critical path (SEO, first paint, error handling)
 import Index from "./pages/Index";
-import PersonaViewer from "./pages/PersonaViewer";
-import PersonaChat from "./pages/PersonaChat";
-import PersonaProfile from "./pages/PersonaProfile";
-import Dashboard from "./pages/Dashboard";
-import Billing from "./pages/Billing";
-import BillingSuccess from "./pages/BillingSuccess";
-import BillingCancel from "./pages/BillingCancel";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import ConversationDetail from "./pages/ConversationDetail";
-
-import PRSNAEcosystem from "./pages/PRSNAEcosystem";
-import Collections from "./pages/Collections";
-import CollectionDetail from "./pages/CollectionDetail";
-import CustomResearch from "./pages/CustomResearch";
-import Research from "./pages/Research";
-import ResearchResults from "./pages/ResearchResults";
-import ACPResults from "./pages/ACPResults";
 import Auth from "./pages/Auth";
-import UserProfile from "./pages/UserProfile";
-import Contact from "./pages/Contact";
-import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
-import Admin from "./pages/Admin";
-import MatcherTest from "./pages/admin/MatcherTest";
-import PersonaQueue from "./pages/PersonaQueue";
-import ParticipateResearch from "./pages/ParticipateResearch";
-import WhitePaper from "./pages/WhitePaper";
-import Roadmap from "./pages/Roadmap";
-import EarnPRSNA from "./pages/EarnPRSNA";
-import Docs from "./pages/Docs";
 
-import { V4PersonaCreationPage } from "./pages/v4";
-import TestPersonaLibrary from "./pages/TestPersonaLibrary";
-import { V4Diagnostic } from "./components/debug/V4Diagnostic";
+// Lazy imports — deferred until route is visited
+const PersonaViewer = lazy(() => import("./pages/PersonaViewer"));
+const PersonaChat = lazy(() => import("./pages/PersonaChat"));
+const PersonaProfile = lazy(() => import("./pages/PersonaProfile"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Billing = lazy(() => import("./pages/Billing"));
+const BillingSuccess = lazy(() => import("./pages/BillingSuccess"));
+const BillingCancel = lazy(() => import("./pages/BillingCancel"));
+const Projects = lazy(() => import("./pages/Projects"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const ConversationDetail = lazy(() => import("./pages/ConversationDetail"));
+const PRSNAEcosystem = lazy(() => import("./pages/PRSNAEcosystem"));
+const Collections = lazy(() => import("./pages/Collections"));
+const CollectionDetail = lazy(() => import("./pages/CollectionDetail"));
+const CustomResearch = lazy(() => import("./pages/CustomResearch"));
+const Research = lazy(() => import("./pages/Research"));
+const ResearchResults = lazy(() => import("./pages/ResearchResults"));
+const ACPResults = lazy(() => import("./pages/ACPResults"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Admin = lazy(() => import("./pages/Admin"));
+const MatcherTest = lazy(() => import("./pages/admin/MatcherTest"));
+const PersonaQueue = lazy(() => import("./pages/PersonaQueue"));
+const ParticipateResearch = lazy(() => import("./pages/ParticipateResearch"));
+const WhitePaper = lazy(() => import("./pages/WhitePaper"));
+const Roadmap = lazy(() => import("./pages/Roadmap"));
+const EarnPRSNA = lazy(() => import("./pages/EarnPRSNA"));
+const Docs = lazy(() => import("./pages/Docs"));
+const TestPersonaLibrary = lazy(() => import("./pages/TestPersonaLibrary"));
 
-// Pages - Persona Creation
-import ConsentForm from "./pages/persona-creation/ConsentForm";
-import PersonaCreationLanding from "./pages/persona-creation/PersonaCreationLanding";
-import PersonaCreationScreener from "./pages/persona-creation/PersonaCreationScreener";
-import PersonaCreationQuestionnaire from "./pages/persona-creation/PersonaCreationQuestionnaire";
-import PersonaCreationComplete from "./pages/persona-creation/PersonaCreationComplete";
+// Lazy imports — v4 pages
+const V4PersonaCreationPage = lazy(() =>
+  import("./pages/v4").then((m) => ({ default: m.V4PersonaCreationPage }))
+);
+const V4Diagnostic = lazy(() =>
+  import("./components/debug/V4Diagnostic").then((m) => ({ default: m.V4Diagnostic }))
+);
 
+// Lazy imports — Persona creation flow
+const ConsentForm = lazy(() => import("./pages/persona-creation/ConsentForm"));
+const PersonaCreationLanding = lazy(() => import("./pages/persona-creation/PersonaCreationLanding"));
+const PersonaCreationScreener = lazy(() => import("./pages/persona-creation/PersonaCreationScreener"));
+const PersonaCreationQuestionnaire = lazy(() => import("./pages/persona-creation/PersonaCreationQuestionnaire"));
+const PersonaCreationComplete = lazy(() => import("./pages/persona-creation/PersonaCreationComplete"));
+
+// Lazy imports — Blog pages
+const BlogIndex = lazy(() => import("./pages/blog/BlogIndex"));
+const BlogPost = lazy(() => import("./pages/blog/BlogPost"));
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 import { JobCompletionNotifier } from "./components/persona-creation/JobCompletionNotifier";
 import ScrollToTop from "./components/layout/ScrollToTop";
 
-// Blog pages
-import BlogIndex from "./pages/blog/BlogIndex";
-import BlogPost from "./pages/blog/BlogPost";
-
-
-
 import "./App.css";
 
-
-// NUCLEAR CACHE BUSTER - Force complete fresh deployment
-const NUCLEAR_BUILD_ID = `NUCLEAR_${Date.now()}_V4_PERSONAS_ONLY`;
-const DEPLOYMENT_VERIFICATION = `PRODUCTION_VERIFICATION_${Math.random().toString(36)}`;
-console.log(`🚨 NUCLEAR CACHE BUSTER ACTIVE: ${NUCLEAR_BUILD_ID}`);
-console.log(`🔥 DEPLOYMENT VERIFICATION ID: ${DEPLOYMENT_VERIFICATION}`);
-console.log(`🚀 PersonaAI App Loaded - FORCED FRESH BUILD - Using v4_personas table EXCLUSIVELY`);
-console.log(`🎯 If you see this message, the NEW code is running!`);
-
-// Force immediate cache invalidation
-if (typeof window !== 'undefined') {
-  (window as any).LOVABLE_DEPLOYMENT_CHECK = DEPLOYMENT_VERIFICATION;
-  console.log(`✅ Window deployment check set: ${(window as any).LOVABLE_DEPLOYMENT_CHECK}`);
-}
+// Helper: wrap a lazy element in its own Suspense boundary
+const S = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
 
 // Create a client with reasonable cache settings
 const queryClient = new QueryClient({
@@ -98,86 +92,84 @@ function App() {
         <ScrollToTop />
         <AuthProvider>
           <JobCompletionNotifier />
-
+          <DeploymentVerifier />
 
           <Routes>
-                {/* DEPLOYMENT TEST ROUTE - Independent persona test */}
-                <Route path="/test-persona-library" element={<ProtectedRoute><TestPersonaLibrary /></ProtectedRoute>} />
-                <Route path="/v4-diagnostic" element={<ProtectedRoute><V4Diagnostic /></ProtectedRoute>} />
-                
-                {/* Public Routes - Accessible without login */}
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/sign-in" element={<Auth />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/contact" element={<Contact />} />
+            {/* Debug / test routes */}
+            <Route path="/test-persona-library" element={<S><ProtectedRoute><TestPersonaLibrary /></ProtectedRoute></S>} />
+            <Route path="/v4-diagnostic" element={<S><ProtectedRoute><V4Diagnostic /></ProtectedRoute></S>} />
 
-                {/* Blog Routes — public */}
-                <Route path="/blog" element={<BlogIndex />} />
-                <Route path="/blog/:slug" element={<BlogPost />} />
-                
-                {/* Documentation - Protected Route */}
-                <Route path="/docs" element={<ProtectedRoute><Docs /></ProtectedRoute>} />
-                
-                
-                {/* PRSNA token routes - public access */}
-                <Route path="/prsna-ecosystem" element={<PRSNAEcosystem />} />
-                <Route path="/prsna" element={<EarnPRSNA />} />
-                <Route path="/prsna/roadmap" element={<Roadmap />} />
-                <Route path="/prsna/whitepaper" element={<WhitePaper />} />
-                <Route path="/whitepaper" element={<WhitePaper />} />
-                
-                {/* User Profile Route */}
-                <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-                <Route path="/admin/matcher-test" element={<ProtectedRoute><MatcherTest /></ProtectedRoute>} />
-                <Route path="/persona-queue" element={<ProtectedRoute><PersonaQueue /></ProtectedRoute>} />
-                
-                {/* Protected Routes - Require authentication */}
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/dashboard/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-                <Route path="/billing/success" element={<BillingSuccess />} />
-                <Route path="/billing/cancel" element={<BillingCancel />} />
-                <Route path="/persona-viewer" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
-                <Route path="/persona-library" element={<ProtectedRoute><PersonaViewer /></ProtectedRoute>} />
-                <Route path="/persona-detail/:personaId" element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
-                <Route path="/persona-detail/:personaId/chat" element={<ProtectedRoute><PersonaChat /></ProtectedRoute>} />
-                <Route path="/profile/:id" element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
-                
-                <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-                <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
-                <Route path="/conversations/:conversationId" element={<ProtectedRoute><ConversationDetail /></ProtectedRoute>} />
-                <Route path="/collections" element={<ProtectedRoute><Collections /></ProtectedRoute>} />
-                
-                {/* IMPORTANT: Add support for both URL formats to avoid breaking existing links */}
-                <Route path="/collections/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
-                <Route path="/collection/:collectionId" element={<ProtectedRoute><CollectionDetail /></ProtectedRoute>} />
-                
-                {/* Research section - Protected */}
-                
-                <Route path="/persona-creator" element={<ProtectedRoute><V4PersonaCreationPage /></ProtectedRoute>} />
-                <Route path="/custom-research" element={<ProtectedRoute><CustomResearch /></ProtectedRoute>} />
-                <Route path="/research" element={<ProtectedRoute><Research /></ProtectedRoute>} />
-                <Route path="/research/results/:surveySessionId" element={<ProtectedRoute><ResearchResults /></ProtectedRoute>} />
-                <Route path="/participate" element={<ProtectedRoute><ParticipateResearch /></ProtectedRoute>} />
-                
-                {/* ACP Results - Public route for external buyers */}
-                <Route path="/acp-results/:jobId" element={<ACPResults />} />
-                
-                {/* Persona Creation Flow - Protected */}
-                <Route path="/create" element={<ProtectedRoute><PersonaCreationLanding /></ProtectedRoute>} />
-                <Route path="/consent" element={<ProtectedRoute><ConsentForm /></ProtectedRoute>} />
-                <Route path="/screener" element={<ProtectedRoute><PersonaCreationScreener /></ProtectedRoute>} />
-                <Route path="/questionnaire" element={<ProtectedRoute><PersonaCreationQuestionnaire /></ProtectedRoute>} />
-                <Route path="/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
-                <Route path="/persona-creation/complete" element={<ProtectedRoute><PersonaCreationComplete /></ProtectedRoute>} />
-                
-                {/* 404 Route */}
-                <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster position="top-right" />
+            {/* Public Routes - Eager (critical path) */}
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/sign-in" element={<Auth />} />
+
+            {/* Public Routes - Lazy */}
+            <Route path="/pricing" element={<S><Pricing /></S>} />
+            <Route path="/contact" element={<S><Contact /></S>} />
+
+            {/* Blog Routes — public */}
+            <Route path="/blog" element={<S><BlogIndex /></S>} />
+            <Route path="/blog/:slug" element={<S><BlogPost /></S>} />
+
+            {/* Documentation - Protected */}
+            <Route path="/docs" element={<S><ProtectedRoute><Docs /></ProtectedRoute></S>} />
+
+            {/* PRSNA token routes - public */}
+            <Route path="/prsna-ecosystem" element={<S><PRSNAEcosystem /></S>} />
+            <Route path="/prsna" element={<S><EarnPRSNA /></S>} />
+            <Route path="/prsna/roadmap" element={<S><Roadmap /></S>} />
+            <Route path="/prsna/whitepaper" element={<S><WhitePaper /></S>} />
+            <Route path="/whitepaper" element={<S><WhitePaper /></S>} />
+
+            {/* User Profile */}
+            <Route path="/profile" element={<S><ProtectedRoute><UserProfile /></ProtectedRoute></S>} />
+
+            {/* Admin Routes */}
+            <Route path="/admin" element={<S><ProtectedRoute><Admin /></ProtectedRoute></S>} />
+            <Route path="/admin/matcher-test" element={<S><ProtectedRoute><MatcherTest /></ProtectedRoute></S>} />
+            <Route path="/persona-queue" element={<S><ProtectedRoute><PersonaQueue /></ProtectedRoute></S>} />
+
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<S><ProtectedRoute><Dashboard /></ProtectedRoute></S>} />
+            <Route path="/dashboard/billing" element={<S><ProtectedRoute><Billing /></ProtectedRoute></S>} />
+            <Route path="/billing/success" element={<S><BillingSuccess /></S>} />
+            <Route path="/billing/cancel" element={<S><BillingCancel /></S>} />
+            <Route path="/persona-viewer" element={<S><ProtectedRoute><PersonaViewer /></ProtectedRoute></S>} />
+            <Route path="/persona-library" element={<S><ProtectedRoute><PersonaViewer /></ProtectedRoute></S>} />
+            <Route path="/persona-detail/:personaId" element={<S><ProtectedRoute><PersonaProfile /></ProtectedRoute></S>} />
+            <Route path="/persona-detail/:personaId/chat" element={<S><ProtectedRoute><PersonaChat /></ProtectedRoute></S>} />
+            <Route path="/profile/:id" element={<S><ProtectedRoute><PersonaProfile /></ProtectedRoute></S>} />
+
+            <Route path="/projects" element={<S><ProtectedRoute><Projects /></ProtectedRoute></S>} />
+            <Route path="/projects/:id" element={<S><ProtectedRoute><ProjectDetail /></ProtectedRoute></S>} />
+            <Route path="/conversations/:conversationId" element={<S><ProtectedRoute><ConversationDetail /></ProtectedRoute></S>} />
+            <Route path="/collections" element={<S><ProtectedRoute><Collections /></ProtectedRoute></S>} />
+            <Route path="/collections/:collectionId" element={<S><ProtectedRoute><CollectionDetail /></ProtectedRoute></S>} />
+            <Route path="/collection/:collectionId" element={<S><ProtectedRoute><CollectionDetail /></ProtectedRoute></S>} />
+
+            {/* Research section */}
+            <Route path="/persona-creator" element={<S><ProtectedRoute><V4PersonaCreationPage /></ProtectedRoute></S>} />
+            <Route path="/custom-research" element={<S><ProtectedRoute><CustomResearch /></ProtectedRoute></S>} />
+            <Route path="/research" element={<S><ProtectedRoute><Research /></ProtectedRoute></S>} />
+            <Route path="/research/results/:surveySessionId" element={<S><ProtectedRoute><ResearchResults /></ProtectedRoute></S>} />
+            <Route path="/participate" element={<S><ProtectedRoute><ParticipateResearch /></ProtectedRoute></S>} />
+
+            {/* ACP Results - Public */}
+            <Route path="/acp-results/:jobId" element={<S><ACPResults /></S>} />
+
+            {/* Persona Creation Flow */}
+            <Route path="/create" element={<S><ProtectedRoute><PersonaCreationLanding /></ProtectedRoute></S>} />
+            <Route path="/consent" element={<S><ProtectedRoute><ConsentForm /></ProtectedRoute></S>} />
+            <Route path="/screener" element={<S><ProtectedRoute><PersonaCreationScreener /></ProtectedRoute></S>} />
+            <Route path="/questionnaire" element={<S><ProtectedRoute><PersonaCreationQuestionnaire /></ProtectedRoute></S>} />
+            <Route path="/complete" element={<S><ProtectedRoute><PersonaCreationComplete /></ProtectedRoute></S>} />
+            <Route path="/persona-creation/complete" element={<S><ProtectedRoute><PersonaCreationComplete /></ProtectedRoute></S>} />
+
+            {/* 404 — eager */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster position="top-right" />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
