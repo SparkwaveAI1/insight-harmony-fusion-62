@@ -23,10 +23,8 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // Log in dev only — no PII logged
-    if (import.meta.env.DEV) {
-      console.error("[ErrorBoundary] Caught error:", error, info.componentStack);
-    }
+    // Always log to console — helps diagnose production crashes
+    console.error("[ErrorBoundary] Caught error:", error?.message, info?.componentStack?.split('\n').slice(0, 5).join('\n'));
   }
 
   handleReset = () => {
@@ -52,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Try again
             </Button>
           </div>
-          {import.meta.env.DEV && this.state.error && (
+          {this.state.error && (
             <pre className="mt-6 text-left text-xs text-muted-foreground bg-muted p-4 rounded max-w-xl overflow-auto">
               {this.state.error.message}
             </pre>
