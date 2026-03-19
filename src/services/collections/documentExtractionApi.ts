@@ -1,3 +1,20 @@
+import { supabase } from "@/integrations/supabase/client";
+
+/**
+ * Get the current user's auth token for edge function calls.
+ * Falls back to anon key behavior if no session (edge function handles it).
+ */
+async function getAuthHeader(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session?.access_token) {
+    return `Bearer ${session.access_token}`;
+  }
+  // Fall back to anon key from env
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  return `Bearer ${anonKey}`;
+}
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
 /**
  * API service for document text extraction
@@ -6,11 +23,13 @@ export const extractDocumentText = async (fileData: string, fileType: string, fi
   try {
     console.log('Extracting document text:', { fileType, fileName, dataLength: fileData.length });
     
-    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-document-text', {
+    const authHeader = await getAuthHeader();
+    
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/extract-document-text`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
+        'Authorization': authHeader,
       },
       body: JSON.stringify({
         fileData,
@@ -49,11 +68,13 @@ export const extractImageText = async (imageData: string, fileName: string): Pro
   try {
     console.log('Extracting image text:', { fileName, dataLength: imageData.length });
     
-    const response = await fetch('https://wgerdrdsuusnrdnwwelt.supabase.co/functions/v1/extract-image-text', {
+    const authHeader = await getAuthHeader();
+    
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/extract-image-text`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndnZXJkcmRzdXVzbnJkbnd3ZWx0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIxODkxMjAsImV4cCI6MjA1Nzc2NTEyMH0.yAoqtSbNo7gabNOSyDrNGNjIUaMIPwyhevV2F-IQHbY`
+        'Authorization': authHeader,
       },
       body: JSON.stringify({
         imageData,

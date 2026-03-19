@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PageLoader from "./components/layout/PageLoader";
+import { ErrorBoundary } from "./components/error/ErrorBoundary";
 
 // Eager imports — critical path (SEO, first paint, error handling)
 import Index from "./pages/Index";
@@ -87,6 +88,7 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ScrollToTop />
@@ -173,6 +175,7 @@ function App() {
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

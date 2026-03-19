@@ -54,6 +54,7 @@ const CollectionDetail = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('name-asc');
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,15 +101,17 @@ const CollectionDetail = () => {
   };
 
   const handleDeleteCollection = async () => {
-    if (collectionId) {
+    if (collectionId && !isDeleting) {
+      setIsDeleting(true);
       try {
         await deleteCollection(collectionId);
         toast.success("Collection deleted successfully!");
-        // Redirect to the collections page after deletion
         navigate("/collections");
       } catch (error) {
         console.error("Error deleting collection:", error);
         toast.error("Failed to delete collection");
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -364,8 +367,8 @@ const CollectionDetail = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteCollection}>
-                      Delete
+                    <AlertDialogAction onClick={handleDeleteCollection} disabled={isDeleting}>
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

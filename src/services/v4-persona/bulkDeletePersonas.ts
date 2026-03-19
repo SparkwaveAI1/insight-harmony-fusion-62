@@ -19,11 +19,19 @@ export async function bulkDeletePersonasBeforeDate(
 ): Promise<BulkDeleteResult> {
   try {
     console.log(`🗑️ Bulk delete personas created before ${cutoffDate} (preview: ${preview})`);
+
+    // Require authenticated user — only delete personas owned by the current user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error('❌ Bulk delete requires authentication');
+      return { success: false, deletedCount: 0, cleanedCollectionReferences: 0, cleanedMemories: 0, error: 'Not authenticated' };
+    }
     
-    // First, get all personas to be deleted
+    // First, get all personas to be deleted — scoped to current user only
     const { data: personasToDelete, error: fetchError } = await supabase
       .from('v4_personas')
       .select('persona_id, name, created_at')
+      .eq('user_id', user.id)
       .lt('created_at', cutoffDate)
       .order('created_at', { ascending: true });
 
@@ -95,12 +103,13 @@ export async function bulkDeletePersonasBeforeDate(
       console.log(`✅ Cleaned ${memoriesCount || 0} persona memories`);
     }
 
-    // Step 3: Delete personas
+    // Step 3: Delete personas — always scoped to current user (defense in depth)
     console.log('🗑️ Deleting personas...');
     const { error: deleteError, count: deleteCount } = await supabase
       .from('v4_personas')
       .delete({ count: 'exact' })
-      .in('persona_id', personaIds);
+      .in('persona_id', personaIds)
+      .eq('user_id', user.id);
 
     if (deleteError) {
       console.error('❌ Error deleting personas:', deleteError);

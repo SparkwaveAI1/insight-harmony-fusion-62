@@ -14,21 +14,21 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    console.log("ProtectedRoute - auth state:", { 
+    if (import.meta.env.DEV) { console.log("ProtectedRoute - auth state:", { 
       userId: user?.id, 
       userEmail: user?.email,
       isLoading, 
       path: location.pathname 
-    });
+    }); }
     
     if (!isLoading) {
       if (!user) {
-        console.log("ProtectedRoute - No authenticated user, redirecting to sign-in");
+        if (import.meta.env.DEV) { console.log("ProtectedRoute - No authenticated user, redirecting to sign-in"); }
         // Store the current path so we can redirect back after login
         sessionStorage.setItem('redirectAfterLogin', location.pathname);
         navigate("/sign-in");
       } else {
-        console.log("ProtectedRoute - User authenticated, allowing access");
+        if (import.meta.env.DEV) { console.log("ProtectedRoute - User authenticated, allowing access"); }
         setAuthChecked(true);
       }
     }
@@ -36,7 +36,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Don't render anything while checking auth state
   if (isLoading) {
-    console.log("ProtectedRoute - Still checking authentication...");
+    if (import.meta.env.DEV) { console.log("ProtectedRoute - Still checking authentication..."); }
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

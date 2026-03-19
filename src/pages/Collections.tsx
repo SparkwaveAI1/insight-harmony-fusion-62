@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useDeferredValue, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useDeferredValue, useCallback, useMemo } from "react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";

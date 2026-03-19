@@ -23,15 +23,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Setting up auth state...");
+    if (import.meta.env.DEV) { console.log("Setting up auth state..."); }
     
     // First set up the auth state listener before checking existing session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log("Auth state changed:", event, {
+        if (import.meta.env.DEV) { console.log("Auth state changed:", event, {
           userId: currentSession?.user?.id,
           userEmail: currentSession?.user?.email
-        });
+        }); }
         
         if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -39,10 +39,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else if (currentSession) {
           setUser(currentSession.user);
           setSession(currentSession);
-          console.log("User authenticated:", {
+          if (import.meta.env.DEV) { console.log("User authenticated:", {
             id: currentSession.user.id,
             email: currentSession.user.email
-          });
+          }); }
         }
         
         setIsLoading(false);
@@ -52,18 +52,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Then check for existing session
     const initializeAuth = async () => {
       try {
-        console.log("Checking for existing session...");
+        if (import.meta.env.DEV) { console.log("Checking for existing session..."); }
         const { data: { session: existingSession } } = await supabase.auth.getSession();
         
         if (existingSession) {
-          console.log("Found existing session:", {
+          if (import.meta.env.DEV) { console.log("Found existing session:", {
             userId: existingSession.user?.id,
             userEmail: existingSession.user?.email
-          });
+          }); }
           setUser(existingSession.user);
           setSession(existingSession);
         } else {
-          console.log("No existing session found");
+          if (import.meta.env.DEV) { console.log("No existing session found"); }
         }
         
         setIsLoading(false);
@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initializeAuth();
 
     return () => {
-      console.log("Cleaning up auth listener...");
+      if (import.meta.env.DEV) { console.log("Cleaning up auth listener..."); }
       subscription.unsubscribe();
     };
   }, []);
@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const trimmedEmail = email.trim().toLowerCase();
       const trimmedPassword = password.trim();
       
-      console.log("Attempting to sign in with email:", trimmedEmail);
+      if (import.meta.env.DEV) { console.log("Attempting to sign in with email:", trimmedEmail); }
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email: trimmedEmail, 
         password: trimmedPassword 
@@ -120,10 +120,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
       
-      console.log("Sign in successful:", {
+      if (import.meta.env.DEV) { console.log("Sign in successful:", {
         userId: data.session?.user?.id,
         userEmail: data.session?.user?.email
-      });
+      }); }
       toast.success("Successfully signed in");
     } catch (error: any) {
       console.error("Sign in exception:", error);
@@ -134,7 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     try {
-      console.log("Signing out...");
+      if (import.meta.env.DEV) { console.log("Signing out..."); }
       
       // First, clear local state immediately to prevent UI confusion
       setUser(null);
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Even if there was a session missing error, we consider logout successful
       // since the user is already signed out locally
-      console.log("Sign out completed successfully");
+      if (import.meta.env.DEV) { console.log("Sign out completed successfully"); }
       toast.success("Successfully signed out");
     } catch (error: any) {
       console.error("Sign out exception:", error);
