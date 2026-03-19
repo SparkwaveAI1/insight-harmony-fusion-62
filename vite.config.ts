@@ -23,9 +23,6 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
-          'query': ['@tanstack/react-query'],
-          'supabase': ['@supabase/supabase-js'],
           'charts': ['recharts'],
         },
       },
