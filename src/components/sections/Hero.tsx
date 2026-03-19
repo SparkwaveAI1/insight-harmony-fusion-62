@@ -107,7 +107,7 @@ const Hero = () => {
           <Reveal delay={225}>
             <div className="mb-6 flex justify-center">
               <div className="inline-flex flex-wrap justify-center items-center gap-x-2 gap-y-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 text-sm md:text-base text-white">
-                <span><span className="font-bold text-green-400">2,500+</span> AI personas and growing!</span>
+                <span><span className="font-bold text-green-400">4,000+</span> AI personas and growing!</span>
                 <span className="text-gray-400 hidden sm:inline">•</span>
                 <span><span className="font-bold text-blue-400">150+</span> traits each.</span>
                 <span className="text-gray-400 hidden sm:inline">•</span>
