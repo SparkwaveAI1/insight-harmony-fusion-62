@@ -1,16 +1,41 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
 import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getPublicPersonasByIds } from "@/services/persona";
-import { useFilteredPersonaSearch } from "@/hooks/useFilteredPersonaSearch";
+import { useFilteredPersonaSearch, FilteredSearchResult } from "@/hooks/useFilteredPersonaSearch";
 import { PersonaFilterPanel } from "./PersonaFilterPanel";
 import { DEFAULT_FILTERS } from "@/types/personaFilters";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+/** Convert a FilteredSearchResult (from RPC) to the V4Persona shape PersonaCard expects */
+function toV4Persona(r: FilteredSearchResult): V4Persona {
+  return {
+    persona_id: r.persona_id,
+    name: r.name,
+    profile_image_url: r.profile_image_url,
+    profile_thumbnail_url: r.profile_thumbnail_url,
+    created_at: r.created_at,
+    updated_at: r.created_at,
+    user_id: '',
+    is_public: r.is_public,
+    schema_version: 'v4',
+    full_profile: null as any,
+    conversation_summary: {
+      demographics: {
+        name: r.name,
+        age: r.age,
+        gender: r.gender,
+        occupation: r.occupation,
+        location: [r.city, r.state_region].filter(Boolean).join(', '),
+        ethnicity: r.ethnicity,
+      },
+      character_description: r.background || '',
+    } as any,
+  } as unknown as V4Persona;
+}
 
 interface PublicPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
@@ -39,28 +64,11 @@ const PublicPersonasList = ({
     totalPages,
   } = useFilteredPersonaSearch(DEFAULT_FILTERS, { publicOnly: true, limit: itemsPerPage });
 
-  // Get the persona IDs from results to fetch full data
-  const personaIds = useMemo(
-    () => filteredResults.map(r => r.persona_id),
+  // Convert RPC results directly to V4Persona shape — no second fetch needed
+  const orderedPersonas = useMemo(
+    () => filteredResults.map(toV4Persona),
     [filteredResults]
   );
-
-  // Fetch full persona data for display (PersonaCard needs full V4Persona structure)
-  const { data: fullPersonas = [], isLoading: isLoadingFullPersonas, refetch } = useQuery({
-    queryKey: ['public-personas-full', personaIds],
-    queryFn: () => getPublicPersonasByIds(personaIds),
-    enabled: personaIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Maintain the order from search results when displaying personas
-  const orderedPersonas = useMemo(() => {
-    if (!fullPersonas.length) return [];
-    const personaMap = new Map(fullPersonas.map(p => [p.persona_id, p]));
-    return personaIds
-      .map(id => personaMap.get(id))
-      .filter((p): p is V4Persona => p !== undefined);
-  }, [fullPersonas, personaIds]);
 
   // Initial load - fetch first page on mount
   useEffect(() => {
@@ -86,7 +94,7 @@ const PublicPersonasList = ({
     setTimeout(() => executeFilteredSearch(), 0);
   }, [setCurrentPage, executeFilteredSearch]);
 
-  const isLoading = isFilterLoading || isLoadingFullPersonas;
+  const isLoading = isFilterLoading;
 
   // Handle page changes
   const handlePageChange = useCallback((newPage: number) => {

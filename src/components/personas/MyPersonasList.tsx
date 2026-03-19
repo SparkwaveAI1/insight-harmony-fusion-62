@@ -1,11 +1,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import PersonaCard from "./PersonaCard";
 import PersonaLoadingState from "./PersonaLoadingState";
 import PersonaEmptyState from "./PersonaEmptyState";
 import { V4Persona } from "@/types/persona-v4";
-import { getMyPersonasByIds } from "@/services/persona";
-import { useFilteredPersonaSearch } from "@/hooks/useFilteredPersonaSearch";
+import { useFilteredPersonaSearch, FilteredSearchResult } from "@/hooks/useFilteredPersonaSearch";
 import { PersonaFilterPanel } from "./PersonaFilterPanel";
 import { DEFAULT_FILTERS } from "@/types/personaFilters";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +12,33 @@ import { updatePersonaVisibility } from "@/services/persona/operations/updatePer
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+/** Convert a FilteredSearchResult (from RPC) to the V4Persona shape PersonaCard expects */
+function toV4Persona(r: FilteredSearchResult): V4Persona {
+  return {
+    persona_id: r.persona_id,
+    name: r.name,
+    profile_image_url: r.profile_image_url,
+    profile_thumbnail_url: r.profile_thumbnail_url,
+    created_at: r.created_at,
+    updated_at: r.created_at,
+    user_id: '',
+    is_public: r.is_public,
+    schema_version: 'v4',
+    full_profile: null as any,
+    conversation_summary: {
+      demographics: {
+        name: r.name,
+        age: r.age,
+        gender: r.gender,
+        occupation: r.occupation,
+        location: [r.city, r.state_region].filter(Boolean).join(', '),
+        ethnicity: r.ethnicity,
+      },
+      character_description: r.background || '',
+    } as any,
+  } as unknown as V4Persona;
+}
 
 interface MyPersonasListProps {
   onPersonasLoad?: (personas: V4Persona[]) => void;
@@ -47,28 +73,11 @@ const MyPersonasList = ({
     limit: itemsPerPage
   });
 
-  // Get the persona IDs from results to fetch full data
-  const personaIds = useMemo(
-    () => filteredResults.map(r => r.persona_id),
+  // Convert RPC results directly to V4Persona shape — no second fetch needed
+  const orderedPersonas = useMemo(
+    () => filteredResults.map(toV4Persona),
     [filteredResults]
   );
-
-  // Fetch full persona data for display (PersonaCard needs full V4Persona structure)
-  const { data: fullPersonas = [], isLoading: isLoadingFullPersonas } = useQuery({
-    queryKey: ['my-personas-full', personaIds, user?.id],
-    queryFn: () => getMyPersonasByIds(personaIds, user?.id || ''),
-    enabled: personaIds.length > 0 && !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Maintain the order from search results when displaying personas
-  const orderedPersonas = useMemo(() => {
-    if (!fullPersonas.length) return [];
-    const personaMap = new Map(fullPersonas.map(p => [p.persona_id, p]));
-    return personaIds
-      .map(id => personaMap.get(id))
-      .filter((p): p is V4Persona => p !== undefined);
-  }, [fullPersonas, personaIds]);
 
   // Initial load - fetch first page on mount when user is available
   useEffect(() => {
@@ -92,7 +101,7 @@ const MyPersonasList = ({
     setTimeout(() => executeFilteredSearch(), 0);
   }, [setCurrentPage, executeFilteredSearch]);
 
-  const isLoading = isFilterLoading || isLoadingFullPersonas;
+  const isLoading = isFilterLoading;
 
   // Handle page changes
   const handlePageChange = useCallback((newPage: number) => {
@@ -104,19 +113,16 @@ const MyPersonasList = ({
   const handleVisibilityChange = useCallback(async (personaId: string, isPublic: boolean) => {
     try {
       await updatePersonaVisibility(personaId, isPublic);
-      queryClient.invalidateQueries({ queryKey: ['my-personas-full'] });
-      queryClient.invalidateQueries({ queryKey: ['public-personas-full'] });
       executeFilteredSearch();
     } catch (error) {
       console.error("Error updating persona visibility:", error);
     }
-  }, [queryClient, executeFilteredSearch]);
+  }, [executeFilteredSearch]);
 
   // Handle deletion
-  const handleDelete = useCallback((personaId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['my-personas-full'] });
+  const handleDelete = useCallback((_personaId: string) => {
     executeFilteredSearch();
-  }, [queryClient, executeFilteredSearch]);
+  }, [executeFilteredSearch]);
 
   if (authLoading) {
     return <PersonaLoadingState />;
