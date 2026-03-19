@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, X, Search } from 'lucide-react';
 import { Collection } from '@/services/collections/types';
 import {
   getProjectCollections,
@@ -25,6 +26,7 @@ const ProjectCollectionsManager: React.FC<ProjectCollectionsManagerProps> = ({ p
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadProjectCollections();
@@ -38,30 +40,28 @@ const ProjectCollectionsManager: React.FC<ProjectCollectionsManagerProps> = ({ p
   const loadAllCollections = async () => {
     const collections = await getUserCollections();
     setAllCollections(collections);
-    
-    // Get current project collection IDs for pre-selection
     const currentCollectionIds = projectCollections.map(c => c.id);
     setSelectedCollections(currentCollectionIds);
+    setSearchQuery('');
   };
+
+  // Filter collections by search query (case-insensitive name match)
+  const filteredCollections = useMemo(() => {
+    if (!searchQuery.trim()) return allCollections;
+    const q = searchQuery.toLowerCase().trim();
+    return allCollections.filter(c => c.name.toLowerCase().includes(q));
+  }, [allCollections, searchQuery]);
 
   const handleAddCollections = async () => {
     setIsLoading(true);
     try {
-      // Get current collection IDs
       const currentCollectionIds = projectCollections.map(c => c.id);
-      
-      // Find collections to add (selected but not currently in project)
       const collectionsToAdd = selectedCollections.filter(id => !currentCollectionIds.includes(id));
-      
-      // Find collections to remove (currently in project but not selected)
       const collectionsToRemove = currentCollectionIds.filter(id => !selectedCollections.includes(id));
 
-      // Add new collections
       for (const collectionId of collectionsToAdd) {
         await addCollectionToProject(projectId, collectionId);
       }
-
-      // Remove unselected collections
       for (const collectionId of collectionsToRemove) {
         await removeCollectionFromProject(projectId, collectionId);
       }
@@ -84,6 +84,8 @@ const ProjectCollectionsManager: React.FC<ProjectCollectionsManagerProps> = ({ p
     }
   };
 
+  const selectedCount = selectedCollections.length;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -95,37 +97,79 @@ const ProjectCollectionsManager: React.FC<ProjectCollectionsManagerProps> = ({ p
               Manage Collections
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Manage Project Collections</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="max-h-60 overflow-y-auto space-y-2">
-                {allCollections.map((collection) => (
-                  <div key={collection.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={collection.id}
-                      checked={selectedCollections.includes(collection.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedCollections([...selectedCollections, collection.id]);
-                        } else {
+            <div className="space-y-3">
+              {/* Search bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search collections..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                  autoFocus
+                />
+              </div>
+
+              {/* Count row */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                <span>
+                  {searchQuery
+                    ? `${filteredCollections.length} of ${allCollections.length} collections`
+                    : `${allCollections.length} collections`}
+                </span>
+                <span>{selectedCount} selected</span>
+              </div>
+
+              {/* Collection list */}
+              <div className="max-h-72 overflow-y-auto space-y-1 border rounded-md p-2">
+                {filteredCollections.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-6">
+                    No collections match "{searchQuery}"
+                  </p>
+                ) : (
+                  filteredCollections.map((collection) => (
+                    <div
+                      key={collection.id}
+                      className="flex items-center space-x-2 px-2 py-1.5 rounded hover:bg-accent cursor-pointer"
+                      onClick={() => {
+                        const isSelected = selectedCollections.includes(collection.id);
+                        if (isSelected) {
                           setSelectedCollections(selectedCollections.filter(id => id !== collection.id));
+                        } else {
+                          setSelectedCollections([...selectedCollections, collection.id]);
                         }
                       }}
-                    />
-                    <label
-                      htmlFor={collection.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1"
                     >
-                      {collection.name}
-                    </label>
-                  </div>
-                ))}
+                      <Checkbox
+                        id={collection.id}
+                        checked={selectedCollections.includes(collection.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedCollections([...selectedCollections, collection.id]);
+                          } else {
+                            setSelectedCollections(selectedCollections.filter(id => id !== collection.id));
+                          }
+                        }}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <label
+                        htmlFor={collection.id}
+                        className="text-sm leading-none flex-1 cursor-pointer"
+                      >
+                        {collection.name}
+                      </label>
+                    </div>
+                  ))
+                )}
               </div>
+
               <div className="flex gap-2">
                 <Button onClick={handleAddCollections} disabled={isLoading} className="flex-1">
-                  {isLoading ? 'Updating...' : 'Update Collections'}
+                  {isLoading ? 'Updating...' : `Update Collections${selectedCount > 0 ? ` (${selectedCount})` : ''}`}
                 </Button>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
