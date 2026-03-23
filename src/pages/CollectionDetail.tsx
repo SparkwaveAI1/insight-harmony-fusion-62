@@ -105,7 +105,8 @@ const CollectionDetail = () => {
         occupation: r.occupation,
         location: `${r.city ?? ''}${r.city && r.state_region ? ', ' : ''}${r.state_region ?? ''}`.trim(),
       },
-    },
+      character_description: r.background || '',
+    } as any,
     full_profile: null,
   } as unknown as V4Persona), []);
 
