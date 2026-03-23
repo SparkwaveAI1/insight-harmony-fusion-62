@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -9,12 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, ArrowLeft, Search, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { useFilteredPersonaSearch, FilteredSearchResult } from "@/hooks/useFilteredPersonaSearch";
+import { PersonaFilterPanel } from "@/components/personas/PersonaFilterPanel";
+import { DEFAULT_FILTERS, PersonaFilters } from "@/types/personaFilters";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,6 @@ import {
 import {
   getCollectionById,
   deleteCollection,
-  getPersonasInCollectionWithDetails,
 } from "@/services/collections";
 import { removePersonaFromCollection } from "@/services/collections/personaCollectionOperations";
 import { Collection } from "@/services/collections/types";
@@ -47,26 +46,67 @@ import { supabase } from "@/integrations/supabase/client";
 const CollectionDetail = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
   const [collection, setCollection] = useState<Collection | null>(null);
-  const [personas, setPersonas] = useState<V4Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
   const [showAddPersonasDialog, setShowAddPersonasDialog] = useState(false);
   const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState('name-asc');
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
+  // Server-side filtered search scoped to this collection
+  const {
+    results: filteredResults,
+    totalCount,
+    isLoading: isLoadingPersonas,
+    filters,
+    setFilters,
+    resetFilters,
+    search: executeSearch,
+    hasActiveFilters,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+  } = useFilteredPersonaSearch(DEFAULT_FILTERS, {
+    publicOnly: false,
+    collectionIds: collectionId ? [collectionId] : [],
+    limit: 30,
+  });
+
+  // Trigger initial search when collectionId is ready
   useEffect(() => {
-    // Scroll to top when collection changes
     window.scrollTo(0, 0);
-    
     if (collectionId) {
       loadCollection(collectionId);
-      loadPersonas(collectionId);
+      executeSearch();
     }
   }, [collectionId]);
+
+  // Map RPC results to V4Persona shape for PersonaCard
+  const toV4Persona = useCallback((r: FilteredSearchResult): V4Persona => ({
+    persona_id: r.persona_id,
+    name: r.name,
+    profile_image_url: r.profile_image_url,
+    profile_thumbnail_url: r.profile_thumbnail_url,
+    user_id: r.user_id ?? '',
+    is_public: r.is_public,
+    schema_version: 'v4',
+    created_at: r.created_at,
+    updated_at: r.created_at,
+    conversation_summary: {
+      demographics: {
+        age: r.age,
+        gender: r.gender,
+        occupation: r.occupation,
+        location: `${r.city ?? ''}${r.city && r.state_region ? ', ' : ''}${r.state_region ?? ''}`.trim(),
+      },
+    },
+    full_profile: null,
+  } as unknown as V4Persona), []);
+
+  const displayedPersonas = useMemo(
+    () => filteredResults.map(toV4Persona),
+    [filteredResults, toV4Persona]
+  );
 
   const loadCollection = async (id: string) => {
     setIsLoading(true);
@@ -88,19 +128,6 @@ const CollectionDetail = () => {
     }
   };
 
-  const loadPersonas = async (collectionId: string) => {
-    setIsLoadingPersonas(true);
-    try {
-      const collectionPersonas = await getPersonasInCollectionWithDetails(collectionId);
-      setPersonas(collectionPersonas);
-    } catch (error) {
-      console.error("Error loading personas in collection:", error);
-      toast.error("Failed to load personas in collection");
-    } finally {
-      setIsLoadingPersonas(false);
-    }
-  };
-
   const handleDeleteCollection = async () => {
     if (collectionId && !isDeleting) {
       setIsDeleting(true);
@@ -118,10 +145,8 @@ const CollectionDetail = () => {
   };
 
   const handlePersonasAdded = () => {
-    // Reload personas after adding
-    if (collectionId) {
-      loadPersonas(collectionId);
-    }
+    // Re-run search to pick up newly added personas
+    executeSearch();
   };
 
   const handleVisibilityChange = (isPublic: boolean) => {
@@ -130,13 +155,12 @@ const CollectionDetail = () => {
     }
   };
 
-  const handleRemovePersonaFromCollection = async (personaId: string, collectionId: string) => {
+  const handleRemovePersonaFromCollection = async (personaId: string, cId: string) => {
     try {
-      const success = await removePersonaFromCollection(collectionId, personaId);
+      const success = await removePersonaFromCollection(cId, personaId);
       if (success) {
-        // Remove the persona from local state immediately for better UX
-        setPersonas(prev => prev.filter(p => p.persona_id !== personaId));
         toast.success("Persona removed from collection");
+        executeSearch(); // refresh results
       } else {
         toast.error("Failed to remove persona from collection");
       }
@@ -145,57 +169,6 @@ const CollectionDetail = () => {
       toast.error("Failed to remove persona from collection");
     }
   };
-
-  // Helpers: extract name/occupation/age from V4Persona (fields may be in root or full_profile)
-  const getOccupation = (p: V4Persona): string => {
-    const raw = p as any;
-    return raw.occupation_computed
-      ?? p.full_profile?.identity?.occupation
-      ?? p.conversation_summary?.demographics?.occupation
-      ?? '';
-  };
-  const getAge = (p: V4Persona): number => {
-    const raw = p as any;
-    return raw.age_computed
-      ?? p.full_profile?.identity?.age
-      ?? 0;
-  };
-
-  // Filtered + sorted personas (client-side, all personas already loaded)
-  const displayedPersonas = useMemo(() => {
-    let result = personas;
-
-    // Filter: case-insensitive match on name or occupation
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(p => {
-        const name = (p.name ?? '').toLowerCase();
-        const occupation = getOccupation(p).toLowerCase();
-        return name.includes(q) || occupation.includes(q);
-      });
-    }
-
-    // Sort
-    const sorted = [...result];
-    switch (sortOrder) {
-      case 'name-asc':
-        sorted.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-        break;
-      case 'name-desc':
-        sorted.sort((a, b) => (b.name ?? '').localeCompare(a.name ?? ''));
-        break;
-      case 'age-asc':
-        sorted.sort((a, b) => getAge(a) - getAge(b));
-        break;
-      case 'age-desc':
-        sorted.sort((a, b) => getAge(b) - getAge(a));
-        break;
-      case 'occupation-asc':
-        sorted.sort((a, b) => getOccupation(a).localeCompare(getOccupation(b)));
-        break;
-    }
-    return sorted;
-  }, [personas, searchQuery, sortOrder]);
 
   // Add a not found state if collection couldn't be loaded
   if (!isLoading && !collection) {
@@ -256,76 +229,87 @@ const CollectionDetail = () => {
               </div>
               <Separator />
 
-              {/* Search + Sort controls */}
-              {!isLoading && personas.length > 0 && (
-                <div className="mt-4 mb-4 flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by name or occupation..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-9"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Select value={sortOrder} onValueChange={setSortOrder}>
-                    <SelectTrigger className="w-full sm:w-52">
-                      <SelectValue placeholder="Sort by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name-asc">Name A → Z</SelectItem>
-                      <SelectItem value="name-desc">Name Z → A</SelectItem>
-                      <SelectItem value="age-asc">Age: Youngest First</SelectItem>
-                      <SelectItem value="age-desc">Age: Oldest First</SelectItem>
-                      <SelectItem value="occupation-asc">Occupation A → Z</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {searchQuery && (
-                    <p className="text-sm text-muted-foreground self-center whitespace-nowrap">
-                      {displayedPersonas.length} of {personas.length} personas
-                    </p>
-                  )}
-                </div>
-              )}
-
+              {/* Full filter panel — same as Persona Library */}
               <div className="mt-4">
+                <PersonaFilterPanel
+                  filters={filters}
+                  onChange={(newFilters: PersonaFilters) => {
+                    setFilters(newFilters);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
+
+              {/* Results count */}
+              <div className="mt-3 mb-2 flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {isLoadingPersonas
+                    ? 'Loading...'
+                    : `${totalCount.toLocaleString()} persona${totalCount !== 1 ? 's' : ''}${hasActiveFilters ? ' match filters' : ' in collection'}`}
+                </p>
+                {hasActiveFilters && (
+                  <button onClick={resetFilters} className="text-xs text-primary hover:underline">
+                    Clear filters
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-2">
                 {isLoadingPersonas ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3" />
                     <p className="text-muted-foreground">Loading personas...</p>
                   </div>
-                ) : personas.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <p className="text-muted-foreground">No personas in this collection yet.</p>
-                  </div>
                 ) : displayedPersonas.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Search className="h-10 w-10 text-muted-foreground mb-3" />
-                    <p className="text-muted-foreground">No personas match "{searchQuery}"</p>
-                    <button onClick={() => setSearchQuery('')} className="text-sm text-primary mt-2 hover:underline">
-                      Clear search
-                    </button>
+                    <p className="text-muted-foreground">
+                      {hasActiveFilters ? 'No personas match your filters.' : 'No personas in this collection yet.'}
+                    </p>
+                    {hasActiveFilters && (
+                      <button onClick={resetFilters} className="text-sm text-primary mt-2 hover:underline">
+                        Clear filters
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                    {displayedPersonas.map((persona) => (
-                      <PersonaCard 
-                        key={persona.persona_id}
-                        persona={persona}
-                        hideChat={true}
-                        collectionId={collectionId}
-                        onRemoveFromCollection={handleRemovePersonaFromCollection}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                      {displayedPersonas.map((persona) => (
+                        <PersonaCard
+                          key={persona.persona_id}
+                          persona={persona}
+                          hideChat={true}
+                          collectionId={collectionId}
+                          onRemoveFromCollection={handleRemovePersonaFromCollection}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1 || isLoadingPersonas}
+                        >
+                          ← Previous
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages || isLoadingPersonas}
+                        >
+                          Next →
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </CardContent>
