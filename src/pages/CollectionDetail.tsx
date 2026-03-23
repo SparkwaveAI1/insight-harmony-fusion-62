@@ -49,6 +49,7 @@ const CollectionDetail = () => {
   const [collection, setCollection] = useState<Collection | null>(null);
   const [personas, setPersonas] = useState<V4Persona[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingPersonas, setIsLoadingPersonas] = useState(true);
   const [showAddPersonasDialog, setShowAddPersonasDialog] = useState(false);
   const [showEditCollectionDialog, setShowEditCollectionDialog] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -88,7 +89,7 @@ const CollectionDetail = () => {
   };
 
   const loadPersonas = async (collectionId: string) => {
-    setIsLoading(true);
+    setIsLoadingPersonas(true);
     try {
       const collectionPersonas = await getPersonasInCollectionWithDetails(collectionId);
       setPersonas(collectionPersonas);
@@ -96,7 +97,7 @@ const CollectionDetail = () => {
       console.error("Error loading personas in collection:", error);
       toast.error("Failed to load personas in collection");
     } finally {
-      setIsLoading(false);
+      setIsLoadingPersonas(false);
     }
   };
 
@@ -296,10 +297,15 @@ const CollectionDetail = () => {
               )}
 
               <div className="mt-4">
-                {isLoading ? (
-                  <p>Loading personas...</p>
+                {isLoadingPersonas ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-3" />
+                    <p className="text-muted-foreground">Loading personas...</p>
+                  </div>
                 ) : personas.length === 0 ? (
-                  <p>No personas in this collection.</p>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <p className="text-muted-foreground">No personas in this collection yet.</p>
+                  </div>
                 ) : displayedPersonas.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Search className="h-10 w-10 text-muted-foreground mb-3" />
