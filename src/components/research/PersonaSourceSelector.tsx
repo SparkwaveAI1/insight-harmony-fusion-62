@@ -1,18 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Users, Folder, Globe, Check, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Users, Folder, Globe, Check, AlertCircle, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Persona } from '@/services/persona/types';
-import { dbPersonaToPersona } from '@/services/persona/mappers';
 import { getProjectCollections } from '@/services/collections/projectCollectionOperations';
-import { getPersonasInCollectionWithDetails } from '@/services/collections/personaCollectionOperations';
-import { getPersonasForListing } from '@/services/persona/operations/getPersonas';
 import { Collection } from '@/services/collections/types';
-import { getV4Personas } from '@/services/v4-persona/getV4Personas';
 
 interface PersonaSourceSelectorProps {
   projectId?: string;
@@ -23,33 +19,32 @@ interface PersonaSourceSelectorProps {
 
 type PersonaSource = 'project-collections' | 'my-personas' | 'public-personas';
 
-interface PersonaSourceOption {
-  id: PersonaSource;
-  label: string;
-  icon: React.ReactNode;
-  description: string;
+interface SearchResult {
+  persona_id: string;
+  name: string;
+  age: number;
+  gender: string;
+  ethnicity: string;
+  occupation: string;
+  profile_thumbnail_url: string | null;
+  profile_image_url: string | null;
+  total_count: number;
 }
 
-const PERSONA_SOURCE_OPTIONS: PersonaSourceOption[] = [
-  {
-    id: 'project-collections',
-    label: 'Project Collections',
-    icon: <Folder className="w-4 h-4" />,
-    description: 'Choose from collections linked to this project'
-  },
-  {
-    id: 'my-personas',
-    label: 'My Personas',
-    icon: <Users className="w-4 h-4" />,
-    description: 'Choose from your own personas'
-  },
-  {
-    id: 'public-personas',
-    label: 'Public Personas',
-    icon: <Globe className="w-4 h-4" />,
-    description: 'Choose from publicly available personas'
-  }
+const ETHNICITY_OPTIONS = [
+  'White (e.g., European descent)',
+  'Black or African descent',
+  'East Asian (e.g., Chinese, Korean, Japanese)',
+  'South Asian (e.g., Indian, Pakistani, Sri Lankan)',
+  'Southeast Asian (e.g., Filipino, Vietnamese, Thai)',
+  'Middle Eastern or North African (MENA)',
+  'Native American or Alaska Native',
+  'Native Hawaiian or Pacific Islander',
+  'Mixed / Multiracial',
+  'Another race or ancestry',
 ];
+
+const GENDER_OPTIONS = ['male', 'female', 'non-binary'];
 
 export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
   projectId,
@@ -57,220 +52,156 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
   onPersonaSelectionChange,
   maxPersonas = 10
 }) => {
-  const { user, session } = useAuth();
+  const { user } = useAuth();
   const [selectedSource, setSelectedSource] = useState<PersonaSource | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string>('');
   const [projectCollections, setProjectCollections] = useState<Collection[]>([]);
-  const [availablePersonas, setAvailablePersonas] = useState<Persona[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [collectionsError, setCollectionsError] = useState<string | null>(null);
   const [collectionsLoading, setCollectionsLoading] = useState(false);
 
-  // Load project collections when component mounts
+  // Search state
+  const [nameQuery, setNameQuery] = useState('');
+  const [selectedGender, setSelectedGender] = useState<string>('');
+  const [selectedEthnicity, setSelectedEthnicity] = useState<string>('');
+  const [ageMin, setAgeMin] = useState<string>('');
+  const [ageMax, setAgeMax] = useState<string>('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Results state
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load project collections on mount
   useEffect(() => {
-    if (projectId) {
-      loadProjectCollections();
-    }
+    if (projectId) loadProjectCollections();
   }, [projectId]);
 
-  // Load personas when source changes
+  // Trigger search whenever filters or source/collection changes
   useEffect(() => {
-    if (selectedSource) {
-      loadPersonasForSource();
-    }
-  }, [selectedSource, selectedCollection]);
+    if (!selectedSource) return;
+    if (selectedSource === 'project-collections' && !selectedCollection) return;
+
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setPage(1);
+      runSearch(1);
+    }, 300);
+
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, [nameQuery, selectedGender, selectedEthnicity, ageMin, ageMax, selectedSource, selectedCollection]);
+
+  // Re-run search when page changes
+  useEffect(() => {
+    if (!selectedSource) return;
+    if (selectedSource === 'project-collections' && !selectedCollection) return;
+    runSearch(page);
+  }, [page]);
 
   const loadProjectCollections = async () => {
-    if (!projectId) {
-      console.log('PersonaSourceSelector: No projectId provided');
-      return;
-    }
-    
-    if (!user || !session) {
-      console.log('PersonaSourceSelector: No authenticated user/session');
-      setCollectionsError('Authentication required to load project collections');
-      return;
-    }
-    
-    console.log('PersonaSourceSelector: Loading project collections for projectId:', projectId);
+    if (!projectId || !user) return;
     setCollectionsLoading(true);
     setCollectionsError(null);
-    
     try {
       const collections = await getProjectCollections(projectId);
-      console.log('PersonaSourceSelector: Loaded collections:', collections);
       setProjectCollections(collections);
-      if (collections.length === 0) {
-        setCollectionsError('No collections found for this project');
-      }
-    } catch (error) {
-      console.error('PersonaSourceSelector: Error loading project collections:', error);
+      if (collections.length === 0) setCollectionsError('No collections found for this project');
+    } catch {
       setCollectionsError('Failed to load project collections');
     } finally {
       setCollectionsLoading(false);
     }
   };
 
-  const loadPersonasForSource = async () => {
+  const runSearch = useCallback(async (pageNum: number) => {
     if (!selectedSource) return;
-    
-    setIsLoading(true);
+    if (selectedSource === 'project-collections' && !selectedCollection) return;
+
+    setIsSearching(true);
     try {
-      let personas: Persona[] = [];
-      
-      switch (selectedSource) {
-        case 'project-collections':
-          if (selectedCollection) {
-            // Get V4 personas from collection
-            const v4PersonasData = await getPersonasInCollectionWithDetails(selectedCollection);
-            const v4Personas = v4PersonasData.map(v4Persona => ({
-              persona_id: v4Persona.persona_id,
-              name: v4Persona.name,
-              description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
-              user_id: v4Persona.user_id,
-              is_public: false,
-              updated_at: v4Persona.updated_at || '',
-              metadata: {},
-              trait_profile: {},
-              behavioral_modulation: {},
-              linguistic_profile: {},
-              emotional_triggers: null,
-              preinterview_tags: [],
-              simulation_directives: {},
-              interview_sections: [],
-              prompt: null
-            } as Persona));
-            
-            // Sort by creation date
-            personas = v4Personas.sort((a, b) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            );
-          }
-          break;
-          
-        case 'my-personas':
-          if (!user?.id) {
-            throw new Error('User authentication required');
-          }
-          
-          // No more legacy personas - only V4 personas exist now
-          const legacyPersonas: Persona[] = [];
-          
-          // Get V4 personas
-          const v4PersonasData = await getV4Personas(user.id);
-          const v4Personas = v4PersonasData.map(v4Persona => ({
-            persona_id: v4Persona.persona_id,
-            name: v4Persona.name,
-            description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
-            user_id: v4Persona.user_id,
-            is_public: false,
-            created_at: v4Persona.created_at || '',
-            updated_at: v4Persona.updated_at || '',
-            metadata: {},
-            trait_profile: {},
-            behavioral_modulation: {},
-            linguistic_profile: {},
-            emotional_triggers: null,
-            preinterview_tags: [],
-            simulation_directives: {},
-            interview_sections: [],
-            prompt: null
-          } as Persona));
-          
-          // Combine both types and sort by creation date
-          personas = [...legacyPersonas, ...v4Personas].sort((a, b) => 
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-          break;
-          
-        case 'public-personas':
-          // Get legacy public personas
-          const legacyPublicPersonas = await getPersonasForListing();
-          
-          // Get public V4 personas
-          const { data: publicV4Data, error: publicV4Error } = await supabase
-            .from('v4_personas')
-            .select('persona_id, name, created_at, updated_at, user_id, is_public')
-            .eq('is_public', true)
-            .order('created_at', { ascending: false });
-          
-          if (publicV4Error) {
-            console.error('Error fetching public V4 personas:', publicV4Error);
-          }
-          
-          const publicV4Personas = (publicV4Data || []).map(v4Persona => ({
-            persona_id: v4Persona.persona_id,
-            name: v4Persona.name,
-            description: `V4 Persona - Created on ${new Date(v4Persona.created_at || '').toLocaleDateString()}`,
-            user_id: v4Persona.user_id,
-            is_public: true,
-            created_at: v4Persona.created_at || '',
-            updated_at: v4Persona.updated_at || '',
-            metadata: {},
-            trait_profile: {},
-            behavioral_modulation: {},
-            linguistic_profile: {},
-            emotional_triggers: null,
-            preinterview_tags: [],
-            simulation_directives: {},
-            interview_sections: [],
-            prompt: null
-          } as Persona));
-          
-          // Combine both types and sort by creation date
-          personas = [...legacyPublicPersonas, ...publicV4Personas].sort((a, b) => 
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-          break;
+      const params: Record<string, unknown> = {
+        p_limit: PAGE_SIZE,
+        p_offset: (pageNum - 1) * PAGE_SIZE,
+        p_name_contains: nameQuery.trim() || null,
+        p_genders: selectedGender ? [selectedGender] : null,
+        p_age_min: ageMin ? parseInt(ageMin) : null,
+        p_age_max: ageMax ? parseInt(ageMax) : null,
+      };
+
+      // Ethnicity search via occupation_contains as text search fallback
+      // The RPC has p_ethnicities which matches the stored ethnicity column
+      if (selectedEthnicity) {
+        (params as Record<string, unknown>).p_ethnicities = [selectedEthnicity];
       }
-      
-      setAvailablePersonas(personas);
-    } catch (error) {
-      console.error('Error loading personas:', error);
-      setAvailablePersonas([]);
+
+      if (selectedSource === 'project-collections') {
+        params.p_collection_ids = [selectedCollection];
+        params.p_public_only = false;
+        params.p_user_id = null;
+      } else if (selectedSource === 'my-personas') {
+        params.p_public_only = false;
+        params.p_user_id = user?.id ?? null;
+      } else {
+        params.p_public_only = true;
+      }
+
+      const { data, error } = await supabase.rpc('search_personas_unified', params);
+      if (error) throw error;
+
+      setResults((data as SearchResult[]) ?? []);
+      setTotalCount((data as SearchResult[])?.[0]?.total_count ?? 0);
+    } catch (err) {
+      console.error('PersonaSourceSelector search error:', err);
+      setResults([]);
+      setTotalCount(0);
     } finally {
-      setIsLoading(false);
+      setIsSearching(false);
     }
-  };
+  }, [selectedSource, selectedCollection, nameQuery, selectedGender, selectedEthnicity, ageMin, ageMax, user]);
 
   const handleSourceSelect = (source: PersonaSource) => {
     setSelectedSource(source);
     setSelectedCollection('');
-    setAvailablePersonas([]);
-    onPersonaSelectionChange([]); // Clear current selection
+    setResults([]);
+    setTotalCount(0);
+    setPage(1);
+    onPersonaSelectionChange([]);
   };
 
-  const togglePersonaSelection = (personaId: string) => {
+  const handleCollectionSelect = (collectionId: string) => {
+    setSelectedCollection(collectionId);
+    setResults([]);
+    setPage(1);
+  };
+
+  const clearFilters = () => {
+    setNameQuery('');
+    setSelectedGender('');
+    setSelectedEthnicity('');
+    setAgeMin('');
+    setAgeMax('');
+  };
+
+  const hasActiveFilters = nameQuery || selectedGender || selectedEthnicity || ageMin || ageMax;
+
+  const togglePersona = (personaId: string) => {
     const isSelected = selectedPersonas.includes(personaId);
-    let newSelection: string[];
-    
     if (isSelected) {
-      newSelection = selectedPersonas.filter(id => id !== personaId);
+      onPersonaSelectionChange(selectedPersonas.filter(id => id !== personaId));
     } else if (selectedPersonas.length < maxPersonas) {
-      newSelection = [...selectedPersonas, personaId];
-    } else {
-      return; // Don't add if max reached
+      onPersonaSelectionChange([...selectedPersonas, personaId]);
     }
-    
-    onPersonaSelectionChange(newSelection);
   };
 
-  const getSourceOptionsToShow = () => {
-    // Always show all options, but we'll handle disabled state in the UI
-    return [...PERSONA_SOURCE_OPTIONS];
-  };
+  const isProjectCollectionsDisabled = !projectId || (collectionsError !== null) || (projectCollections.length === 0 && !collectionsLoading);
 
-  const isProjectCollectionsDisabled = () => {
-    return !projectId || collectionsError !== null || (projectCollections.length === 0 && !collectionsLoading);
-  };
-
-  const getProjectCollectionsDescription = () => {
-    if (!projectId) return 'No project selected';
-    if (collectionsLoading) return 'Loading collections...';
-    if (collectionsError) return collectionsError;
-    if (projectCollections.length === 0) return 'No collections found for this project';
-    return 'Choose from collections linked to this project';
-  };
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   return (
     <Card>
@@ -284,133 +215,256 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
+
         {/* Source Selection */}
         <div>
           <h4 className="text-sm font-medium mb-2">Choose Persona Source</h4>
           <div className="grid grid-cols-1 gap-2">
-            {getSourceOptionsToShow().map((option) => {
-              const isDisabled = option.id === 'project-collections' && isProjectCollectionsDisabled();
-              const description = option.id === 'project-collections' 
-                ? getProjectCollectionsDescription()
-                : option.description;
-              
-              return (
-                <Button
-                  key={option.id}
-                  variant={selectedSource === option.id ? "default" : "outline"}
-                  onClick={() => !isDisabled && handleSourceSelect(option.id)}
-                  disabled={isDisabled}
-                  className="justify-start h-auto p-3"
-                >
-                  <div className="flex items-start gap-3 text-left">
-                    {option.id === 'project-collections' && collectionsError ? (
-                      <AlertCircle className="w-4 h-4 text-destructive" />
-                    ) : (
-                      option.icon
-                    )}
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{option.label}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {description}
+            {[
+              { id: 'project-collections' as PersonaSource, label: 'Project Collections', icon: <Folder className="w-4 h-4" />, disabled: isProjectCollectionsDisabled },
+              { id: 'my-personas' as PersonaSource, label: 'My Personas', icon: <Users className="w-4 h-4" />, disabled: false },
+              { id: 'public-personas' as PersonaSource, label: 'Public Personas', icon: <Globe className="w-4 h-4" />, disabled: false },
+            ].map((option) => (
+              <Button
+                key={option.id}
+                variant={selectedSource === option.id ? 'default' : 'outline'}
+                onClick={() => !option.disabled && handleSourceSelect(option.id)}
+                disabled={option.disabled}
+                className="justify-start h-auto p-3"
+              >
+                <div className="flex items-start gap-3 text-left w-full">
+                  {option.id === 'project-collections' && collectionsError
+                    ? <AlertCircle className="w-4 h-4 text-destructive" />
+                    : option.icon}
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{option.label}</div>
+                    {option.id === 'project-collections' && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {collectionsLoading ? 'Loading...' : collectionsError ?? 'Choose from collections linked to this project'}
                       </div>
-                    </div>
-                    {selectedSource === option.id && !isDisabled && (
-                      <Check className="w-4 h-4 text-primary" />
-                    )}
-                    {option.id === 'project-collections' && collectionsLoading && (
-                      <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />
                     )}
                   </div>
-                </Button>
-              );
-            })}
+                  {selectedSource === option.id && <Check className="w-4 h-4" />}
+                  {option.id === 'project-collections' && collectionsLoading && (
+                    <div className="w-4 h-4 border-2 border-muted border-t-primary rounded-full animate-spin" />
+                  )}
+                </div>
+              </Button>
+            ))}
           </div>
         </div>
 
-        {/* Collection Selection (for project collections) */}
+        {/* Collection picker */}
         {selectedSource === 'project-collections' && projectCollections.length > 0 && (
           <div>
             <h4 className="text-sm font-medium mb-2">Choose Collection</h4>
-            <Select value={selectedCollection} onValueChange={setSelectedCollection}>
+            <Select value={selectedCollection} onValueChange={handleCollectionSelect}>
               <SelectTrigger className="max-w-md">
                 <SelectValue placeholder="Select a collection..." />
               </SelectTrigger>
               <SelectContent>
-                 {projectCollections.map((collection) => (
-                   <SelectItem key={collection.id} value={collection.id}>
-                     {collection.name}
-                   </SelectItem>
-                 ))}
+                {projectCollections.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         )}
 
-        {/* Persona List */}
-        {selectedSource && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium">Available Personas</h4>
-              <Badge variant="secondary">
-                {selectedPersonas.length}/{maxPersonas} selected
-              </Badge>
+        {/* Search + Filters */}
+        {selectedSource && (selectedSource !== 'project-collections' || selectedCollection) && (
+          <div className="space-y-3">
+            {/* Name search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={nameQuery}
+                onChange={(e) => setNameQuery(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {nameQuery && (
+                <button onClick={() => setNameQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            
-            {isLoading ? (
-              <div className="text-center py-4">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-sm text-muted-foreground mt-2">Loading personas...</p>
-              </div>
-            ) : availablePersonas.length === 0 ? (
-              <div className="text-center py-4 text-muted-foreground">
-                <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">
-                  {selectedSource === 'project-collections' && !selectedCollection
-                    ? 'Please select a collection first'
-                    : 'No personas found for this source'
-                  }
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {availablePersonas.map((persona) => {
-                  const isSelected = selectedPersonas.includes(persona.persona_id);
-                  const canSelect = selectedPersonas.length < maxPersonas || isSelected;
-                  
-                  return (
-                    <div
-                      key={persona.persona_id}
-                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : canSelect
-                          ? 'border-border hover:border-primary/50'
-                          : 'border-border opacity-50 cursor-not-allowed'
-                      }`}
-                      onClick={() => canSelect && togglePersonaSelection(persona.persona_id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{persona.name}</div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {persona.description || 'No description'}
-                          </div>
-                        </div>
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                          isSelected
-                            ? 'bg-primary border-primary'
-                            : 'border-border'
-                        }`}>
-                          {isSelected && (
-                            <Check className="w-3 h-3 text-primary-foreground" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+
+            {/* Filter toggle */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                Filters
+                {hasActiveFilters && <span className="ml-1 text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5">active</span>}
+              </button>
+              {hasActiveFilters && (
+                <button onClick={clearFilters} className="text-xs text-muted-foreground hover:text-foreground">
+                  Clear all
+                </button>
+              )}
+            </div>
+
+            {/* Filter panel */}
+            {showFilters && (
+              <div className="grid grid-cols-2 gap-3 p-3 border rounded-lg bg-muted/30">
+                {/* Gender */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Gender</label>
+                  <Select value={selectedGender} onValueChange={setSelectedGender}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Any" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Any</SelectItem>
+                      {GENDER_OPTIONS.map(g => (
+                        <SelectItem key={g} value={g} className="capitalize">{g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Age range */}
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Age range</label>
+                  <div className="flex items-center gap-1">
+                    <Input
+                      placeholder="Min"
+                      value={ageMin}
+                      onChange={(e) => setAgeMin(e.target.value.replace(/\D/g, ''))}
+                      className="h-8 text-sm w-16"
+                      maxLength={3}
+                    />
+                    <span className="text-muted-foreground text-sm">–</span>
+                    <Input
+                      placeholder="Max"
+                      value={ageMax}
+                      onChange={(e) => setAgeMax(e.target.value.replace(/\D/g, ''))}
+                      className="h-8 text-sm w-16"
+                      maxLength={3}
+                    />
+                  </div>
+                </div>
+
+                {/* Ethnicity — full width */}
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Ethnicity</label>
+                  <Select value={selectedEthnicity} onValueChange={setSelectedEthnicity}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Any ethnicity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Any ethnicity</SelectItem>
+                      {ETHNICITY_OPTIONS.map(e => (
+                        <SelectItem key={e} value={e}>{e}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
+
+            {/* Results */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">
+                  {isSearching ? 'Searching...' : `${totalCount.toLocaleString()} personas`}
+                </span>
+                <Badge variant="secondary">{selectedPersonas.length}/{maxPersonas} selected</Badge>
+              </div>
+
+              {isSearching ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mb-2" />
+                  <p className="text-sm text-muted-foreground">Searching...</p>
+                </div>
+              ) : results.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No personas match your search</p>
+                  {hasActiveFilters && (
+                    <button onClick={clearFilters} className="text-xs text-primary mt-1 hover:underline">Clear filters</button>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+                  {results.map((persona) => {
+                    const isSelected = selectedPersonas.includes(persona.persona_id);
+                    const canSelect = selectedPersonas.length < maxPersonas || isSelected;
+                    return (
+                      <div
+                        key={persona.persona_id}
+                        onClick={() => canSelect && togglePersona(persona.persona_id)}
+                        className={`flex items-center gap-3 p-2.5 border rounded-lg cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : canSelect
+                            ? 'border-border hover:border-primary/50 hover:bg-muted/40'
+                            : 'border-border opacity-40 cursor-not-allowed'
+                        }`}
+                      >
+                        {/* Avatar */}
+                        <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                          {persona.profile_thumbnail_url || persona.profile_image_url ? (
+                            <img
+                              src={persona.profile_thumbnail_url || persona.profile_image_url || ''}
+                              alt={persona.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs font-medium text-muted-foreground">
+                              {persona.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{persona.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {[
+                              persona.age ? `${persona.age}y` : null,
+                              persona.gender ? persona.gender.charAt(0).toUpperCase() + persona.gender.slice(1) : null,
+                              persona.occupation || null,
+                            ].filter(Boolean).join(' · ')}
+                          </div>
+                        </div>
+
+                        {/* Checkbox */}
+                        <div className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center ${
+                          isSelected ? 'bg-primary border-primary' : 'border-border'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1 || isSearching}
+                    className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ← Prev
+                  </button>
+                  <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
+                  <button
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages || isSearching}
+                    className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
