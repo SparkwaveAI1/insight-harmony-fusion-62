@@ -313,12 +313,12 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
                 {/* Gender */}
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Gender</label>
-                  <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <Select value={selectedGender || '__any__'} onValueChange={(v) => setSelectedGender(v === '__any__' ? '' : v)}>
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue placeholder="Any" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any</SelectItem>
+                      <SelectItem value="__any__">Any</SelectItem>
                       {GENDER_OPTIONS.map(g => (
                         <SelectItem key={g} value={g} className="capitalize">{g}</SelectItem>
                       ))}
@@ -351,12 +351,12 @@ export const PersonaSourceSelector: React.FC<PersonaSourceSelectorProps> = ({
                 {/* Ethnicity — full width */}
                 <div className="col-span-2">
                   <label className="text-xs font-medium text-muted-foreground mb-1 block">Ethnicity</label>
-                  <Select value={selectedEthnicity} onValueChange={setSelectedEthnicity}>
+                  <Select value={selectedEthnicity || '__any__'} onValueChange={(v) => setSelectedEthnicity(v === '__any__' ? '' : v)}>
                     <SelectTrigger className="h-8 text-sm">
                       <SelectValue placeholder="Any ethnicity" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any ethnicity</SelectItem>
+                      <SelectItem value="__any__">Any ethnicity</SelectItem>
                       {ETHNICITY_OPTIONS.map(e => (
                         <SelectItem key={e} value={e}>{e}</SelectItem>
                       ))}
