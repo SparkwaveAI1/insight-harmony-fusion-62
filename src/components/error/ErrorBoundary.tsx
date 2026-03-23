@@ -49,6 +49,13 @@ export class ErrorBoundary extends Component<Props, State> {
               Try again
             </Button>
           </div>
+          {this.state.error && (
+            <pre className="mt-6 text-left text-xs text-red-600 bg-red-50 border border-red-200 p-4 rounded max-w-xl overflow-auto whitespace-pre-wrap">
+              {this.state.error.message}
+              {"\n\n"}
+              {this.state.error.stack?.split('\n').slice(0, 8).join('\n')}
+            </pre>
+          )}
         </div>
       );
     }
