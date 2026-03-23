@@ -72,14 +72,20 @@ const CollectionDetail = () => {
     limit: 30,
   });
 
-  // Trigger initial search when collectionId is ready
+  // Scroll + load collection metadata on mount
   useEffect(() => {
     window.scrollTo(0, 0);
     if (collectionId) {
       loadCollection(collectionId);
-      executeSearch();
     }
   }, [collectionId]);
+
+  // Re-run search whenever filters or page change (auto-fires on mount too)
+  useEffect(() => {
+    if (collectionId) {
+      executeSearch();
+    }
+  }, [filters, currentPage, collectionId]);
 
   // Map RPC results to V4Persona shape for PersonaCard
   const toV4Persona = useCallback((r: FilteredSearchResult): V4Persona => ({
