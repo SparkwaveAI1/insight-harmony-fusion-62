@@ -6,6 +6,10 @@
     <link rel="icon" href="/lovable-uploads/928af4dd-ec22-412b-98e0-57d4f08eb4b2.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <meta name="virtual-protocol-site-verification" content="561d727812a05ffb740f82c756eeea46" />
+    <!-- Force browsers never to cache this HTML file -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     
     <!-- SEO Meta Tags -->
     <meta name="description" content="Create AI personas that remember, learn, and evolve. PersonaAI builds persistent digital characters with authentic personalities and deep memory for immersive conversations." />
@@ -38,6 +42,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Chivo:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Bungee:wght@400&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
+    <script>
+      // Detect stale chunk errors and hard-reload to pick up new deployment.
+      // Uses sessionStorage to prevent infinite reload loops.
+      window.addEventListener('error', function(e) {
+        var src = (e.filename || e.message || '');
+        if (src.indexOf('/assets/') !== -1 && src.indexOf('Failed to fetch') !== -1) {
+          var key = 'chunk_reload_' + src;
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, '1');
+            window.location.replace(window.location.href.split('?')[0] + '?r=' + Date.now());
+          }
+        }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason || '');
+        if (msg.indexOf('Failed to fetch dynamically imported module') !== -1) {
+          var key = 'chunk_reload_rej_' + msg.slice(0, 80);
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, '1');
+            window.location.replace(window.location.href.split('?')[0] + '?r=' + Date.now());
+          }
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
