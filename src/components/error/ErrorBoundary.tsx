@@ -24,6 +24,26 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary] Caught error:", error?.message, info?.componentStack?.split('\n').slice(0, 5).join('\n'));
+
+    // Auto-reload on chunk load failures (stale browser cache after deploy)
+    const msg = error?.message || '';
+    const isChunkError =
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('ChunkLoadError') ||
+      msg.includes('Loading chunk') ||
+      msg.includes('Loading CSS chunk');
+
+    if (isChunkError) {
+      const reloadKey = 'eb_chunk_reload_' + msg.slice(0, 60);
+      if (!sessionStorage.getItem(reloadKey)) {
+        sessionStorage.setItem(reloadKey, '1');
+        console.log('[ErrorBoundary] Chunk error detected — reloading to pick up fresh deployment');
+        setTimeout(() => {
+          window.location.replace(window.location.href.split('?')[0] + '?_r=' + Date.now());
+        }, 200);
+      }
+    }
   }
 
   handleReset = () => {
