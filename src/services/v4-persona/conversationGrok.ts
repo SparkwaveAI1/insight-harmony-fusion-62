@@ -26,7 +26,7 @@ export async function sendV4GrokMessage(request: V4GrokConversationRequest): Pro
     console.log('🚀 GROK REQUEST PAYLOAD:', JSON.stringify(request, null, 2));
 
 
-    const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
+    const { data, error } = await supabase.functions.invoke('v4-grok-conversation-clean', {
       body: {
         persona_id: request.persona_id,
         user_message: request.user_message,
