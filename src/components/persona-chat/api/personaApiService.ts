@@ -56,18 +56,15 @@ async function generateQuickPersonaResponse(
     try {
       console.log(`🎯 Attempt ${attempt}/${maxRetries} for persona ${personaId}`);
       
-      // Use the trait-first quick chat function for authentic persona responses
-      const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
+      // Use the clean Grok-only function (no OpenAI dependency)
+      const { data, error } = await supabase.functions.invoke('v4-grok-conversation-clean', {
         body: {
-          personaId,
-          message: userMessage,
-          previousMessages: optimizedHistory.map(msg => ({
+          persona_id: personaId,
+          user_message: userMessage,
+          conversation_history: optimizedHistory.map(msg => ({
             role: msg.role,
-            content: msg.content,
-            image: msg.image
+            content: msg.content
           })),
-          mode,
-          conversationContext,
           imageData
         }
       });
