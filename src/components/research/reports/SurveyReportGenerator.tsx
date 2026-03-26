@@ -334,6 +334,7 @@ Return as JSON: {"summary": "brief summary", "characteristics": ["trait1", "trai
           <ReportExport 
             report={report}
             surveyName={surveyName}
+            surveyDescription={surveyDescription}
             questions={questions}
           />
         </div>

@@ -1,17 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { SurveyReport } from './SurveyReportGenerator';
+import { printReport } from './PrintableReport';
 
 interface ReportExportProps {
   report: SurveyReport;
   surveyName: string;
+  surveyDescription?: string;
   questions: string[];
 }
 
-export const ReportExport: React.FC<ReportExportProps> = ({ report, surveyName, questions }) => {
+export const ReportExport: React.FC<ReportExportProps> = ({ report, surveyName, surveyDescription, questions }) => {
   const generateMarkdownReport = () => {
     let markdown = `# Research Report: ${surveyName}\n\n`;
     markdown += `Generated on: ${new Date().toLocaleDateString()}\n\n`;
@@ -101,7 +103,7 @@ export const ReportExport: React.FC<ReportExportProps> = ({ report, surveyName, 
     return markdown;
   };
 
-  const exportReport = () => {
+  const exportMarkdown = () => {
     try {
       const markdownContent = generateMarkdownReport();
       const blob = new Blob([markdownContent], { type: 'text/markdown' });
@@ -114,17 +116,31 @@ export const ReportExport: React.FC<ReportExportProps> = ({ report, surveyName, 
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      toast.success('Research report exported successfully!');
+      toast.success('Markdown report exported!');
     } catch (error) {
-      console.error('Error exporting report:', error);
       toast.error('Failed to export report');
     }
   };
 
+  const exportPDF = () => {
+    try {
+      printReport(report, surveyName, surveyDescription, questions);
+      toast.success('Report opened — use Ctrl+P (Cmd+P on Mac) to save as PDF');
+    } catch (error) {
+      toast.error('Failed to open PDF report');
+    }
+  };
+
   return (
-    <Button onClick={exportReport} className="flex items-center gap-2">
-      <Download className="w-4 h-4" />
-      Export Report
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button onClick={exportPDF} className="flex items-center gap-2">
+        <FileDown className="w-4 h-4" />
+        Download PDF
+      </Button>
+      <Button variant="outline" onClick={exportMarkdown} className="flex items-center gap-2">
+        <Download className="w-4 h-4" />
+        Export Markdown
+      </Button>
+    </div>
   );
 };
