@@ -98,7 +98,7 @@ serve(async (req) => {
     let unifiedError: any
 
     try {
-      const invokePromise = supabase.functions.invoke('v4-persona-unified', {
+      const invokePromise = supabase.functions.invoke('v4-persona-unified-grok', {
         body: {
           user_description: item.description,
           user_id: item.user_id

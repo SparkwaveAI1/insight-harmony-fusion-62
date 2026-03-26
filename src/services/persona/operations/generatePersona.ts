@@ -4,7 +4,7 @@ import { Persona } from "../types";
 export async function generatePersona(prompt: string): Promise<Persona | null> {
   try {
     // Call the V4 unified persona generation function
-    const { data, error } = await supabase.functions.invoke('v4-persona-unified', {
+    const { data, error } = await supabase.functions.invoke('v4-persona-unified-grok', {
       body: { 
         prompt,
         stage: 'full_generation'

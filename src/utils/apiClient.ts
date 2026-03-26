@@ -222,7 +222,7 @@ export async function invokePersonaCreation<T = unknown>(
   body: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
   const functionName = stage === 'unified' 
-    ? 'v4-persona-unified' 
+    ? 'v4-persona-unified-grok' 
     : `v4-persona-call${stage}`;
   
   return invokeFunction<T>(functionName, body, {

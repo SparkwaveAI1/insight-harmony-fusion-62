@@ -26,7 +26,7 @@ export async function createV4PersonaUnified(request: CreateV4PersonaUnifiedRequ
     });
 
     console.log('📞 About to call edge function...');
-    const { data, error } = await supabase.functions.invoke('v4-persona-unified', {
+    const { data, error } = await supabase.functions.invoke('v4-persona-unified-grok', {
       body: {
         user_description: request.user_description,
         user_id: request.user_id
