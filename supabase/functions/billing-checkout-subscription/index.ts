@@ -89,17 +89,23 @@ serve(async (req) => {
       });
       customerId = customer.id;
 
-      // Update billing profile with customer ID
+      // Update billing profile with customer ID and plan_id
       await supabase
         .from("billing_profiles")
         .upsert({
           user_id: userId,
           stripe_customer_id: customerId,
+          plan_id: planId,
         });
 
       console.log("✅ Created new Stripe customer:", customerId);
     } else {
       console.log("✅ Using existing Stripe customer:", customerId);
+      // Update plan_id for existing profile (user may be upgrading/changing plans)
+      await supabase
+        .from("billing_profiles")
+        .update({ plan_id: planId })
+        .eq("user_id", userId);
     }
 
     // Create checkout session

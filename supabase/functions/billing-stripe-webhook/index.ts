@@ -31,18 +31,40 @@ async function verifyStripeSignature(req: Request): Promise<Stripe.Event> {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log("🎉 Processing checkout.session.completed:", session.id);
   
-  // Only handle payment mode (credit packs) for Task 3C
-  if (session.mode !== "payment") {
-    console.log(`ℹ️ Ignoring ${session.mode} session - only handling credit packs in Task 3C`);
-    return;
-  }
-
   const userId = session.client_reference_id || session.metadata?.user_id;
-  const credits = Number(session.metadata?.credits || 0);
-  
   if (!userId) {
     throw new Error("No user_id found in session");
   }
+
+  if (session.mode === "subscription") {
+    // For subscription checkout: record the plan_id and subscription_id so invoice.paid can grant credits
+    const planId = session.metadata?.plan_id;
+    const subscriptionId = session.subscription as string | null;
+
+    console.log(`📋 Subscription checkout completed for user ${userId}: planId=${planId}, subscriptionId=${subscriptionId}`);
+
+    if (planId) {
+      await supabase
+        .from("billing_profiles")
+        .upsert({
+          user_id: userId,
+          plan_id: planId,
+          ...(subscriptionId ? { stripe_subscription_id: subscriptionId } : {}),
+        });
+      console.log(`✅ Linked plan_id=${planId} to user ${userId}`);
+    } else {
+      console.warn(`⚠️ Subscription checkout for user ${userId} has no plan_id in metadata`);
+    }
+    return;
+  }
+
+  // payment mode = credit pack
+  if (session.mode !== "payment") {
+    console.log(`ℹ️ Ignoring unexpected session mode: ${session.mode}`);
+    return;
+  }
+
+  const credits = Number(session.metadata?.credits || 0);
   
   if (credits <= 0) {
     throw new Error("Invalid credits amount");
@@ -97,8 +119,28 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     return;
   }
 
-  if (!profile.plan_id) {
-    console.log("ℹ️ No plan_id for user, skipping credit grant");
+  // Resolve plan_id: use profile value, fall back to subscription metadata
+  let resolvedPlanId = profile.plan_id;
+  if (!resolvedPlanId && invoice.subscription) {
+    // Try to get plan_id from subscription metadata (set during checkout)
+    try {
+      const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+      resolvedPlanId = subscription.metadata?.plan_id || null;
+      if (resolvedPlanId) {
+        console.log(`📋 Resolved plan_id from subscription metadata: ${resolvedPlanId}`);
+        // Backfill billing_profiles so future invoices work without metadata lookup
+        await supabase
+          .from("billing_profiles")
+          .update({ plan_id: resolvedPlanId })
+          .eq("user_id", profile.user_id);
+      }
+    } catch (err) {
+      console.error("⚠️ Could not retrieve subscription metadata:", err);
+    }
+  }
+
+  if (!resolvedPlanId) {
+    console.log("ℹ️ No plan_id found for user (profile + subscription metadata), skipping credit grant");
     return;
   }
 
@@ -106,7 +148,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const { data: plan, error: planError } = await supabase
     .from("billing_plans")
     .select("included_credits")
-    .eq("plan_id", profile.plan_id)
+    .eq("plan_id", resolvedPlanId)
     .maybeSingle();
 
   if (planError || !plan?.included_credits) {
@@ -141,7 +183,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   // Update billing state
   await supabase.from("billing_states").upsert({
     user_id: profile.user_id,
-    plan_id: profile.plan_id,
+    plan_id: resolvedPlanId,
     stripe_customer_id: customerId,
     stripe_subscription_id: invoice.subscription as string,
     last_invoice_id: invoice.id,
