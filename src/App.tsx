@@ -17,6 +17,7 @@ const PersonaChat = lazy(() => import("./pages/PersonaChat"));
 const PersonaProfile = lazy(() => import("./pages/PersonaProfile"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Billing = lazy(() => import("./pages/Billing"));
+const ApiAccess = lazy(() => import("./pages/ApiAccess"));
 const BillingSuccess = lazy(() => import("./pages/BillingSuccess"));
 const BillingCancel = lazy(() => import("./pages/BillingCancel"));
 const Projects = lazy(() => import("./pages/Projects"));
@@ -135,6 +136,7 @@ function App() {
             {/* Protected Routes */}
             <Route path="/dashboard" element={<S><ProtectedRoute><Dashboard /></ProtectedRoute></S>} />
             <Route path="/dashboard/billing" element={<S><ProtectedRoute><Billing /></ProtectedRoute></S>} />
+            <Route path="/dashboard/api-access" element={<S><ProtectedRoute><ApiAccess /></ProtectedRoute></S>} />
             <Route path="/billing/success" element={<S><BillingSuccess /></S>} />
             <Route path="/billing/cancel" element={<S><BillingCancel /></S>} />
             <Route path="/persona-viewer" element={<S><ProtectedRoute><PersonaViewer /></ProtectedRoute></S>} />

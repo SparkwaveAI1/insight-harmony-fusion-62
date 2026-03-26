@@ -12,6 +12,7 @@ import {
   Shield,
   CreditCard,
   DollarSign,
+  Key,
 } from "lucide-react";
 
 export const navigationMenuItems = [
@@ -59,6 +60,11 @@ export const navigationMenuItems = [
     title: "Billing",
     url: "/dashboard/billing",
     icon: CreditCard,
+  },
+  {
+    title: "API Access",
+    url: "/dashboard/api-access",
+    icon: Key,
   },
 ];
 
