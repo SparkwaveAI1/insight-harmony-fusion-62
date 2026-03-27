@@ -7,7 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const grokApiKey = Deno.env.get('GROK_API_KEY');
+const GROK_MODEL = Deno.env.get('GROK_MODEL') ?? 'grok-3-latest';
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -44,8 +45,8 @@ export async function generateQualitativeInsights(
   questions: string[],
   researchContext?: any
 ): Promise<any> {
-  if (!openAIApiKey) {
-    throw new Error('OpenAI API key not found');
+  if (!grokApiKey) {
+    throw new Error('Grok API key not found');
   }
 
   if (!responses || responses.length === 0) {
@@ -276,17 +277,17 @@ Please provide a comprehensive qualitative research report in JSON format:
 
 Focus on providing deep, contextual insights that would be valuable for research, product development, policy making, or strategic decision-making. Ensure all findings are grounded in the actual response data while connecting to broader research objectives.`;
 
-  console.log('Sending analysis request to OpenAI...');
+  console.log(`Sending analysis request to Grok (${GROK_MODEL})...`);
 
-  // Call OpenAI API for analysis
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  // Call Grok API for analysis (OpenAI-compatible endpoint)
+  const response = await fetch('https://api.x.ai/v1/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
+      'Authorization': `Bearer ${grokApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14',
+      model: GROK_MODEL,
       messages: [
         { 
           role: 'system', 
@@ -301,14 +302,14 @@ Focus on providing deep, contextual insights that would be valuable for research
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(`OpenAI API error: ${errorData.error?.message || response.statusText}`);
+    throw new Error(`Grok API error: ${errorData.error?.message || response.statusText}`);
   }
 
   const data = await response.json();
   const analysisResult = data.choices[0]?.message?.content || '';
 
-  console.log('Received analysis from OpenAI, parsing JSON...');
-  console.log('Raw OpenAI response length:', analysisResult.length);
+  console.log('Received analysis from Grok, parsing JSON...');
+  console.log('Raw Grok response length:', analysisResult.length);
 
   // Extract JSON from markdown code blocks if present
   function extractJSONFromMarkdown(text: string): string {
@@ -336,9 +337,9 @@ Focus on providing deep, contextual insights that would be valuable for research
   try {
     const cleanedResult = extractJSONFromMarkdown(analysisResult);
     insights = JSON.parse(cleanedResult);
-    console.log('Successfully parsed OpenAI response');
+    console.log('Successfully parsed Grok response');
   } catch (parseError) {
-    console.error('Failed to parse OpenAI response as JSON:', parseError);
+    console.error('Failed to parse Grok response as JSON:', parseError);
     // Fallback structure
     insights = {
       executive_summary: {
@@ -367,7 +368,7 @@ Focus on providing deep, contextual insights that would be valuable for research
     total_responses: responses.length,
     unique_personas: responsesByPersona.size,
     total_questions: responsesByQuestion.size,
-    model_used: 'gpt-4.1-2025-04-14'
+    model_used: GROK_MODEL
   };
 
   return insights;
