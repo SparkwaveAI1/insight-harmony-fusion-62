@@ -7,6 +7,7 @@ import {
   Coins,
   Folder,
   FlaskConical,
+  History,
   Mail,
   BookOpen,
   Shield,
@@ -45,6 +46,11 @@ export const navigationMenuItems = [
     title: "Researcher",
     url: "/research",
     icon: FlaskConical,
+  },
+  {
+    title: "Research History",
+    url: "/research/history",
+    icon: History,
   },
   {
     title: "User Guide",

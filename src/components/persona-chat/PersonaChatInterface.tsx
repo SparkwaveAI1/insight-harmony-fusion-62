@@ -19,9 +19,10 @@ import { useCreditBalance } from '@/hooks/useCreditBalance';
 
 interface PersonaChatInterfaceProps {
   personaId: string;
+  onMessagesChange?: (messages: { role: 'user' | 'assistant'; content: string }[]) => void;
 }
 
-const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
+const PersonaChatInterface = ({ personaId, onMessagesChange }: PersonaChatInterfaceProps) => {
   const { user } = useAuth();
   const { refreshBalance } = useCreditBalance();
   const [activePersona, setActivePersona] = useState<any>(null);
@@ -63,7 +64,10 @@ const PersonaChatInterface = ({ personaId }: PersonaChatInterfaceProps) => {
 
   useEffect(() => {
     messagesRef.current = messages;
-  }, [messages]);
+    if (onMessagesChange) {
+      onMessagesChange(messages.map(m => ({ role: m.role, content: m.content })));
+    }
+  }, [messages, onMessagesChange]);
 
   // Ensure hooks are declared before any early returns
   const handleSendMessageWithImage = useCallback(async (message: string, imageFile: File | null) => {

@@ -29,6 +29,7 @@ const CollectionDetail = lazy(() => import("./pages/CollectionDetail"));
 const CustomResearch = lazy(() => import("./pages/CustomResearch"));
 const Research = lazy(() => import("./pages/Research"));
 const ResearchResults = lazy(() => import("./pages/ResearchResults"));
+const ResearchHistory = lazy(() => import("./pages/ResearchHistory"));
 const ACPResults = lazy(() => import("./pages/ACPResults"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -157,6 +158,7 @@ function App() {
             <Route path="/custom-research" element={<S><ProtectedRoute><CustomResearch /></ProtectedRoute></S>} />
             <Route path="/research" element={<S><ProtectedRoute><Research /></ProtectedRoute></S>} />
             <Route path="/research/results/:surveySessionId" element={<S><ProtectedRoute><ResearchResults /></ProtectedRoute></S>} />
+            <Route path="/research/history" element={<S><ProtectedRoute><ResearchHistory /></ProtectedRoute></S>} />
             <Route path="/participate" element={<S><ProtectedRoute><ParticipateResearch /></ProtectedRoute></S>} />
 
             {/* ACP Results - Public */}
