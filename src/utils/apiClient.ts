@@ -104,7 +104,7 @@ function createTimeout(ms: number): Promise<never> {
  * 
  * @example
  * ```ts
- * const { data, error } = await invokeFunction('v4-grok-conversation', {
+ * const { data, error } = await invokeFunction('v4-grok-conversation-clean', {
  *   persona_id: 'v4_123',
  *   user_message: 'Hello!'
  * });
@@ -208,7 +208,7 @@ export async function invokeFunction<T = unknown>(
 export async function invokeConversation<T = unknown>(
   body: Record<string, unknown>
 ): Promise<ApiResponse<T>> {
-  return invokeFunction<T>('v4-grok-conversation', body, {
+  return invokeFunction<T>('v4-grok-conversation-clean', body, {
     timeout: 60000, // 60s for conversations (can be slow with images)
     maxRetries: 2,
   });

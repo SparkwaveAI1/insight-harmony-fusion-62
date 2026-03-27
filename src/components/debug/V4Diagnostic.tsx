@@ -35,7 +35,7 @@ export function V4Diagnostic() {
   const runRealFunction = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('v4-grok-conversation', {
+      const { data, error } = await supabase.functions.invoke('v4-grok-conversation-clean', {
         body: {
           persona_id: personaId,
           user_message: userMessage,
