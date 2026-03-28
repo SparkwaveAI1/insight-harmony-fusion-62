@@ -60,21 +60,66 @@ interface SearchResult {
 /**
  * Enhanced query parser that extracts diversity requirements
  */
+/**
+ * Try LLM API with failover. Attempts OpenAI first, falls back to Grok (via xAI) on failure.
+ */
+async function callLlmWithFailover(
+  messages: any[],
+  openaiKey: string,
+  grokKey?: string
+): Promise<any> {
+  // Try OpenAI first
+  if (openaiKey) {
+    try {
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'gpt-4o-mini', temperature: 0, response_format: { type: 'json_object' }, messages }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.choices?.[0]?.message?.content) {
+          return JSON.parse(data.choices[0].message.content);
+        }
+      }
+      const errText = await resp.text().catch(() => '');
+      console.warn('[LLM] OpenAI failed:', resp.status, errText.slice(0, 200));
+    } catch (e: any) {
+      console.warn('[LLM] OpenAI error:', e?.message);
+    }
+  }
+
+  // Fall back to Grok (xAI API)
+  if (grokKey) {
+    try {
+      const resp = await fetch('https://api.x.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${grokKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'grok-3-mini', temperature: 0, response_format: { type: 'json_object' }, messages }),
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data.choices?.[0]?.message?.content) {
+          return JSON.parse(data.choices[0].message.content);
+        }
+      }
+      const errText = await resp.text().catch(() => '');
+      console.warn('[LLM] Grok failed:', resp.status, errText.slice(0, 200));
+    } catch (e: any) {
+      console.warn('[LLM] Grok error:', e?.message);
+    }
+  }
+
+  throw new Error('All LLM providers failed');
+}
+
 export async function parseQueryWithGPT(query: string, openaiKey: string): Promise<ParsedCriteria> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openaiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: 'system',
-          content: `You parse research queries into database search filters AND diversity requirements.
+  // Also read Grok key from env for failover
+  const grokKey: string | undefined = (typeof Deno !== 'undefined')
+    ? (Deno.env.get('GROK_API_KEY') || Deno.env.get('XAI_API_KEY'))
+    : undefined;
+
+  const systemPrompt = `You parse research queries into database search filters AND diversity requirements.
 
 **CRITICAL: Parse BOTH basic filters AND diversity requirements**
 
@@ -83,15 +128,18 @@ BASIC FILTERS (same as before):
 - gender: "male" or "female" 
 - genders: Array when multiple specified
 - states: Array of US state names
-- occupation_keywords: Array of occupation-related words
+- occupation_keywords: Array of occupation-related words (SINGULAR FORM: "nurse" not "nurses", "worker" not "workers", "doctor" not "doctors")
 - education_level/education_levels: Education requirements
 - income_brackets: Income ranges
 - ethnicities: Ethnicity requirements
 - has_children: true/false if mentioned
 - health_tags: Health conditions
 - political_leans: Array of political orientations
-- text_contains: Key phrases
+- text_contains: Key phrases for open-ended topics (burnout, stress, anxiety, etc.)
 - total_count: Total number requested (default from context)
+
+IMPORTANT: occupation_keywords must be SINGULAR. Always strip trailing 's' from occupation nouns.
+Examples: "nurses" → ["nurse"], "doctors" → ["doctor"], "healthcare workers" → ["healthcare worker"]
 
 DIVERSITY REQUIREMENTS - Extract these patterns:
 - "different X" / "variety of X" / "mix of X" → {"field": "X", "type": "unique"}
@@ -129,27 +177,39 @@ Response: {
   "diversity_requirements": [{"field": "state_region", "type": "unique"}]
 }
 
-Return JSON with these fields. Use null for unspecified filters.`
-        },
-        {
-          role: 'user',
-          content: query
-        }
-      ],
-    }),
-  });
+Return JSON with these fields. Use null for unspecified filters.`;
 
-  if (!response.ok) {
-    throw new Error('Failed to parse query');
-  }
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: query }
+  ];
 
-  const result = await response.json();
-  return JSON.parse(result.choices[0].message.content);
+  return callLlmWithFailover(messages, openaiKey, grokKey);
 }
 
 /**
  * Build RPC parameters from parsed criteria
  */
+/**
+ * Normalize an occupation keyword for ILIKE substring matching.
+ * Strips common plural suffixes so "nurses" → "nurse", "workers" → "worker", etc.
+ * Persona occupations are stored singular ("Nurse", "Healthcare Worker") so plural queries
+ * return 0 results. This normalization bridges the gap.
+ */
+function normalizeOccupationKeyword(kw: string): string {
+  const lower = kw.toLowerCase().trim();
+  // Strip trailing 's' for common plural forms, but not short words (≤3 chars)
+  // and not words that end in 'ss' (e.g., "boss") or 'ess' (e.g., "actress")
+  if (lower.length > 4 && lower.endsWith('ers')) return lower.slice(0, -1);  // "workers" → "worker"
+  if (lower.length > 4 && lower.endsWith('ists')) return lower.slice(0, -1); // "analysts" → "analyst"
+  if (lower.length > 4 && lower.endsWith('ors')) return lower.slice(0, -1);  // "doctors" → "doctor"
+  if (lower.length > 4 && lower.endsWith('ians')) return lower.slice(0, -1); // "physicians" → "physician"
+  if (lower.length > 3 && lower.endsWith('ves')) return lower.slice(0, -3) + 'fe'; // "wives" → "wife"
+  if (lower.length > 4 && lower.endsWith('es') && !lower.endsWith('ses')) return lower.slice(0, -1); // "nurses" → "nurse"
+  if (lower.length > 4 && lower.endsWith('s') && !lower.endsWith('ss') && !lower.endsWith('ess')) return lower.slice(0, -1); // generic plural strip
+  return lower;
+}
+
 function buildRpcParams(criteria: ParsedCriteria, limit: number, excludeIds: string[] = []): any {
   const params: any = { 
     p_limit: limit,
@@ -163,7 +223,8 @@ function buildRpcParams(criteria: ParsedCriteria, limit: number, excludeIds: str
   if (criteria.genders?.length) params.p_genders = criteria.genders;
   if (criteria.states?.length) params.p_states = criteria.states;
   if (criteria.occupation_keywords?.length) {
-    params.p_occupation_contains = criteria.occupation_keywords[0];
+    // Normalize to singular form — DB stores "Nurse" not "nurses", "Healthcare Worker" not "healthcare workers"
+    params.p_occupation_contains = normalizeOccupationKeyword(criteria.occupation_keywords[0]);
   }
   if (criteria.education_levels?.length) params.p_education_levels = criteria.education_levels;
   if (criteria.income_brackets?.length) params.p_income_brackets = criteria.income_brackets;
