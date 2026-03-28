@@ -1828,6 +1828,7 @@ export type Database = {
           encryption_iv: string | null
           encryption_key: string | null
           id: string
+          is_active: boolean
           key_present: boolean | null
           service: string
           updated_at: string | null
@@ -1839,6 +1840,7 @@ export type Database = {
           encryption_iv?: string | null
           encryption_key?: string | null
           id?: string
+          is_active?: boolean
           key_present?: boolean | null
           service: string
           updated_at?: string | null
@@ -1850,6 +1852,7 @@ export type Database = {
           encryption_iv?: string | null
           encryption_key?: string | null
           id?: string
+          is_active?: boolean
           key_present?: boolean | null
           service?: string
           updated_at?: string | null
