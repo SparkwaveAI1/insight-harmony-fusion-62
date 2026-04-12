@@ -68,6 +68,42 @@
     </script>
   </head>
   <body>
+    <!-- ULTRA AGGRESSIVE: Catch ALL chunk loading failures and force fresh load -->
+    <script>
+      (function() {
+        var reloadCount = parseInt(sessionStorage.getItem('_pr') || '0');
+        if (reloadCount > 2) { sessionStorage.removeItem('_pr'); }
+        
+        function forceReload() {
+          if (reloadCount < 3) {
+            reloadCount++;
+            sessionStorage.setItem('_pr', reloadCount.toString());
+            console.log('Chunk loading failed, forcing hard reload...', reloadCount);
+            window.location.href = window.location.pathname + '?_=' + Date.now();
+          }
+        }
+        
+        window.addEventListener('error', function(e) {
+          var msg = (e.message || '').toLowerCase();
+          var src = (e.filename || '').toLowerCase();
+          if (src.includes('/assets/') || msg.includes('dynamically') || 
+              msg.includes('failed to fetch') || msg.includes('import') ||
+              (src.includes('.js') && msg.includes('error'))) {
+            e.preventDefault();
+            forceReload();
+          }
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+          var msg = String(e.reason || '').toLowerCase();
+          if (msg.includes('failed to fetch dynamically') || 
+              msg.includes('dynamically imported module') ||
+              (msg.includes('import') && msg.includes('failed'))) {
+            forceReload();
+          }
+        });
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
