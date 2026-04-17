@@ -85,7 +85,7 @@ const PersonaQueue = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const ITEMS_PER_PAGE = 50;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const totalPages = totalItems > 0 ? Math.ceil(totalItems / ITEMS_PER_PAGE) : 0;
 
   const CONSECUTIVE_FAILURE_LIMIT = 3;
   const PERSONA_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
