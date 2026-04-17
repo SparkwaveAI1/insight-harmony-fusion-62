@@ -62,6 +62,21 @@ const ensureV4PersonaCore = (persona: any) => {
   return persona;
 };
 
+// Safe component wrapper to catch render errors
+const SafePersonaQueue = ({ children }: { children: React.ReactNode }) => {
+  try {
+    return <>{children}</>;
+  } catch (err: any) {
+    console.error('💥 Render error caught:', err?.message);
+    return (
+      <div className="p-8 text-center text-red-500">
+        <h2 className="text-xl font-bold mb-2">Render Error</h2>
+        <p>{err?.message}</p>
+      </div>
+    );
+  }
+};
+
 const PersonaQueue = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -735,8 +750,16 @@ const PersonaQueue = () => {
     }
   };
 
-  if (!user || !isAdmin) {
-    return null;
+  // Render guard - require user AND loaded admin status
+  if (!user || !userEmail || !isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading queue...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
