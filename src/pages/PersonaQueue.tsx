@@ -90,23 +90,26 @@ const PersonaQueue = () => {
   const CONSECUTIVE_FAILURE_LIMIT = 3;
   const PERSONA_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
 
-  // Check if user is admin - be defensive
+// Check if user is admin - be defensive
   const userEmail = user?.email;
   const isAdmin = !!(userEmail && ADMIN_EMAILS.includes(userEmail));
   
   // Debug log in production for admin check
-  if (import.meta.env.DEV) {
-    console.log('Admin check:', { userEmail, isAdmin, inList: ADMIN_EMAILS.includes(userEmail || '') });
-  }
+  console.log('🎯 Admin check:', { userEmail, isAdmin, inList: userEmail ? ADMIN_EMAILS.includes(userEmail) : false });
 
   useEffect(() => {
+    console.log('🔍 useEffect #1 (admin check):', { user: !!user, userEmail: !!userEmail, isAdmin });
     // Wait for auth to fully load before checking admin status
     if (!user || !userEmail) {
+      console.log('🔍 useEffect #1: waiting for auth');
       return;
     }
     // Only redirect non-admins, not people still loading
     if (!isAdmin) {
+      console.log('🔍 useEffect #1: NOT ADMIN, redirecting to /');
       navigate("/");
+    } else {
+      console.log('🔍 useEffect #1: IS ADMIN, good to go');
     }
   }, [user, userEmail, isAdmin, navigate]);
 
