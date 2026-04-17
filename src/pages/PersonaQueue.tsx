@@ -736,7 +736,7 @@ const PersonaQueue = () => {
                   <SidebarTrigger className="hidden md:flex" />
                   <div>
                     <h1 className="text-3xl font-bold">Persona Queue Admin</h1>
-                    {queueItems.length > 0 && (
+                    {queueItems && queueItems.length > 0 && (
                       <div className="flex gap-4 mt-2 text-sm">
                         <span className="text-muted-foreground">
                           Total: <strong>{queueItems.length}</strong>
@@ -822,7 +822,7 @@ const PersonaQueue = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {queueItems.length === 0 ? (
+                        {(!queueItems || queueItems.length === 0) ? (
                           <TableRow>
                             <TableCell colSpan={5} className="text-center py-8">
                               No queue items found
@@ -902,7 +902,7 @@ const PersonaQueue = () => {
                     {totalPages > 1 && (
                       <div className="flex items-center justify-between px-4 py-3 border-t">
                         <div className="text-sm text-muted-foreground">
-                          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems)} of {totalItems} items
+                          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems || 0)} of {totalItems || 0} items
                         </div>
                         <div className="flex gap-2">
                           <Button
