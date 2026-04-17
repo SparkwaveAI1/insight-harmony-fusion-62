@@ -141,7 +141,7 @@ const PersonaQueue = () => {
           getQueueItemCount()
         ]);
         setQueueItems(items || []);
-        setTotalItems(count);
+        setTotalItems(typeof count === 'number' ? count : 0);
         console.log('loadQueueItems: loaded', items?.length || 0, 'of', count, 'items');
       } else {
         const items = await getQueueItems(user.id);
