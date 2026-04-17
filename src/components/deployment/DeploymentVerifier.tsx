@@ -16,8 +16,7 @@ export function DeploymentVerifier() {
         console.log(`🧪 Testing V4 personas access from fresh component...`);
         const { data, error } = await supabase
           .from('v4_personas')
-          .select('count(*)')
-          .limit(1);
+          .select('*', { count: 'exact', head: true });
         
         if (error) {
           console.error(`❌ V4 personas access failed:`, error);
