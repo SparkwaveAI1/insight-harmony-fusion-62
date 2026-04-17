@@ -64,7 +64,8 @@ const BlogIndex = lazy(() => import("./pages/blog/BlogIndex"));
 const BlogPost = lazy(() => import("./pages/blog/BlogPost"));
 
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
+// TEMP: DeploymentVerifier removed - was causing Supabase count errors
+// import { DeploymentVerifier } from "./components/deployment/DeploymentVerifier";
 import { JobCompletionNotifier } from "./components/persona-creation/JobCompletionNotifier";
 import ScrollToTop from "./components/layout/ScrollToTop";
 
@@ -96,7 +97,8 @@ function App() {
         <ScrollToTop />
         <AuthProvider>
           <JobCompletionNotifier />
-          <DeploymentVerifier />
+          {/* TEMP: DeploymentVerifier removed - was causing Supabase count errors */}
+          {/* <DeploymentVerifier /> */}
 
           <Routes>
             {/* Debug / test routes */}
