@@ -100,9 +100,11 @@ const PersonaQueue = () => {
   }, [user, isAdmin, navigate]);
 
   useEffect(() => {
-    if (user && isAdmin) {
-      loadQueueItems(true); // immediate on initial load
+    // Guard against missing user or admin status
+    if (!user || !user.email || !isAdmin) {
+      return;
     }
+    loadQueueItems(true); // immediate on initial load
   }, [user, isAdmin, currentPage, loadQueueItems]);
 
 
