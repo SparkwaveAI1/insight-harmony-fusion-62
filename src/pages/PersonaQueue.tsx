@@ -99,16 +99,8 @@ const PersonaQueue = () => {
     }
   }, [user, isAdmin, navigate]);
 
-  useEffect(() => {
-    // Guard against missing user or admin status
-    if (!user || !user.email || !isAdmin) {
-      return;
-    }
-    loadQueueItems(true); // immediate on initial load
-  }, [user, isAdmin, currentPage, loadQueueItems]);
-
-
   // Debounced load function to prevent multiple rapid API calls
+  // MUST be defined before the useEffect that calls it (temporal dead zone)
   const loadQueueItems = useCallback(async (immediate = false) => {
     if (!user) return;
 
@@ -163,6 +155,14 @@ const PersonaQueue = () => {
       loadingRef.current = false;
     }
   }, [user, isAdmin, currentPage, toast]);
+
+  // Load queue items on mount and when dependencies change
+  useEffect(() => {
+    if (!user || !user.email || !isAdmin) {
+      return;
+    }
+    loadQueueItems(true);
+  }, [user, isAdmin, currentPage, loadQueueItems]);
 
   const handleTestAdd = async () => {
     if (!user) return;
