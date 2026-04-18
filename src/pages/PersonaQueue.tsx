@@ -1,60 +1,1018 @@
-// MINIMAL TEST VERSION - to isolate whether the problem is here vs elsewhere
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/sections/Footer";
+import { Toaster } from "@/components/ui/toaster";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  addToQueue,
+  getQueueItems,
+  getAllQueueItems,
+  getQueueItemCount,
+  updateQueueStatus,
+  updateQueueStatusSafe,
+  parsePersonaDescription,
+  parseBulkPersonaDescriptions,
+  popNextQueueItem,
+  forceFailQueueItem,
+  deleteQueueItem
+} from "@/services/personaQueueService";
+import { useToast } from "@/hooks/use-toast";
+import { createV4PersonaUnified } from "@/services/v4-persona";
+import { tryAcquireQueueLock, renewQueueLock, releaseQueueLock, readQueueLock } from '@/utils/queueLock';
+import { addPersonaToCollection } from '@/services/collections/personaCollectionOperations';
+import { getUserCollections } from '@/services/collections/collectionOperations';
+import { supabase } from '@/integrations/supabase/client';
+import { QueueHealthMonitor } from '@/components/persona-queue/QueueHealthMonitor';
+import { getProcessingTimeText, getStatusColor, getStatusDisplay } from '@/services/queueHealthService';
+import { RefreshCw, Trash2, ExternalLink, Upload, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { importPersonaFromJSON } from "@/services/persona/operations/importPersona";
 
 const ADMIN_EMAILS = [
   "cumbucotrader@gmail.com",
   "scott@sparkwave-ai.com",
 ];
 
-const MinimalQueue = () => {
-  const { user, isLoading } = useAuth();
+const ensureV4PersonaCore = (persona: any) => {
+  if (!persona) throw new Error('No persona returned from creation call');
+  if (!persona.schema_version || !persona.schema_version.startsWith('v4')) {
+    throw new Error(`Non-V4 persona detected (schema_version=${persona.schema_version || 'missing'})`);
+  }
+
+  const fp = persona.full_profile;
+  if (!fp) throw new Error('V4 persona missing full_profile');
+  if (!fp.identity) throw new Error('V4 persona missing full_profile.identity');
+  if (!fp.communication_style) throw new Error('V4 persona missing full_profile.communication_style');
+  if (!fp.motivation_profile) throw new Error('V4 persona missing full_profile.motivation_profile');
+
+  // conversation_summary is strongly recommended for engine:
+  if (!persona.conversation_summary) {
+    console.warn('V4 persona missing conversation_summary (will degrade UX but not blocked)');
+  }
+
+  // DO NOT require legacy `trait_profile` for V4
+  return persona;
+};
+
+const PersonaQueue = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [status, setStatus] = useState("initializing");
+  const { toast } = useToast();
+  const [queueItems, setQueueItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [textareaContent, setTextareaContent] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [consecutiveFailures, setConsecutiveFailures] = useState(0);
+  const [showJsonImportDialog, setShowJsonImportDialog] = useState(false);
+  const [jsonImportText, setJsonImportText] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+
+  // Debounce refs to prevent multiple rapid reloads
+  const loadingRef = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const ITEMS_PER_PAGE = 50;
+  const totalPages = totalItems > 0 ? Math.ceil(totalItems / ITEMS_PER_PAGE) : 0;
+
+  const CONSECUTIVE_FAILURE_LIMIT = 3;
+  const PERSONA_TIMEOUT_MS = 4 * 60 * 1000; // 4 minutes
+
+  // Check if user is admin
+  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
 
   useEffect(() => {
-    console.log("[TEST] MinimalQueue rendering, user:", !!user, "isLoading:", isLoading);
-    setStatus("useEffect running");
-  }, [user, isLoading]);
+    if (user && !isAdmin) {
+      navigate("/");
+    }
+  }, [user, isAdmin, navigate]);
 
-  // Wait for auth to load
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading auth...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    // Guard against missing user or admin status
+    if (!user || !user.email || !isAdmin) {
+      return;
+    }
+    loadQueueItems(true); // immediate on initial load
+  }, [user, isAdmin, currentPage, loadQueueItems]);
 
-  // No user = redirect
-  if (!user) {
-    setStatus("no user, redirecting");
-    navigate("/sign-in");
-    return null;
-  }
 
-  // Check admin
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
-  console.log("[TEST] Admin check:", user?.email, isAdmin);
+  // Debounced load function to prevent multiple rapid API calls
+  const loadQueueItems = useCallback(async (immediate = false) => {
+    if (!user) return;
 
-  if (!isAdmin) {
-    setStatus("not admin, redirecting to /");
-    navigate("/");
+    // Clear any pending debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
+    // If already loading, skip (unless immediate)
+    if (loadingRef.current && !immediate) {
+      console.log('loadQueueItems: skipped (already loading)');
+      return;
+    }
+
+    // Debounce non-immediate calls by 500ms
+    if (!immediate) {
+      debounceTimerRef.current = setTimeout(() => loadQueueItems(true), 500);
+      return;
+    }
+
+    loadingRef.current = true;
+
+    try {
+      setLoading(true);
+      const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+      // Admins see all queue items across all users (with pagination)
+      if (isAdmin) {
+        const [items, count] = await Promise.all([
+          getAllQueueItems(ITEMS_PER_PAGE, offset),
+          getQueueItemCount()
+        ]);
+        setQueueItems(items || []);
+        setTotalItems(typeof count === 'number' ? count : 0);
+        console.log('loadQueueItems: loaded', items?.length || 0, 'of', count, 'items');
+      } else {
+        const items = await getQueueItems(user.id);
+        setQueueItems(items || []);
+        setTotalItems(items?.length || 0);
+      }
+    } catch (error: any) {
+      console.error('Error loading queue items:', error);
+      toast({
+        title: "Error",
+        description: `Failed to load queue items: ${error?.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+      setQueueItems([]);
+    } finally {
+      setLoading(false);
+      loadingRef.current = false;
+    }
+  }, [user, isAdmin, currentPage, toast]);
+
+  const handleTestAdd = async () => {
+    if (!user) return;
+
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const probeName = `Queue Probe ${timestamp}`;
+      
+      await addToQueue(
+        user.id,
+        probeName,
+        'A test probe persona to observe queue behavior and trace logging',
+        []
+      );
+      toast({
+        title: "Success",
+        description: `Added "${probeName}" to queue`,
+      });
+      loadQueueItems(); // Refresh the list
+    } catch (error) {
+      console.error('Error adding test item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add test item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const testStatusUpdate = async () => {
+    // Test with Denise Chen's ID
+    const deniseId = '10bdf9e6-8327-4f4a-9f57-02de800dc7e7';
+    console.log('🧪 Testing updateQueueStatus with Denise Chen...');
+    
+    try {
+      console.log('Before update - checking current status...');
+      const result = await updateQueueStatus(deniseId, 'test_status');
+      console.log('✅ updateQueueStatus SUCCESS:', result);
+      toast({ title: "Test Success", description: "Status update worked!" });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('❌ updateQueueStatus FAILED:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
+      toast({ title: "Test Failed", description: `Status update failed: ${error.message}`, variant: "destructive" });
+    }
+  };
+
+  // Test function to update status WITH persona_id
+  const testStatusWithPersonaId = async () => {
+    const deniseId = '10bdf9e6-8327-4f4a-9f57-02de800dc7e7';
+    console.log('🧪 Testing status + persona_id update for Denise Chen...');
+    
+    try {
+      const result = await updateQueueStatus(deniseId, 'test_with_persona', 'test_persona_id_123');
+      console.log('✅ Status + persona_id update successful:', result);
+      console.log('📋 Check persona_id field:', result.persona_id);
+      toast({ 
+        title: "Test Success", 
+        description: `Status + persona_id update worked! persona_id: ${result.persona_id}`
+      });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('❌ Status + persona_id update failed:', error);
+      toast({ 
+        title: "Test Failed", 
+        description: `Status + persona_id update failed: ${error.message}`, 
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const handleManualClear = async (id: string, name: string) => {
+    try {
+      await forceFailQueueItem(id, 'Manually cleared by admin');
+      toast({
+        title: "Success",
+        description: `Cleared ${name} from queue`,
+      });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('Error clearing queue item:', error);
+      toast({
+        title: "Error",
+        description: `Failed to clear ${name}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteItem = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete "${name}"? This will permanently remove it from the queue.`)) {
+      return;
+    }
+    
+    try {
+      setBusy(true);
+      await deleteQueueItem(id);
+      toast({
+        title: "Success",
+        description: `Deleted "${name}" from queue`,
+      });
+      loadQueueItems(); // Refresh to see the change
+    } catch (error) {
+      console.error('Error deleting queue item:', error);
+      toast({
+        title: "Error",
+        description: `Failed to delete ${name}`,
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleParseAndAdd = async () => {
+    if (!user || !textareaContent.trim()) return;
+
+    try {
+      // Check if this is bulk input (contains numbered entries with names)
+      // Match either start of string or newline followed by numbered entry
+      const hasBulkFormat = /(?:^|\n)\d+\.\s+[A-Z]/.test(textareaContent.trim());
+
+      if (hasBulkFormat) {
+        // Parse multiple personas
+        const personas = parseBulkPersonaDescriptions(textareaContent.trim());
+
+        // Add all to queue in parallel
+        const addPromises = personas.map(p =>
+          addToQueue(user.id, p.name, p.description, p.collections)
+        );
+
+        await Promise.all(addPromises);
+
+        toast({
+          title: "Success",
+          description: `Added ${personas.length} persona${personas.length > 1 ? 's' : ''} to queue`,
+        });
+      } else {
+        // Single persona (existing logic)
+        const parsed = parsePersonaDescription(textareaContent.trim());
+
+        await addToQueue(
+          user.id,
+          parsed.name,
+          parsed.description,
+          parsed.collections
+        );
+
+        toast({
+          title: "Success",
+          description: `Added "${parsed.name}" to queue`,
+        });
+      }
+
+      setTextareaContent(''); // Clear textarea
+      loadQueueItems(); // Refresh the list
+    } catch (error) {
+      console.error('Error adding to queue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add to queue",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleJsonImport = async () => {
+    if (!user || !jsonImportText.trim()) return;
+
+    setIsImporting(true);
+    setImportError(null);
+
+    try {
+      // Parse JSON
+      let personaData;
+      try {
+        personaData = JSON.parse(jsonImportText);
+        console.log("📋 JSON parsed successfully:", {
+          keys: Object.keys(personaData),
+          hasName: !!personaData.name,
+          hasDescription: !!personaData.description,
+          hasPersonaData: !!personaData.persona_data,
+          hasIdentity: !!personaData.identity,
+          structure: personaData.persona_data ? 'V3' : personaData.identity ? 'V3-flat' : 'Legacy'
+        });
+      } catch (parseError: any) {
+        console.error('❌ JSON parse error:', parseError);
+        toast({
+          title: "Invalid JSON Syntax",
+          description: `JSON parsing failed: ${parseError.message}. Please check your JSON format.`,
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+
+      // Validate basic structure
+      if (!personaData || typeof personaData !== 'object') {
+        console.error('❌ Invalid persona data: not an object', personaData);
+        toast({
+          title: "Invalid Persona Data",
+          description: "JSON must contain a persona object.",
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+
+      // Check for required fields
+      if (!personaData.name) {
+        console.error('❌ Missing required field: name');
+        toast({
+          title: "Missing Required Field",
+          description: "Persona JSON must include a 'name' field.",
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+
+      console.log("🚀 Starting import for persona:", personaData.name);
+
+      // Use the existing importPersonaFromJSON function which handles:
+      // - Validation
+      // - V3 vs Legacy detection
+      // - Profile image generation
+      // - Saving to database
+      const persona = await importPersonaFromJSON(personaData);
+
+      if (persona) {
+        console.log("✅ Persona imported successfully:", {
+          name: persona.name,
+          persona_id: persona.persona_id,
+          hasImage: !!persona.profile_image_url
+        });
+        toast({
+          title: "Success",
+          description: `Persona "${persona.name}" imported successfully with profile image!`,
+        });
+
+        setJsonImportText('');
+        setShowJsonImportDialog(false);
+
+        // Navigate to the persona detail page
+        navigate(`/persona-detail/${persona.persona_id}`);
+      } else {
+        console.error('❌ Import returned null - unknown failure');
+        const errorMsg = "Failed to import persona. The import function returned no data. Check console for details.";
+        setImportError(errorMsg);
+        toast({
+          title: "Import Failed",
+          description: errorMsg,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('❌ Error importing persona:', {
+        message: error.message,
+        stack: error.stack,
+        error: error
+      });
+
+      // Provide more specific error messages
+      let errorDescription = error.message || "Unknown error occurred";
+
+      if (error.message?.includes('User must be authenticated')) {
+        errorDescription = "You must be signed in to import personas.";
+      } else if (error.message?.includes('name is required')) {
+        errorDescription = "Persona JSON must include a 'name' field.";
+      } else if (error.message?.includes('Database error') || error.message?.includes('Failed to save')) {
+        errorDescription = error.message;
+      } else if (error.message?.includes('V4 persona import not yet supported')) {
+        errorDescription = error.message;
+      }
+
+      setImportError(errorDescription);
+      toast({
+        title: "Import Failed",
+        description: errorDescription,
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  // New enhanced cross-tab lock processing handler
+  const onProcessClick = async () => {
+    if (busy) return;
+
+    // Cross-tab guard using new utility
+    if (!tryAcquireQueueLock(60_000)) {
+      const held = readQueueLock();
+      toast({
+        title: 'Already processing elsewhere',
+        description: `Another tab started processing. Try again in ~60s.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setBusy(true);
+    const renew = setInterval(() => renewQueueLock(60_000), 30_000); // keepalive if it runs long
+    try {
+      await processQueueItemInternal();
+    } finally {
+      clearInterval(renew);
+      releaseQueueLock();
+      setBusy(false);
+    }
+  };
+
+  const processQueueItemInternal = async () => {
+    if (!user || processing) {
+      console.log('🚫 Already processing or no user, skipping...');
+      return;
+    }
+
+    setProcessing(true);
+    console.log('🚀 Starting to process queue with atomic pop...');
+    
+    let currentItemId: string | null = null;
+    let currentItemName: string | null = null;
+
+    // Timeout wrapper to prevent hanging stages
+    const withTimeout = <T,>(p: Promise<T>, ms: number, label: string = 'operation'): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`${label} timeout after ${ms/1000}s`)), ms)),
+      ]);
+
+    // Helper to fail with proper error capture
+    const fail = async (msg: string): Promise<never> => {
+      if (currentItemId) {
+        await deleteQueueItem(currentItemId);
+      }
+      throw new Error(msg);
+    };
+
+    try {
+      // Reset stale processing items (stuck >5 min) back to pending
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      await supabase
+        .from('persona_creation_queue')
+        .update({ status: 'pending', error_message: 'Reset: Stale processing state' })
+        .eq('status', 'processing')
+        .lt('updated_at', fiveMinutesAgo);
+
+      // 1) Atomically claim a job
+      const item = await popNextQueueItem();
+      if (!item) {
+        toast({
+          title: 'Queue empty',
+          description: 'No pending items to process',
+        });
+        return;
+      }
+
+      currentItemId = item.id;
+      currentItemName = item.name;
+      console.log('📋 Claimed queue item:', item.name, 'Status:', item.status);
+
+      let personaId = item.persona_id ?? null;
+      let currentStatus = item.status; // Track current status locally
+
+      // === STEP 2: Resume Logic - Fetch fresh queue row to check existing persona_id ===
+      const { data: queueRow } = await supabase
+        .from('persona_creation_queue')
+        .select('status, persona_id, collections')
+        .eq('id', item.id)
+        .single();
+
+      if (queueRow?.persona_id) {
+        personaId = queueRow.persona_id;
+        currentStatus = queueRow.status; // Use actual current status
+        console.log('📋 Resume detected - existing persona_id:', personaId);
+        
+        // Skip to correct stage based on current status
+        if (queueRow.status === 'completed') {
+          console.log('✅ Item already completed, skipping');
+          return;
+        }
+      }
+
+      // === Stage 1: Create (idempotent) ===
+      if (!personaId && (currentStatus === 'processing' || currentStatus === 'processing_stage1')) {
+        console.log('🎯 Starting V4 persona creation...');
+        
+        // DIAGNOSTIC: Log trace before queue creation call
+        console.log('TRACE_Q_START', {
+          queue_item_id: item.id,
+          payload_keys: Object.keys({
+            user_prompt: item.description,
+            user_id: user.id
+          }),
+          ts: new Date().toISOString(),
+        });
+        
+        const unifiedResponse = await withTimeout(createV4PersonaUnified({
+          user_description: item.description,
+          user_id: user.id
+        }), PERSONA_TIMEOUT_MS, 'Persona creation'); // 4 minute timeout
+
+        if (!unifiedResponse.success) {
+          await fail(`V4 Unified creation failed: ${unifiedResponse.error}`);
+        }
+
+        // === STEP 1: Validate and persist persona_id after creation ===
+        personaId = unifiedResponse.persona_id;
+        
+        // Guard: only accept real V4 ids; never write queue uuid by accident
+        if (!personaId || !String(personaId).startsWith('v4_')) {
+          await fail(`Unified creation returned non-v4 persona_id: ${personaId}`);
+        }
+
+        // 🔒 Fetch the created persona from DB and enforce V4 schema
+        const { data: fresh, error } = await supabase
+          .from('v4_personas')
+          .select('persona_id, schema_version, full_profile, profile_image_url, creation_stage, creation_completed')
+          .eq('persona_id', personaId)
+          .maybeSingle();
+
+        if (error) throw error;
+        ensureV4PersonaCore(fresh);
+        
+        // DIAGNOSTIC: Log trace after queue creation call
+        console.log('TRACE_Q_AFTER_UNIFIED', {
+          queue_item_id: item.id,
+          persona_id: unifiedResponse?.persona_id,
+          db: {
+            schema: fresh?.schema_version,
+            has_identity: !!(fresh?.full_profile as any)?.identity,
+            has_motivation: !!(fresh?.full_profile as any)?.motivation_profile,
+            has_comm_style: !!(fresh?.full_profile as any)?.communication_style,
+            profile_image_url: fresh?.profile_image_url ?? null,
+            creation_stage: fresh?.creation_stage ?? null,
+            creation_completed: fresh?.creation_completed ?? null,
+          },
+          ts: new Date().toISOString(),
+        });
+        
+        console.log('✅ V4 unified persona creation completed:', personaId);
+        
+        // Add to collections if specified
+        if (item.collections && item.collections.length > 0) {
+          console.log('📁 Adding persona to collections:', item.collections);
+          
+          // Fetch user collections and create name-to-ID map
+          const userCollections = await getUserCollections();
+          const collectionMap = new Map();
+          userCollections.forEach(collection => {
+            // Normalize collection name for matching
+            const normalizedName = collection.name.toLowerCase().trim();
+            collectionMap.set(normalizedName, collection.id);
+          });
+          
+          for (const collectionName of item.collections) {
+            try {
+              const normalizedSearchName = collectionName.toLowerCase().trim();
+              const collectionId = collectionMap.get(normalizedSearchName);
+              
+              if (collectionId) {
+                await addPersonaToCollection(collectionId, personaId);
+                console.log(`✅ Added persona to collection "${collectionName}" (${collectionId})`);
+              } else {
+                console.warn(`⚠️ Collection "${collectionName}" not found for user. Available collections:`, Array.from(collectionMap.keys()));
+              }
+            } catch (collectionError) {
+              console.warn(`⚠️ Failed to add persona to collection "${collectionName}":`, collectionError);
+            }
+          }
+        }
+        
+        // Mark as completed and reset consecutive failures on success
+        setConsecutiveFailures(0);
+        await updateQueueStatusSafe(item.id, 'completed', personaId);
+        console.log('🎉 Queue item marked as completed');
+        
+      } else if (personaId) {
+        console.log('📋 Persona already exists, marking as completed:', personaId);
+        setConsecutiveFailures(0);
+        await updateQueueStatusSafe(item.id, 'completed', personaId);
+      } else if (currentStatus === 'completed') {
+        console.log('✅ Item already completed, skipping');
+        return;
+      }
+
+      console.log('🎉 Unified persona creation and collection assignment completed');
+      
+      // Reset consecutive failures on success
+      setConsecutiveFailures(0);
+      
+      toast({
+        title: 'Persona created successfully!',
+        description: `${item.name} has been processed and is ready for use.`,
+      });
+
+    } catch (error: any) {
+      console.error('❌ Error processing queue item:', error);
+      
+      // Delete failed item from queue
+      if (currentItemId) {
+        await deleteQueueItem(currentItemId);
+      }
+      
+      // Track consecutive failures
+      const newFailureCount = consecutiveFailures + 1;
+      setConsecutiveFailures(newFailureCount);
+      
+      toast({
+        title: 'Persona creation failed',
+        description: `${currentItemName || 'Item'} failed. ${newFailureCount}/${CONSECUTIVE_FAILURE_LIMIT} consecutive failures.`,
+        variant: 'destructive',
+      });
+      
+      // Stop if too many consecutive failures
+      if (newFailureCount >= CONSECUTIVE_FAILURE_LIMIT) {
+        toast({
+          title: 'Queue processing stopped',
+          description: `Stopped after ${CONSECUTIVE_FAILURE_LIMIT} consecutive failures. Please check for issues.`,
+          variant: 'destructive',
+        });
+        setProcessing(false);
+        setBusy(false);
+        loadQueueItems();
+        return; // EXIT - don't continue to finally block's auto-continue
+      }
+      
+      // Otherwise, continue to next item (fall through to finally)
+    } finally {
+      setProcessing(false);
+      setBusy(false);
+      console.log('🏁 Processing complete, refreshing queue...');
+      loadQueueItems();
+      
+      // Always check for next item (unless we hit consecutive failure limit)
+      if (consecutiveFailures < CONSECUTIVE_FAILURE_LIMIT) {
+        setTimeout(async () => {
+          console.log('🔍 Checking for next pending item...');
+          // Use admin function to get all items across all users
+          const updatedItems = isAdmin ? await getAllQueueItems(ITEMS_PER_PAGE, 0) : await getQueueItems(user.id);
+          const nextPending = updatedItems?.find((item: any) => item.status === 'pending');
+          if (nextPending) {
+            console.log('🚀 Found next pending item, processing automatically...');
+            onProcessClick(); // Recursive call to process next
+          } else {
+            console.log('✅ No more pending items found');
+            setConsecutiveFailures(0); // Reset when queue is empty
+          }
+        }, 5000); // 5 second delay between items
+      }
+    }
+  };
+
+  if (!user || !isAdmin) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <h1 className="text-3xl font-bold mb-4">Persona Queue (Minimal Test)</h1>
-      <p>Status: {status}</p>
-      <p>User: {user?.email}</p>
-      <p>IsAdmin: {isAdmin ? "YES" : "NO"}</p>
-    </div>
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <SidebarInset>
+          <div className="relative flex min-h-svh flex-col">
+            <Header />
+            <main className="flex-1 pt-24">
+              <div className="container py-6">
+                <div className="flex items-center justify-between mb-6">
+                  <SidebarTrigger className="hidden md:flex" />
+                  <div>
+                    <h1 className="text-3xl font-bold">Persona Queue Admin</h1>
+                    {queueItems && queueItems.length > 0 && (
+                      <div className="flex gap-4 mt-2 text-sm">
+                        <span className="text-muted-foreground">
+                          Total: <strong>{queueItems.length}</strong>
+                        </span>
+                        <span className="text-yellow-600">
+                          Pending: <strong>{queueItems.filter(i => i.status === 'pending').length}</strong>
+                        </span>
+                        <span className="text-blue-600">
+                          Processing: <strong>{queueItems.filter(i => i.status?.startsWith('processing')).length}</strong>
+                        </span>
+                        <span className="text-green-600">
+                          Completed: <strong>{queueItems.filter(i => i.status === 'completed').length}</strong>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="grid lg:grid-cols-4 gap-6 mb-8">
+                  {/* Queue Health Monitor */}
+                  <div className="lg:col-span-1">
+                    <QueueHealthMonitor 
+                      onRefresh={loadQueueItems}
+                      refreshing={loading}
+                    />
+                  </div>
+
+                  {/* Text Input Area */}
+                  <div className="lg:col-span-3 bg-card border rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold">Add Personas to Queue</h2>
+                      <div className="flex items-center gap-2">
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <Textarea
+                        placeholder="Paste persona descriptions here..."
+                        value={textareaContent}
+                        onChange={(e) => setTextareaContent(e.target.value)}
+                        className="min-h-[200px] text-base"
+                        rows={8}
+                      />
+                      <div className="flex gap-3">
+                        <Button onClick={handleParseAndAdd} className="flex-1">
+                          Parse & Add to Queue
+                        </Button>
+                        <Button onClick={() => setShowJsonImportDialog(true)} variant="outline">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import JSON
+                        </Button>
+                        <Button onClick={onProcessClick} disabled={busy}>
+                          {busy ? "Processing..." : "Process Queue"}
+                        </Button>
+                        <Button onClick={handleTestAdd} variant="outline">
+                          Test Add
+                        </Button>
+                        <Button onClick={testStatusUpdate} variant="outline">
+                          Test Status Update
+                        </Button>
+                        <Button onClick={testStatusWithPersonaId} variant="outline">
+                          Test Status + Persona ID
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+                    <p>Loading queue items...</p>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Processing Time</TableHead>
+                          <TableHead>Created At</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(!queueItems || queueItems.length === 0) ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8">
+                              No queue items found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          queueItems.map((item) => (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">
+                                {item.name}
+                                {item.persona_id && (
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    ID: {item.persona_id}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={item.status === 'completed' ? 'default' : 
+                                           item.status === 'failed' ? 'destructive' : 
+                                           item.status.startsWith('processing') ? 'secondary' : 'outline'}
+                                  className={getStatusColor(item.status)}
+                                >
+                                  {getStatusDisplay(item.status)}
+                                </Badge>
+                                {item.error_message && (
+                                  <div className="text-xs text-red-600 mt-1 max-w-xs truncate">
+                                    {item.error_message}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {getProcessingTimeText(item.processing_started_at)}
+                                </div>
+                                {item.attempt_count > 0 && (
+                                  <div className="text-xs text-muted-foreground">
+                                    Attempt {item.attempt_count}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {new Date(item.created_at).toLocaleString()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  {item.persona_id && item.status === 'completed' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => window.open(`/persona/${item.persona_id}`, '_blank')}
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                  {/* Delete button for all non-completed statuses */}
+                                  {item.status !== 'completed' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteItem(item.id, item.name)}
+                                      title={item.status.startsWith('processing') ? 'Delete stuck item' : 'Delete from queue'}
+                                      className={item.status.startsWith('processing') ? 'text-orange-600 hover:text-orange-700' : ''}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+
+                    {/* Pagination controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between px-4 py-3 border-t">
+                        <div className="text-sm text-muted-foreground">
+                          Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalItems || 0)} of {totalItems || 0} items
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            Previous
+                          </Button>
+                          <span className="flex items-center px-3 text-sm">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </main>
+            <Footer />
+            <Toaster />
+          </div>
+        </SidebarInset>
+      </div>
+
+      {/* JSON Import Dialog */}
+      <Dialog open={showJsonImportDialog} onOpenChange={(open) => {
+        setShowJsonImportDialog(open);
+        if (!open) {
+          setImportError(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Import Persona from JSON
+            </DialogTitle>
+            <DialogDescription>
+              Import a persona by pasting JSON data. The persona will be validated and a profile image will be generated automatically.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {importError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <div className="font-semibold mb-2">Import Error:</div>
+                  <div className="text-sm whitespace-pre-wrap font-mono bg-red-50 p-2 rounded border border-red-200">
+                    {importError}
+                  </div>
+                  <div className="text-sm mt-2">
+                    Check the browser console (F12) for detailed error logs.
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Paste JSON Data</label>
+              <Textarea
+                placeholder="Paste your persona JSON data here..."
+                value={jsonImportText}
+                onChange={(e) => setJsonImportText(e.target.value)}
+                className="min-h-48 font-mono text-sm resize-none"
+                disabled={isImporting}
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowJsonImportDialog(false)}
+                disabled={isImporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleJsonImport}
+                disabled={isImporting || !jsonImportText.trim()}
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import Persona
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </SidebarProvider>
   );
 };
 
-export default MinimalQueue;
+export default PersonaQueue;
