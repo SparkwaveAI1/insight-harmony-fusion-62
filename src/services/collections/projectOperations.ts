@@ -89,6 +89,14 @@ export const getUserProjectsWithCount = async (): Promise<ProjectWithConversatio
   try {
     console.log('🔍 Fetching projects with conversation counts...');
     
+    // Ensure session is fresh before making authenticated calls
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error('No session found — user may need to re-authenticate');
+      toast.error("Session expired. Please sign in again.");
+      return [];
+    }
+    
     // Use the optimized database function for a single query
     const { data, error } = await supabase.rpc('get_user_projects_with_counts');
 
@@ -123,10 +131,10 @@ export const createProject = async (
   methodology: string | null = null
 ): Promise<Project | null> => {
   try {
-    // Get the user's ID
-    const { data: { user } } = await supabase.auth.getUser();
+    // Get the user's ID from the cached session (getUser() does a network call that can fail with expired JWT)
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (!user) {
+    if (!session?.user) {
       toast.error("You must be logged in to create a project");
       return null;
     }
@@ -140,7 +148,7 @@ export const createProject = async (
         information,
         research_objectives: researchObjectives,
         methodology,
-        user_id: user.id 
+        user_id: session.user.id 
       })
       .select()
       .single();
