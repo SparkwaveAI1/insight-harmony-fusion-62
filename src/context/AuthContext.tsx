@@ -33,9 +33,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           userEmail: currentSession?.user?.email
         }); }
         
-        if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !currentSession) {
+          // Session lost — clear state completely so UI doesn't show stale user
           setUser(null);
           setSession(null);
+        } else if (event === 'TOKEN_REFRESHED' && currentSession) {
+          // Successful refresh — update session (user object stays the same)
+          setUser(currentSession.user);
+          setSession(currentSession);
         } else if (currentSession) {
           setUser(currentSession.user);
           setSession(currentSession);
