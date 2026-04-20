@@ -13,5 +13,31 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   }
 });
+
+// Proactive session refresh: every 5 minutes, check if the token is about to expire
+// and refresh it before it does. JWT expires every 60 minutes (jwt_exp: 3600).
+const SESSION_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+
+setInterval(async () => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.expires_at) {
+      const expiresInSeconds = session.expires_at - Math.floor(Date.now() / 1000);
+      // Refresh if token expires within 10 minutes
+      if (expiresInSeconds < 600) {
+        console.log(`[Auth] Token expires in ${expiresInSeconds}s — refreshing proactively`);
+        const { error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error('[Auth] Proactive refresh failed:', error.message);
+        } else {
+          console.log('[Auth] Token refreshed successfully');
+        }
+      }
+    }
+  } catch (e) {
+    console.error('[Auth] Session refresh check failed:', e);
+  }
+}, SESSION_REFRESH_INTERVAL_MS);
